@@ -1,4 +1,4 @@
-package com.frcteam3636.swervebase.utils
+package com.frcteam3636.bunnybots2025.utils
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.JsonProcessingException

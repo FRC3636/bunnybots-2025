@@ -1,12 +1,12 @@
-package com.frcteam3636.swervebase.subsystems.drivetrain
+package com.frcteam3636.bunnybots2025.subsystems.drivetrain
 
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.hardware.Pigeon2
-import com.frcteam3636.swervebase.Robot
-import com.frcteam3636.swervebase.utils.math.degreesPerSecond
-import com.frcteam3636.swervebase.utils.math.radiansPerSecond
-import com.frcteam3636.swervebase.utils.swerve.PerCorner
-import com.frcteam3636.swervebase.utils.swerve.translation2dPerSecond
+import com.frcteam3636.bunnybots2025.Robot
+import com.frcteam3636.bunnybots2025.utils.math.degreesPerSecond
+import com.frcteam3636.bunnybots2025.utils.math.radiansPerSecond
+import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
+import com.frcteam3636.bunnybots2025.utils.swerve.translation2dPerSecond
 import com.studica.frc.AHRS
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation2d

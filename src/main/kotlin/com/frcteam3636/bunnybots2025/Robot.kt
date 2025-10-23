@@ -1,10 +1,10 @@
-package com.frcteam3636.swervebase
+package com.frcteam3636.bunnybots2025
 
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.CANBus
 import com.ctre.phoenix6.SignalLogger
-import com.frcteam3636.swervebase.Dashboard.field
-import com.frcteam3636.swervebase.subsystems.drivetrain.Drivetrain
+import com.frcteam3636.bunnybots2025.Dashboard.field
+import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
 import com.frcteam3636.version.BUILD_DATE
 import com.frcteam3636.version.DIRTY
 import com.frcteam3636.version.GIT_BRANCH

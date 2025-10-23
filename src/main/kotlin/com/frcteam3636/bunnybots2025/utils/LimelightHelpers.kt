@@ -2,14 +2,14 @@
 
 @file:Suppress("unused")
 
-package com.frcteam3636.swervebase.utils
+package com.frcteam3636.bunnybots2025.utils
 
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.frcteam3636.swervebase.utils.math.meters
+import com.frcteam3636.bunnybots2025.utils.math.meters
 import edu.wpi.first.math.geometry.*
 import edu.wpi.first.math.util.Units
 import edu.wpi.first.networktables.DoubleArrayEntry

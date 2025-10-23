@@ -1,8 +1,8 @@
-package com.frcteam3636.swervebase.utils.swerve
+package com.frcteam3636.bunnybots2025.utils.swerve
 
-import com.frcteam3636.swervebase.utils.math.inMetersPerSecond
-import com.frcteam3636.swervebase.utils.math.metersPerSecond
-import com.frcteam3636.swervebase.utils.math.radiansPerSecond
+import com.frcteam3636.bunnybots2025.utils.math.inMetersPerSecond
+import com.frcteam3636.bunnybots2025.utils.math.metersPerSecond
+import com.frcteam3636.bunnybots2025.utils.math.radiansPerSecond
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.kinematics.ChassisSpeeds
