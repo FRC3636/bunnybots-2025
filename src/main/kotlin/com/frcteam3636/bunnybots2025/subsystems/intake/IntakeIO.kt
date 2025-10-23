@@ -49,7 +49,7 @@ class IntakeIOReal: IntakeIO {
     }
 
     internal companion object Constants {
-        val PID_GAINS = PIDGains(5.0, 0.0, 0.0)
+        val PID_GAINS = PIDGains(6.0, 0.0, 0.0)
     }
 }
 
