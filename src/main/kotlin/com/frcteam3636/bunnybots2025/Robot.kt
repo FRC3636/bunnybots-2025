@@ -28,6 +28,7 @@ import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 
@@ -60,6 +61,8 @@ object Robot : LoggedRobot() {
     private val statusSignals = mutableListOf<BaseStatusSignal>()
 
     var beforeFirstEnable = true
+
+    val odometryLock = ReentrantLock()
 
     override fun robotInit() {
         // Report the use of the Kotlin Language for "FRC Usage Report" statistics
@@ -159,6 +162,12 @@ object Robot : LoggedRobot() {
             println("Zeroing gyro.")
             Drivetrain.zeroGyro()
         }).ignoringDisable(true))
+
+        joystickLeft.button(1).onTrue(
+            Commands.runOnce({
+                Drivetrain.zeroFull()
+            })
+        )
 
 
         controller.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))

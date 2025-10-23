@@ -13,6 +13,7 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.
 import com.frcteam3636.bunnybots2025.utils.math.degreesPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.kilogramSquareMeters
 import com.frcteam3636.bunnybots2025.utils.math.volts
+import com.frcteam3636.bunnybots2025.utils.swerve.DrivetrainCorner
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
 import edu.wpi.first.apriltag.AprilTagFieldLayout
 import edu.wpi.first.apriltag.AprilTagFields
@@ -21,6 +22,7 @@ import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.kinematics.SwerveModulePosition
 import edu.wpi.first.math.kinematics.SwerveModuleState
 import edu.wpi.first.math.system.plant.DCMotor
+import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Voltage
 import org.ironmaple.simulation.SimulatedArena
 import org.ironmaple.simulation.drivesims.COTS
@@ -38,6 +40,8 @@ open class DrivetrainInputs {
     var gyroConnected = true
     var measuredStates = PerCorner.generate { SwerveModuleState() }
     var measuredPositions = PerCorner.generate { SwerveModulePosition() }
+    var odometryYawTimestamps: DoubleArray = doubleArrayOf()
+    var odometryYawPositions: DoubleArray = doubleArrayOf()
 }
 
 abstract class DrivetrainIO {
@@ -52,6 +56,8 @@ abstract class DrivetrainIO {
         inputs.gyroRotation = gyro.rotation
         inputs.gyroVelocity = gyro.velocity
         inputs.gyroConnected = gyro.connected
+        inputs.odometryYawPositions = gyro.odometryYawPositions
+        inputs.odometryYawTimestamps = gyro.odometryYawTimestamps
         inputs.measuredStates = modules.map { it.state }
         inputs.measuredPositions = modules.map { it.position }
     }
@@ -66,6 +72,14 @@ abstract class DrivetrainIO {
         for (module in modules) {
             module.characterize(voltage)
         }
+    }
+
+    fun getOdometryPositions(): PerCorner<Array<SwerveModulePosition>> {
+        return modules.map { it.odometryPositions }
+    }
+
+    fun getOdometryTimestamps(): DoubleArray {
+        return modules[DrivetrainCorner.FRONT_LEFT].odometryTimestamps
     }
 
     fun getStatusSignals(): MutableList<BaseStatusSignal> {
@@ -152,8 +166,6 @@ class DrivetrainIOSim : DrivetrainIO() {
             }
         }
     }
-
-    // Register the drivetrain simulation to the default simulation world
 }
 
 val FIELD_LAYOUT = AprilTagFieldLayout.loadFromResource(

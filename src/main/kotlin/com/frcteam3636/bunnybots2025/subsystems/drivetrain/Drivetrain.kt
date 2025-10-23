@@ -25,8 +25,10 @@ import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Transform3d
 import edu.wpi.first.math.geometry.Translation2d
+import edu.wpi.first.math.geometry.Twist2d
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics
+import edu.wpi.first.math.kinematics.SwerveModulePosition
 import edu.wpi.first.math.kinematics.SwerveModuleState
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.Joystick
@@ -35,7 +37,6 @@ import edu.wpi.first.wpilibj2.command.Subsystem
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.littletonrobotics.junction.Logger
-import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.abs
@@ -66,7 +67,13 @@ object Drivetrain : Subsystem {
         inputs.gyroVelocity
     })
 
-    val odometryLock = ReentrantLock()
+    // someone please give me a better way to do this
+    val lastModulePositions = arrayOf(
+        SwerveModulePosition(),
+        SwerveModulePosition(),
+        SwerveModulePosition(),
+        SwerveModulePosition()
+    )
 
     private val absolutePoseIOs = when (Robot.model) {
         Robot.Model.SIMULATION -> mapOf(
@@ -84,7 +91,7 @@ object Drivetrain : Subsystem {
     /** Helper for converting a desired drivetrain velocity into the speeds and angles for each swerve module */
     private val kinematics =
         SwerveDriveKinematics(
-            *Constants.MODULE_POSITIONS
+            *MODULE_POSITIONS
                 .map { it.position.translation }
                 .toTypedArray()
         )
@@ -104,7 +111,6 @@ object Drivetrain : Subsystem {
     /** Whether every sensor used for pose estimation is connected. */
     val allPoseProvidersConnected
         get() = absolutePoseIOs.values.all { it.second.connected }
-
 
     init {
         Pathfinding.setPathfinder(
@@ -129,16 +135,19 @@ object Drivetrain : Subsystem {
         if (Robot.model != Robot.Model.SIMULATION) {
             PathfindingCommand.warmupCommand().schedule()
         }
-
         if (io is DrivetrainIOSim) {
             poseEstimator.resetPose(io.swerveDriveSimulation.simulatedDriveTrainPose)
             io.registerPoseProviders(absolutePoseIOs.values.map { it.first })
         }
+
+        PhoenixOdometryThread.getInstance().start()
     }
 
     override fun periodic() {
+        Robot.odometryLock.lock()
         io.updateInputs(inputs)
         Logger.processInputs("Drivetrain", inputs)
+        Robot.odometryLock.unlock()
 
         // Update absolute pose sensors and add their measurements to the pose estimator
         for ((name, ioPair) in absolutePoseIOs) {
@@ -156,11 +165,30 @@ object Drivetrain : Subsystem {
             }
         }
 
-        // Use the new measurements to update the pose estimator
-        poseEstimator.update(
-            inputs.gyroRotation,
-            inputs.measuredPositions.toTypedArray()
-        )
+        val odometryTimestamps = io.getOdometryTimestamps()
+        for (i in 0..<odometryTimestamps.size) {
+            val modulePositions = Array(4) { index ->
+                io.getOdometryPositions()[index][i]
+            }
+            val moduleDeltas = Array(4) { index ->
+                SwerveModulePosition(
+                    modulePositions[index].distanceMeters - lastModulePositions[index].distanceMeters,
+                    modulePositions[index].angle - lastModulePositions[index].angle
+                )
+            }
+            for (moduleIndex in 0..3) {
+                lastModulePositions[moduleIndex] = modulePositions[moduleIndex]
+            }
+
+            val odometryYawPosition = Rotation2d.fromDegrees(inputs.odometryYawPositions[i])
+            poseEstimator.updateWithTime(odometryTimestamps[i], odometryYawPosition, modulePositions)
+        }
+
+//        // Use the new measurements to update the pose estimator
+//        poseEstimator.update(
+//            inputs.gyroRotation,
+//            inputs.measuredPositions.toTypedArray()
+//        )
 
         Logger.recordOutput("Drivetrain/Pose Estimator/Estimated Pose", poseEstimator.estimatedPosition)
         Logger.recordOutput("Drivetrain/Estimated Pose", estimatedPose)
@@ -276,6 +304,10 @@ object Drivetrain : Subsystem {
 
         estimatedPose = Pose2d(estimatedPose.translation, zeroPos + offset)
 //        io.setGyro(zeroPos)
+    }
+
+    fun zeroFull() {
+        poseEstimator.resetPose(Pose2d(0.0, 0.0, Rotation2d.kZero))
     }
 
     var sysID = SysIdRoutine(
