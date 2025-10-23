@@ -168,6 +168,9 @@ object Robot : LoggedRobot() {
         controller.a().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
         controller.b().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
         controller.x().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+//        controller.leftBumper().whileTrue(Intake.intake())
+//        controller.rightBumper().whileTrue(Intake.outtake())
     }
 
     /** Add data to the driver station dashboard. */
