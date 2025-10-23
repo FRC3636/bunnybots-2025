@@ -150,9 +150,16 @@ class LimelightPoseProvider(
             currentAlgorithm = megaTagV2
         }
 
-        when (val algorithm = currentAlgorithm) {
+        when (currentAlgorithm) {
             is LimelightAlgorithm.MegaTag ->
                 LimelightHelpers.getBotPoseEstimate_wpiBlue(name)?.let { estimate ->
+                    LimelightHelpers.SetRobotOrientation(
+                        name,
+                        megaTagV2.gyroPosition.degrees,
+                        // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
+                        0.0, 0.0, 0.0, 0.0, 0.0
+                    )
+
                     measurement.observedTags = estimate.rawFiducials.mapNotNull { it?.id }.toIntArray()
 
                     // Reject zero tag or low-quality one tag readings
@@ -175,14 +182,14 @@ class LimelightPoseProvider(
             is LimelightAlgorithm.MegaTag2 -> {
                 LimelightHelpers.SetRobotOrientation(
                     name,
-                    algorithm.gyroPosition.degrees,
+                    megaTagV2.gyroPosition.degrees,
                     // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
                     0.0, 0.0, 0.0, 0.0, 0.0
                 )
 
                 LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name)?.let { estimate ->
                     measurement.observedTags = estimate.rawFiducials.mapNotNull { it?.id }.toIntArray()
-                    val highSpeed = algorithm.gyroVelocity.abs(DegreesPerSecond) > 720.0
+                    val highSpeed = megaTagV2.gyroVelocity.abs(DegreesPerSecond) > 720.0
                     if (estimate.tagCount == 0 || highSpeed) return measurement
 
                     measurement.poseMeasurement = AbsolutePoseMeasurement(
