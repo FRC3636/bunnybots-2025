@@ -105,14 +105,14 @@ class Mk5nSwerveModule(
     }
 
     override fun periodic() {
+        odometryTimestamps = timestampQueue.stream().mapToDouble { it.toDouble() }.toArray()
         drivingMotor.periodic()
         turningMotor.periodic()
         odometryTurnPositions = turningMotor.odometryTurnPositions
         odometryDrivePositionsRad = drivingMotor.odometryDrivePositionsRad
-        odometryTimestamps = timestampQueue.stream().mapToDouble { it.toDouble() }.toArray()
         odometryPositions = Array(odometryTimestamps.size) { index ->
             SwerveModulePosition(
-                odometryDrivePositionsRad[index].radians.toLinear(WHEEL_RADIUS),
+                odometryDrivePositionsRad[index] * WHEEL_RADIUS.inInches(),
                 odometryTurnPositions[index]
             )
         }
