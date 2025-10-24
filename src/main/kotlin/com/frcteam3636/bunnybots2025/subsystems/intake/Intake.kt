@@ -1,6 +1,7 @@
 package com.frcteam3636.bunnybots2025.subsystems.intake
 
 import com.frcteam3636.bunnybots2025.Robot
+import com.frcteam3636.bunnybots2025.utils.math.inDegrees
 import edu.wpi.first.units.Units.Degrees
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d
@@ -30,7 +31,7 @@ object Intake: Subsystem {
     override fun periodic() {
         io.updateInputs(inputs)
         Logger.processInputs("Intake", inputs)
-        intakeAngleLigament.angle = inputs.position.`in`(Degrees)
+        intakeAngleLigament.angle = inputs.position.inDegrees()
         Logger.recordOutput("Pivot Angle", intakeAngleLigament.angle)
     }
 
