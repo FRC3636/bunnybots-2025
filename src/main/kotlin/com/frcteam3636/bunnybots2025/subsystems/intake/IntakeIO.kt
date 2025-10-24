@@ -1,32 +1,57 @@
 package com.frcteam3636.bunnybots2025.subsystems.intake
 
+import com.ctre.phoenix6.BaseStatusSignal
+import com.ctre.phoenix6.configs.TalonFXConfiguration
+import com.ctre.phoenix6.signals.NeutralModeValue
+import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.REVMotorControllerId
 import com.frcteam3636.bunnybots2025.SparkFlex
+import com.frcteam3636.bunnybots2025.TalonFX
+import com.frcteam3636.bunnybots2025.subsystems.drivetrain.TURNING_PID_GAINS
 import com.frcteam3636.bunnybots2025.utils.math.*
-import com.revrobotics.spark.SparkBase
-import com.revrobotics.spark.SparkBase.PersistMode
 import com.revrobotics.spark.SparkLowLevel
-import com.revrobotics.spark.config.SparkBaseConfig
-import com.revrobotics.spark.config.SparkFlexConfig
 import edu.wpi.first.units.Units.*
 import org.team9432.annotation.Logged
 
 @Logged
 open class IntakeInputs {
     var rollerVelocity = RadiansPerSecond.zero()
-    var current = Amps.zero()!!
-    var position = Radians.zero()
+    var rollerCurrent = Amps.zero()!!
+    var pivotPosition = Radians.zero()
+    var pivotCurrent = Amps.zero()!!
 }
 
 interface IntakeIO {
     fun setSpeed(percentage: Double)
     fun updateInputs(inputs: IntakeInputs)
+    fun getSignals(): MutableList<BaseStatusSignal> {
+        return mutableListOf()
+    }
 }
 
 class IntakeIOReal: IntakeIO {
 
     private var intakeMotor = SparkFlex(REVMotorControllerId.IntakeMotor, SparkLowLevel.MotorType.kBrushless)
-    private var intakePivotMotor = SparkFlex(REVMotorControllerId.IntakePivotMotor, SparkLowLevel.MotorType.kBrushless)
+    private var intakePivotMotor = TalonFX(CTREDeviceId.IntakePivotMotor).apply {
+        configurator.apply(TalonFXConfiguration().apply {
+            Slot0.apply {
+                pidGains = TURNING_PID_GAINS
+                MotionMagic.apply {
+                    MotionMagicCruiseVelocity = CRUISE_VELOCITY.inRotationsPerSecond()
+                    MotionMagicAcceleration = ACCELERATION.inRotationsPerSecondPerSecond()
+                }
+            }
+            Feedback.apply {
+                SensorToMechanismRatio = GEAR_RATIO
+            }
+            MotorOutput.apply {
+                NeutralMode = NeutralModeValue.Brake
+            }
+        })
+    }
+
+    private val positionSignal = intakePivotMotor.position
+    private val currentSignal = intakePivotMotor.supplyCurrent
 
     override fun setSpeed(percentage: Double) {
         assert(percentage in -1.0 .. 1.0)
@@ -35,21 +60,20 @@ class IntakeIOReal: IntakeIO {
 
     override fun updateInputs(inputs: IntakeInputs) {
         inputs.rollerVelocity = intakeMotor.encoder.velocity.rpm
-        inputs.current = intakeMotor.outputCurrent.amps
-        inputs.position = intakePivotMotor.encoder.position.rotations
+        inputs.rollerCurrent = intakeMotor.outputCurrent.amps
+        inputs.pivotPosition = positionSignal.valueAsDouble.radians
+        inputs.pivotCurrent = currentSignal.valueAsDouble.amps
     }
 
-    init {
-        val config = SparkFlexConfig().apply {
-            idleMode(SparkBaseConfig.IdleMode.kBrake)
-            PIDController(PID_GAINS)
-        }
-
-        intakePivotMotor.configure(config, SparkBase.ResetMode.kResetSafeParameters, PersistMode.kPersistParameters)
+    override fun getSignals(): MutableList<BaseStatusSignal> {
+        return mutableListOf(positionSignal, currentSignal)
     }
 
     internal companion object Constants {
         val PID_GAINS = PIDGains(6.0, 0.0, 0.0)
+        val CRUISE_VELOCITY = 0.0.rotationsPerSecond
+        val ACCELERATION = 0.0.rotationsPerSecondPerSecond
+        val GEAR_RATIO = 0.0
     }
 }
 

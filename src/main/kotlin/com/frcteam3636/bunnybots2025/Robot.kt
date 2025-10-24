@@ -5,6 +5,7 @@ import com.ctre.phoenix6.CANBus
 import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.Dashboard.field
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
+import com.frcteam3636.bunnybots2025.subsystems.intake.Intake
 import com.frcteam3636.version.BUILD_DATE
 import com.frcteam3636.version.DIRTY
 import com.frcteam3636.version.GIT_BRANCH
@@ -81,6 +82,7 @@ object Robot : LoggedRobot() {
 //        Diagnostics.reportLimelightsInBackground(arrayOf("limelight-left", "limelight-right"))
 
         statusSignals += Drivetrain.getStatusSignals()
+        statusSignals += Intake.getStatusSignals()
     }
 
     /** Start logging or pull replay logs from a file */

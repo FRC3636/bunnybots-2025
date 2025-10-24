@@ -27,6 +27,7 @@ enum class CTREDeviceId(val num: Int, val bus: CANBus) {
     FrontRightTurningEncoder(12, canivoreBus),
 
     ShooterPivotMotor(13, canivoreBus),
+    IntakePivotMotor(14, canivoreBus),
     PigeonGyro(20, canivoreBus),
 }
 
@@ -39,7 +40,6 @@ enum class REVMotorControllerId(val num: Int) {
     LowerShooterMotor(2),
     IndexerMotor(3),
     IntakeMotor(4),
-    IntakePivotMotor(5)
 }
 
 
