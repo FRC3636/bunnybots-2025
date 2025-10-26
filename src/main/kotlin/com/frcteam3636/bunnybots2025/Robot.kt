@@ -54,8 +54,6 @@ object Robot : LoggedRobot() {
 
     private var autoCommand: Command? = null
 
-    private val rioCANBus = CANBus("rio")
-    private val canivore = CANBus("*")
     var didRefreshSucceed = true
 
     private val statusSignals = mutableListOf<BaseStatusSignal>()
@@ -205,7 +203,7 @@ object Robot : LoggedRobot() {
     private fun reportDiagnostics() {
         Diagnostics.periodic()
         Diagnostics.report(rioCANBus)
-        Diagnostics.report(canivore)
+        Diagnostics.report(canivoreBus)
         Diagnostics.reportDSPeripheral(joystickLeft.hid, isController = false)
         Diagnostics.reportDSPeripheral(joystickRight.hid, isController = false)
         Diagnostics.reportDSPeripheral(controller.hid, isController = true)
