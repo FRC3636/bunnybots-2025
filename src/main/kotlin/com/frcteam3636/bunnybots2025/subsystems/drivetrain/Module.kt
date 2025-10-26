@@ -105,7 +105,7 @@ class Mk5nSwerveModule(
     }
 
     override fun periodic() {
-        odometryTimestamps = timestampQueue.stream().mapToDouble { it.toDouble() }.toArray()
+        odometryTimestamps = timestampQueue.map { it.toDouble() }.toTypedArray().toDoubleArray()
         drivingMotor.periodic()
         turningMotor.periodic()
         odometryTurnPositions = turningMotor.odometryTurnPositions
