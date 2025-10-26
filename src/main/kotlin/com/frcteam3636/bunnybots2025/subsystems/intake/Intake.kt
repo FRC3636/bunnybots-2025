@@ -3,8 +3,6 @@ package com.frcteam3636.bunnybots2025.subsystems.intake
 import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.utils.math.inDegrees
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d
 import edu.wpi.first.wpilibj.util.Color
 import edu.wpi.first.wpilibj.util.Color8Bit
 import edu.wpi.first.wpilibj2.command.Command
@@ -40,20 +38,20 @@ object Intake: Subsystem {
     fun intake(): Command =
         startEnd(
             {
-                io.setSpeed(0.7)
+                io.setRollerSpeed(0.7)
             },
             {
-                io.setSpeed(0.0)
+                io.setRollerSpeed(0.0)
             }
         )
 
     fun outtake(): Command =
         startEnd(
             {
-                io.setSpeed(-0.5)
+                io.setRollerSpeed(-0.5)
             },
             {
-                io.setSpeed(0.0)
+                io.setRollerSpeed(0.0)
             }
         )
 

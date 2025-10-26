@@ -7,7 +7,6 @@ import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.REVMotorControllerId
 import com.frcteam3636.bunnybots2025.SparkFlex
 import com.frcteam3636.bunnybots2025.TalonFX
-import com.frcteam3636.bunnybots2025.subsystems.drivetrain.TURNING_PID_GAINS
 import com.frcteam3636.bunnybots2025.utils.math.*
 import com.revrobotics.spark.SparkLowLevel
 import edu.wpi.first.units.Units.*
@@ -22,7 +21,7 @@ open class IntakeInputs {
 }
 
 interface IntakeIO {
-    fun setSpeed(percentage: Double)
+    fun setRollerSpeed(percentage: Double)
     fun updateInputs(inputs: IntakeInputs)
     fun getSignals(): MutableList<BaseStatusSignal> {
         return mutableListOf()
@@ -53,7 +52,7 @@ class IntakeIOReal: IntakeIO {
     private val positionSignal = intakePivotMotor.position
     private val currentSignal = intakePivotMotor.supplyCurrent
 
-    override fun setSpeed(percentage: Double) {
+    override fun setRollerSpeed(percentage: Double) {
         assert(percentage in -1.0 .. 1.0)
         intakeMotor.set(percentage)
     }
@@ -78,7 +77,7 @@ class IntakeIOReal: IntakeIO {
 }
 
 class IntakeIOSim: IntakeIO {
-    override fun setSpeed(percentage: Double) {
+    override fun setRollerSpeed(percentage: Double) {
         TODO("Not yet implemented")
     }
 
