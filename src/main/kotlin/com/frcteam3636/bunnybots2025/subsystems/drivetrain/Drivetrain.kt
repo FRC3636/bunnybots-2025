@@ -147,24 +147,6 @@ object Drivetrain : Subsystem {
         Robot.odometryLock.lock()
         io.updateInputs(inputs)
         Logger.processInputs("Drivetrain", inputs)
-        Robot.odometryLock.unlock()
-
-        // Update absolute pose sensors and add their measurements to the pose estimator
-        for ((name, ioPair) in absolutePoseIOs) {
-            val (sensorIO, inputs) = ioPair
-
-            sensorIO.updateInputs(inputs)
-            Logger.processInputs("Drivetrain/Absolute Pose/$name", inputs)
-
-            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Has Measurement", inputs.measurement != null)
-            inputs.measurement?.let {
-                poseEstimator.addAbsolutePoseMeasurement(it)
-                Logger.recordOutput("Drivetrain/Absolute Pose/$name/Measurement", it)
-                Logger.recordOutput("Drivetrain/Last Added Pose", it.pose)
-                Logger.recordOutput("Drivetrain/Absolute Pose/$name/Pose", it.pose)
-            }
-        }
-
         val odometryTimestamps = io.getOdometryTimestamps()
         for (i in 0..<odometryTimestamps.size) {
             val modulePositions = Array(4) { index ->
@@ -182,6 +164,23 @@ object Drivetrain : Subsystem {
 
             val odometryYawPosition = Rotation2d.fromDegrees(inputs.odometryYawPositions[i])
             poseEstimator.updateWithTime(odometryTimestamps[i], odometryYawPosition, modulePositions)
+        }
+        Robot.odometryLock.unlock()
+
+        // Update absolute pose sensors and add their measurements to the pose estimator
+        for ((name, ioPair) in absolutePoseIOs) {
+            val (sensorIO, inputs) = ioPair
+
+            sensorIO.updateInputs(inputs)
+            Logger.processInputs("Drivetrain/Absolute Pose/$name", inputs)
+
+            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Has Measurement", inputs.measurement != null)
+            inputs.measurement?.let {
+                poseEstimator.addAbsolutePoseMeasurement(it)
+                Logger.recordOutput("Drivetrain/Absolute Pose/$name/Measurement", it)
+                Logger.recordOutput("Drivetrain/Last Added Pose", it.pose)
+                Logger.recordOutput("Drivetrain/Absolute Pose/$name/Pose", it.pose)
+            }
         }
 
 //        // Use the new measurements to update the pose estimator

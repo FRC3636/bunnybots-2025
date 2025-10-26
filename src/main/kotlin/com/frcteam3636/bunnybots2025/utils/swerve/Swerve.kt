@@ -32,9 +32,9 @@ data class PerCorner<T>(val frontLeft: T, val frontRight: T, val backLeft: T, va
     operator fun get(index: Int): T =
         when (index) {
             0 -> frontLeft
-            1 -> backLeft
-            2 -> backRight
-            3 -> frontRight
+            1 -> frontRight
+            2 -> backLeft
+            3 -> backRight
             else -> throw IndexOutOfBoundsException()
         }
 
