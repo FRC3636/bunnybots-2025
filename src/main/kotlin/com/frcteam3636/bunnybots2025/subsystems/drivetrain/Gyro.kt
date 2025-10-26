@@ -114,8 +114,8 @@ class GyroPigeon(private val pigeon: Pigeon2) : Gyro {
     }
 
     override fun periodic() {
-        odometryYawTimestamps = yawTimestampQueue.stream().mapToDouble { it.toDouble() }.toArray()
-        odometryYawPositions = yawPositionQueue.stream().mapToDouble { it.toDouble() }.toArray()
+        odometryYawTimestamps = yawTimestampQueue.toDoubleArray()
+        odometryYawPositions = yawPositionQueue.toDoubleArray()
         yawTimestampQueue.clear()
         yawPositionQueue.clear()
     }

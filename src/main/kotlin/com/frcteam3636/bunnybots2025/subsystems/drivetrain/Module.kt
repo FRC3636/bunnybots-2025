@@ -16,7 +16,6 @@ import com.frcteam3636.bunnybots2025.utils.swerve.speed
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.kinematics.SwerveModulePosition
 import edu.wpi.first.math.kinematics.SwerveModuleState
-import edu.wpi.first.math.util.Units
 import edu.wpi.first.units.Units.Volts
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
@@ -47,7 +46,7 @@ interface SwerveModule {
 
     var odometryTimestamps: DoubleArray
     var odometryTurnPositions: Array<Rotation2d>
-    var odometryDrivePositionsRad: DoubleArray
+    var odometryDrivePositions: DoubleArray
     var odometryPositions: Array<SwerveModulePosition>
 
     fun getSignals(): Array<BaseStatusSignal> {
@@ -64,7 +63,7 @@ class Mk5nSwerveModule(
     private var timestampQueue: Queue<Double> = PhoenixOdometryThread.getInstance().makeTimestampQueue()
 
     override var odometryTimestamps: DoubleArray = doubleArrayOf()
-    override var odometryDrivePositionsRad = doubleArrayOf()
+    override var odometryDrivePositions = doubleArrayOf()
     override var odometryTurnPositions: Array<Rotation2d> = emptyArray()
     override var odometryPositions: Array<SwerveModulePosition> = emptyArray()
 
@@ -109,10 +108,10 @@ class Mk5nSwerveModule(
         drivingMotor.periodic()
         turningMotor.periodic()
         odometryTurnPositions = turningMotor.odometryTurnPositions
-        odometryDrivePositionsRad = drivingMotor.odometryDrivePositionsRad
+        odometryDrivePositions = drivingMotor.odometryDrivePositions
         odometryPositions = Array(odometryTimestamps.size) { index ->
             SwerveModulePosition(
-                odometryDrivePositionsRad[index] * WHEEL_RADIUS.inInches(),
+                odometryDrivePositions[index].rotations.toLinear(WHEEL_RADIUS).inMeters(),
                 odometryTurnPositions[index]
             )
         }
@@ -132,7 +131,7 @@ interface SwerveTurningMotor {
 interface SwerveDrivingMotor {
     val position: Distance
     var velocity: LinearVelocity
-    var odometryDrivePositionsRad: DoubleArray
+    var odometryDrivePositions: DoubleArray
     fun setVoltage(voltage: Voltage)
     fun getSignals(): Array<BaseStatusSignal> {
         return arrayOf()
@@ -158,7 +157,7 @@ class DrivingTalon(id: CTREDeviceId) : SwerveDrivingMotor {
         })
     }
 
-    override var odometryDrivePositionsRad = doubleArrayOf()
+    override var odometryDrivePositions = doubleArrayOf()
 
     private val positionSignal = inner.position
     private val velocitySignal = inner.velocity
@@ -196,7 +195,7 @@ class DrivingTalon(id: CTREDeviceId) : SwerveDrivingMotor {
     }
 
     override fun periodic() {
-        odometryDrivePositionsRad = positionQueue.stream().mapToDouble { Units.rotationsToRadians(it) }.toArray()
+        odometryDrivePositions = positionQueue.toDoubleArray()
         positionQueue.clear()
     }
 }
@@ -261,7 +260,7 @@ class TurningTalon(id: CTREDeviceId, encoderId: CTREDeviceId, magnetOffset: Doub
 
 class SimSwerveModule(val sim: SwerveModuleSimulation) : SwerveModule {
 
-    override var odometryDrivePositionsRad: DoubleArray = doubleArrayOf()
+    override var odometryDrivePositions: DoubleArray = doubleArrayOf()
     override var odometryTurnPositions: Array<Rotation2d> = emptyArray()
     override var odometryPositions: Array<SwerveModulePosition> = emptyArray()
     private val driveMotor: SimulatedMotorController.GenericMotorController = sim.useGenericMotorControllerForDrive()
