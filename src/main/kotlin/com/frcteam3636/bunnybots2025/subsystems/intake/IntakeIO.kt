@@ -15,9 +15,9 @@ import org.team9432.annotation.Logged
 
 @Logged
 open class IntakeInputs {
-    var rollerVelocity = RadiansPerSecond.zero()
+    var rollerVelocity = RadiansPerSecond.zero()!!
     var rollerCurrent = Amps.zero()!!
-    var pivotPosition = Radians.zero()
+    var pivotPosition = Radians.zero()!!
     var pivotCurrent = Amps.zero()!!
 }
 
@@ -35,7 +35,7 @@ class IntakeIOReal: IntakeIO {
     private var intakePivotMotor = TalonFX(CTREDeviceId.IntakePivotMotor).apply {
         configurator.apply(TalonFXConfiguration().apply {
             Slot0.apply {
-                pidGains = TURNING_PID_GAINS
+                pidGains = PID_GAINS
                 MotionMagic.apply {
                     MotionMagicCruiseVelocity = CRUISE_VELOCITY.inRotationsPerSecond()
                     MotionMagicAcceleration = ACCELERATION.inRotationsPerSecondPerSecond()
@@ -73,7 +73,7 @@ class IntakeIOReal: IntakeIO {
         val PID_GAINS = PIDGains(6.0, 0.0, 0.0)
         val CRUISE_VELOCITY = 0.0.rotationsPerSecond
         val ACCELERATION = 0.0.rotationsPerSecondPerSecond
-        val GEAR_RATIO = 0.0
+        const val GEAR_RATIO = 0.0
     }
 }
 
