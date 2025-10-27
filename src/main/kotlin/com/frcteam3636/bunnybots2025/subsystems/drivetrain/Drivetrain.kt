@@ -321,12 +321,20 @@ object Drivetrain : Subsystem {
     )
 
     fun sysIdQuasistatic(direction: SysIdRoutine.Direction) = run {
-        io.runCharacterization(0.volts)
-    }.withTimeout(1.0).andThen(sysID.quasistatic(direction))!!
+        io.runCharacterization(0.volts, shouldStraight = true)
+    }.withTimeout(2.0).andThen(sysID.quasistatic(direction))!!
 
     fun sysIdDynamic(direction: SysIdRoutine.Direction) = run {
-        io.runCharacterization(0.volts)
-    }.withTimeout(1.0).andThen(sysID.dynamic(direction))!!
+        io.runCharacterization(0.volts, shouldStraight = true)
+    }.withTimeout(2.0).andThen(sysID.dynamic(direction))!!
+
+    fun sysIdQuasistaticSpin(direction: SysIdRoutine.Direction) = run {
+        io.runCharacterization(0.volts, shouldSpin = true)
+    }.withTimeout(2.0).andThen(sysID.quasistatic(direction))!!
+
+    fun sysIdDynamicSpin(direction: SysIdRoutine.Direction) = run {
+        io.runCharacterization(0.volts, shouldSpin = true)
+    }.withTimeout(2.0).andThen(sysID.dynamic(direction))!!
 
     internal object Constants {
         // Translation/rotation coefficient for teleoperated driver controls

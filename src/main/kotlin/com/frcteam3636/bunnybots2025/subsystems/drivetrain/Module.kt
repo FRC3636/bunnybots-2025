@@ -54,7 +54,7 @@ interface SwerveModule {
     }
 
     fun periodic() {}
-    fun characterize(voltage: Voltage)
+    fun characterize(voltage: Voltage, turningAngle: Angle?)
 }
 
 class Mk5nSwerveModule(
@@ -78,9 +78,11 @@ class Mk5nSwerveModule(
             drivingMotor.position, Rotation2d.fromRadians(turningMotor.position.inRadians()) + chassisAngle
         )
 
-    override fun characterize(voltage: Voltage) {
+    override fun characterize(voltage: Voltage, turningAngle: Angle?) {
         drivingMotor.setVoltage(voltage)
-        turningMotor.position = -chassisAngle.measure
+        if (turningAngle != null) {
+            turningMotor.position = turningAngle
+        }
     }
 
     override var desiredState: SwerveModuleState = SwerveModuleState(0.0, -chassisAngle)
@@ -310,7 +312,7 @@ class SimSwerveModule(val sim: SwerveModuleSimulation) : SwerveModule {
         )
     }
 
-    override fun characterize(voltage: Voltage) {
+    override fun characterize(voltage: Voltage, turningAngle: Angle?) {
         TODO("Not yet implemented")
     }
 }
