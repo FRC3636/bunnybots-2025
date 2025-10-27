@@ -30,8 +30,8 @@ enum class CTREDeviceId(val num: Int, val bus: CANBus) {
     IntakePivotMotor(14, canivoreBus),
     IntakePivotEncoder(15, canivoreBus),
     ShooterPivotEncoder(16, canivoreBus),
+    CANRange(17, canivoreBus),
     PigeonGyro(20, canivoreBus),
-    CANRange(21, canivoreBus), //?
 }
 
 fun CANcoder(id: CTREDeviceId) = CANcoder(id.num, id.bus)
