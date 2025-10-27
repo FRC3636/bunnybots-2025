@@ -69,7 +69,7 @@ object Shooter {
             )
         }
 
-        fun spinFlywheel(): Command =
+        fun pulse(): Command =
             startEnd(
                 {
                     upperSetpoint = 1.radiansPerSecond
