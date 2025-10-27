@@ -148,9 +148,11 @@ object Drivetrain : Subsystem {
         io.updateInputs(inputs)
         Logger.processInputs("Drivetrain", inputs)
         val odometryTimestamps = io.getOdometryTimestamps()
+        val odometryPositions = io.getOdometryPositions()
+        Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions.size)
         for (i in 0..<odometryTimestamps.size) {
             val modulePositions = Array(4) { index ->
-                io.getOdometryPositions()[index][i]
+                odometryPositions[index][i]
             }
             val moduleDeltas = Array(4) { index ->
                 SwerveModulePosition(

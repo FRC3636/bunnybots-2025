@@ -16,6 +16,7 @@ import com.frcteam3636.bunnybots2025.utils.swerve.speed
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.kinematics.SwerveModulePosition
 import edu.wpi.first.math.kinematics.SwerveModuleState
+import edu.wpi.first.math.util.Units
 import edu.wpi.first.units.Units.Volts
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
@@ -113,7 +114,7 @@ class Mk5nSwerveModule(
         odometryDrivePositions = drivingMotor.odometryDrivePositions
         odometryPositions = Array(odometryTimestamps.size) { index ->
             SwerveModulePosition(
-                odometryDrivePositions[index].rotations.toLinear(WHEEL_RADIUS).inMeters(),
+                odometryDrivePositions[index] * WHEEL_RADIUS.inMeters(),
                 odometryTurnPositions[index]
             )
         }
@@ -197,7 +198,7 @@ class DrivingTalon(id: CTREDeviceId) : SwerveDrivingMotor {
     }
 
     override fun periodic() {
-        odometryDrivePositions = positionQueue.toDoubleArray()
+        odometryDrivePositions = positionQueue.map { Units.rotationsToRadians(it) }.toDoubleArray()
         positionQueue.clear()
     }
 }
