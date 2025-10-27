@@ -149,7 +149,7 @@ object Drivetrain : Subsystem {
         Logger.processInputs("Drivetrain", inputs)
         val odometryTimestamps = io.getOdometryTimestamps()
         val odometryPositions = io.getOdometryPositions()
-        Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions.size)
+        Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions[0].size)
         for (i in 0..<odometryTimestamps.size) {
             val modulePositions = Array(4) { index ->
                 odometryPositions[index][i]
