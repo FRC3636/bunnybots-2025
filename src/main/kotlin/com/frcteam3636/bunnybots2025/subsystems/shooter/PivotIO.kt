@@ -3,6 +3,9 @@ package com.frcteam3636.bunnybots2025.subsystems.shooter
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC
+import com.ctre.phoenix6.controls.MotionMagicVoltage
+import com.ctre.phoenix6.hardware.ParentDevice
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.NeutralModeValue
 import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.TalonFX
@@ -16,9 +19,9 @@ import org.team9432.annotation.Logged
 
 @Logged
 open class PivotInputs {
-    var pivotAngle = Rotations.zero()
-    var pivotCurrent = Amps.zero()
-    var pivotVelocity = RotationsPerSecond.zero()
+    var pivotAngle = Rotations.zero()!!
+    var pivotCurrent = Amps.zero()!!
+    var pivotVelocity = RotationsPerSecond.zero()!!
 }
 
 interface PivotIO {
@@ -45,6 +48,11 @@ class PivotIOReal: PivotIO {
                 MotionMagicAcceleration = PROFILE_ACCELERATION
                 MotionMagicJerk = PROFILE_JERK
             }
+            Feedback.apply {
+                FeedbackRemoteSensorID = CTREDeviceId.ShooterPivotEncoder.num
+                FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder
+                SensorToMechanismRatio = GEAR_RATIO
+            }
         })
     }
 
@@ -52,12 +60,15 @@ class PivotIOReal: PivotIO {
     private val currentSignal = shooterPivotMotor.supplyCurrent
     private val velocitySignal = shooterPivotMotor.velocity
 
+    init {
+        BaseStatusSignal.setUpdateFrequencyForAll(100.0, positionSignal, currentSignal, velocitySignal)
+        shooterPivotMotor.optimizeBusUtilization()
+    }
+
+    val positionControl = MotionMagicVoltage(0.0)
+
     override fun turnToAngle(angle: Angle) {
-        val positionControl = MotionMagicTorqueCurrentFOC(0.0).apply {
-            Slot = 0
-            Position = angle.inRotations()
-        }
-        shooterPivotMotor.setControl(positionControl)
+        shooterPivotMotor.setControl(positionControl.withPosition(angle))
     }
 
     override fun setBrakeMode(enabled: Boolean) {
@@ -71,7 +82,7 @@ class PivotIOReal: PivotIO {
     }
 
     override fun getStatusSignals(): MutableList<BaseStatusSignal> {
-        return mutableListOf(positionSignal, currentSignal)
+        return mutableListOf(positionSignal, currentSignal, velocitySignal)
     }
 
     override fun updateInputs(inputs: PivotInputs) {
@@ -82,6 +93,7 @@ class PivotIOReal: PivotIO {
 
     internal companion object Constants {
         private val PID_GAINS = PIDGains(6.0, 0.0, 0.0)
+        private const val GEAR_RATIO = 0.0
         private const val PROFILE_ACCELERATION = 50.0
         private const val PROFILE_JERK = 0.0
         private const val PROFILE_VELOCITY = 25.0

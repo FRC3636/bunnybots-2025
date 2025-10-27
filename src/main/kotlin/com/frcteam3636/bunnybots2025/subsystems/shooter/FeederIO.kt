@@ -1,5 +1,6 @@
 package com.frcteam3636.bunnybots2025.subsystems.shooter
 
+import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.configs.CANrangeConfiguration
 import com.ctre.phoenix6.hardware.CANrange
 import com.ctre.phoenix6.signals.UpdateModeValue
@@ -11,18 +12,21 @@ import com.frcteam3636.bunnybots2025.utils.math.rpm
 import com.revrobotics.spark.SparkLowLevel
 import edu.wpi.first.units.Units.Amps
 import edu.wpi.first.units.Units.RotationsPerSecond
-import edu.wpi.first.units.measure.Voltage
 import org.team9432.annotation.Logged
 
 @Logged
 open class FeederInputs {
-    var feederVelocity = RotationsPerSecond.zero()
-    var feederCurrent = Amps.zero()
+    var feederVelocity = RotationsPerSecond.zero()!!
+    var feederCurrent = Amps.zero()!!
+    var isDetected = false
 }
 
 interface FeederIO {
     fun setSpeed(percent: Double)
     fun updateInputs(inputs: FeederInputs)
+    fun getStatusSignals(): MutableList<BaseStatusSignal> {
+        return mutableListOf()
+    }
 }
 
 class FeederIOReal: FeederIO {
@@ -34,10 +38,16 @@ class FeederIOReal: FeederIO {
                 ProximityParams.ProximityThreshold = 0.35 // fix
                 FovParams.FOVCenterY = 10.0 // fix
                 FovParams.FOVRangeY = 7.0 // fix
-                ToFParams.UpdateMode = UpdateModeValue.ShortRangeUserFreq
-                ToFParams.UpdateFrequency = 50.0
+                ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz
             }
         )
+    }
+
+    private val detectedSignal = canRange.isDetected
+
+    init {
+        BaseStatusSignal.setUpdateFrequencyForAll(100.0, detectedSignal)
+        canRange.optimizeBusUtilization()
     }
 
     override fun setSpeed(percent: Double) {
@@ -48,6 +58,11 @@ class FeederIOReal: FeederIO {
     override fun updateInputs(inputs: FeederInputs) {
         inputs.feederVelocity = shooterFeederMotor.encoder.velocity.rpm
         inputs.feederCurrent = shooterFeederMotor.outputCurrent.amps
+        inputs.isDetected = detectedSignal.value
+    }
+
+    override fun getStatusSignals(): MutableList<BaseStatusSignal> {
+        return mutableListOf(detectedSignal)
     }
 }
 
@@ -59,5 +74,4 @@ class FeederIOSim: FeederIO {
     override fun updateInputs(inputs: FeederInputs) {
         TODO("Not yet implemented")
     }
-
 }

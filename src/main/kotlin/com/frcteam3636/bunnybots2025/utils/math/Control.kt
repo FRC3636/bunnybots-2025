@@ -9,6 +9,8 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile
 
 data class MotorFFGains(val s: Double = 0.0, val v: Double = 0.0, val a: Double = 0.0)
 
+fun MotorFFGains.toSimpleMotorFeedforward(): SimpleMotorFeedforward = SimpleMotorFeedforward(s, v, a)
+
 fun SimpleMotorFeedforward(gains: MotorFFGains) = SimpleMotorFeedforward(gains.s, gains.v, gains.a)
 
 val SimpleMotorFeedforward.gains: MotorFFGains

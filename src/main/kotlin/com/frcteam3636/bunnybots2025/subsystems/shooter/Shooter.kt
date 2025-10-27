@@ -1,4 +1,105 @@
 package com.frcteam3636.bunnybots2025.subsystems.shooter
 
+import com.ctre.phoenix6.BaseStatusSignal
+import com.frcteam3636.bunnybots2025.Robot
+import com.frcteam3636.bunnybots2025.utils.math.MotorFFGains
+import com.frcteam3636.bunnybots2025.utils.math.PIDController
+import com.frcteam3636.bunnybots2025.utils.math.PIDGains
+import com.frcteam3636.bunnybots2025.utils.math.SimpleMotorFeedforward
+import com.frcteam3636.bunnybots2025.utils.math.inDegrees
+import com.frcteam3636.bunnybots2025.utils.math.inRadiansPerSecond
+import edu.wpi.first.units.Units.RadiansPerSecond
+import edu.wpi.first.wpilibj.util.Color
+import edu.wpi.first.wpilibj.util.Color8Bit
+import edu.wpi.first.wpilibj2.command.Subsystem
+import org.littletonrobotics.junction.Logger
+import org.littletonrobotics.junction.mechanism.LoggedMechanism2d
+import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d
+
 object Shooter {
+    object Flywheel : Subsystem {
+        private var io = when (Robot.model) {
+            Robot.Model.COMPETITION -> FlywheelIOReal()
+            Robot.Model.SIMULATION -> FlywheelIOSim()
+        }
+
+        private val upperSetpoint = RadiansPerSecond.zero()!!
+        private val lowerSetpoint = RadiansPerSecond.zero()!!
+
+        private val inputs = LoggedFlywheelInputs()
+
+        private var upperPidController = PIDController(Constants.UPPER_PID_GAINS)
+        private var lowerPidController = PIDController(Constants.LOWER_PID_GAINS)
+        private var upperFFController = SimpleMotorFeedforward(Constants.UPPER_FF_GAINS)
+        private var lowerFFController = SimpleMotorFeedforward(Constants.LOWER_FF_GAINS)
+
+        override fun periodic() {
+            io.updateInputs(inputs)
+
+            Logger.processInputs("Shooter/Flywheels", inputs)
+
+            io.setVoltage(
+                upperFFController.calculate(upperSetpoint.inRadiansPerSecond()) +
+                upperPidController.calculate(inputs.topVelocity.inRadiansPerSecond(), upperSetpoint.inRadiansPerSecond()),
+                lowerFFController.calculate(lowerSetpoint.inRadiansPerSecond()) +
+                lowerPidController.calculate(inputs.bottomVelocity.inRadiansPerSecond(), lowerSetpoint.inRadiansPerSecond()),
+            )
+        }
+
+        object Constants {
+            val UPPER_PID_GAINS = PIDGains()
+            val LOWER_PID_GAINS = PIDGains()
+            val UPPER_FF_GAINS = MotorFFGains()
+            val LOWER_FF_GAINS = MotorFFGains()
+        }
+    }
+
+    object Pivot : Subsystem {
+        private var io = when (Robot.model) {
+            Robot.Model.COMPETITION -> PivotIOReal()
+            Robot.Model.SIMULATION -> PivotIOSim()
+        }
+
+        private val inputs = LoggedPivotInputs()
+
+        var mechanism = LoggedMechanism2d(100.0, 200.0)
+        var pivotAngleLigament = LoggedMechanismLigament2d("Pivot Ligament", 50.0, 180.0, 5.0, Color8Bit(Color.kGreen))
+
+        init {
+            mechanism.getRoot("Shooter/Pivot", 50.0, 150.0).apply {
+                append(pivotAngleLigament)
+            }
+        }
+
+        override fun periodic() {
+            io.updateInputs(inputs)
+
+            Logger.processInputs("Shooter/Pivot", inputs)
+
+            pivotAngleLigament.angle = inputs.pivotAngle.inDegrees()
+            Logger.recordOutput("Shooter/Pivot/Mechanism", mechanism)
+        }
+
+        fun getStatusSignals(): MutableList<BaseStatusSignal> {
+            return io.getStatusSignals()
+        }
+    }
+
+    object Feeder : Subsystem {
+        private var io = when (Robot.model) {
+            Robot.Model.COMPETITION -> FeederIOReal()
+            Robot.Model.SIMULATION -> FeederIOSim()
+        }
+
+        private val inputs = LoggedFeederInputs()
+
+        override fun periodic() {
+            io.updateInputs(inputs)
+            Logger.processInputs("Shooter/Feeder", inputs)
+        }
+
+        fun getStatusSignals(): MutableList<BaseStatusSignal> {
+            return io.getStatusSignals()
+        }
+    }
 }
