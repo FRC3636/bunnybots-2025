@@ -10,9 +10,12 @@ import com.frcteam3636.bunnybots2025.utils.math.SimpleMotorFeedforward
 import com.frcteam3636.bunnybots2025.utils.math.inDegrees
 import com.frcteam3636.bunnybots2025.utils.math.inRadiansPerSecond
 import edu.wpi.first.units.Units.RadiansPerSecond
+import edu.wpi.first.units.measure.Angle
+import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.wpilibj.util.Color
 import edu.wpi.first.wpilibj.util.Color8Bit
 import edu.wpi.first.wpilibj2.command.Command
+import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.Subsystem
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d
@@ -47,6 +50,16 @@ object Shooter {
                 lowerPidController.calculate(inputs.bottomVelocity.inRadiansPerSecond(), lowerSetpoint.inRadiansPerSecond()),
             )
         }
+
+        fun spinFlywheel(): Command =
+            startEnd(
+                {
+                    io.setSpeed(0.5, -0.5)
+                },
+                {
+                    io.setSpeed(0.0, 0.0)
+                }
+            )
 
         object Constants {
             val UPPER_PID_GAINS = PIDGains()
@@ -85,6 +98,12 @@ object Shooter {
         fun getStatusSignals(): MutableList<BaseStatusSignal> {
             return io.getStatusSignals()
         }
+
+        fun followTarget(angle: Angle): Command =
+            // should follow carrot box
+            runOnce {
+                io.turnToAngle(angle)
+            }
     }
 
     object Feeder : Subsystem {

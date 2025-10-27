@@ -9,6 +9,7 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.NeutralModeValue
 import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.TalonFX
+import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal
 import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal.Constants.ACCELERATION
 import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal.Constants.CRUISE_VELOCITY
 import com.frcteam3636.bunnybots2025.utils.math.*
@@ -51,7 +52,8 @@ class PivotIOReal: PivotIO {
             Feedback.apply {
                 FeedbackRemoteSensorID = CTREDeviceId.ShooterPivotEncoder.num
                 FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder
-                SensorToMechanismRatio = GEAR_RATIO
+                SensorToMechanismRatio = SENSOR_TO_MECHANISM_GEAR_RATIO
+                RotorToSensorRatio = ROTOR_TO_SENSOR_GEAR_RATIO
             }
         })
     }
@@ -86,14 +88,15 @@ class PivotIOReal: PivotIO {
     }
 
     override fun updateInputs(inputs: PivotInputs) {
-        inputs.pivotAngle = positionSignal.value // multiply by driver/driven gear ratio?
+        inputs.pivotAngle = positionSignal.value
         inputs.pivotCurrent = currentSignal.value
         inputs.pivotVelocity = velocitySignal.value
     }
 
     internal companion object Constants {
         private val PID_GAINS = PIDGains(6.0, 0.0, 0.0)
-        private const val GEAR_RATIO = 0.0
+        private const val SENSOR_TO_MECHANISM_GEAR_RATIO = 0.0
+        private const val ROTOR_TO_SENSOR_GEAR_RATIO = 0.0
         private const val PROFILE_ACCELERATION = 50.0
         private const val PROFILE_JERK = 0.0
         private const val PROFILE_VELOCITY = 25.0
