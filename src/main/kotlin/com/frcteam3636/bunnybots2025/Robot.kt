@@ -4,6 +4,7 @@ import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.CANBus
 import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
+import com.frcteam3636.bunnybots2025.subsystems.indexer.Indexer
 import com.frcteam3636.bunnybots2025.subsystems.intake.Intake
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
 import com.frcteam3636.version.BUILD_DATE
@@ -154,6 +155,21 @@ object Robot : LoggedRobot() {
 //        )
     }
 
+    private fun doIntakeSequence(): Command {
+        return Commands.either(
+            Commands.parallel(
+                Intake.intake(),
+                Indexer.intake(),
+                Shooter.Feeder.intake()
+            ).until { Shooter.Feeder.isDetected },
+            Commands.parallel(
+                Intake.intake(),
+                Indexer.intake(),
+            ),
+        ) { !Shooter.Feeder.isDetected }
+
+    }
+
     /** Configure which commands each joystick button triggers. */
     private fun configureBindings() {
         Drivetrain.defaultCommand = Drivetrain.driveWithJoysticks(joystickLeft.hid, joystickRight.hid)
@@ -164,16 +180,19 @@ object Robot : LoggedRobot() {
         }).ignoringDisable(true))
 
 
-//        controller.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
-//        controller.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
+//        controller.leftBumper().onTrue(Commands.runOnce(SignalLogger::start).ignoringDisable(true))
+//        controller.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop).ignoringDisable(true))
 //
 //        controller.y().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
 //        controller.a().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
 //        controller.b().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
 //        controller.x().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-        controller.leftBumper().whileTrue(Intake.intake())
-        controller.rightBumper().whileTrue(Intake.outtake())
+        controller.leftBumper().whileTrue(doIntakeSequence())
+        controller.rightBumper().whileTrue(Commands.parallel(
+            Intake.outtake(),
+            Indexer.outtake()
+        ))
     }
 
     /** Add data to the driver station dashboard. */

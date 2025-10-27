@@ -2,6 +2,7 @@ package com.frcteam3636.bunnybots2025.subsystems.shooter
 
 import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
+import com.frcteam3636.bunnybots2025.subsystems.indexer.Indexer
 import com.frcteam3636.bunnybots2025.utils.math.MotorFFGains
 import com.frcteam3636.bunnybots2025.utils.math.PIDController
 import com.frcteam3636.bunnybots2025.utils.math.PIDGains
@@ -11,6 +12,7 @@ import com.frcteam3636.bunnybots2025.utils.math.inRadiansPerSecond
 import edu.wpi.first.units.Units.RadiansPerSecond
 import edu.wpi.first.wpilibj.util.Color
 import edu.wpi.first.wpilibj.util.Color8Bit
+import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Subsystem
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d
@@ -93,10 +95,25 @@ object Shooter {
 
         private val inputs = LoggedFeederInputs()
 
+        val isDetected: Boolean
+            get() {
+                return inputs.isDetected
+            }
+
         override fun periodic() {
             io.updateInputs(inputs)
             Logger.processInputs("Shooter/Feeder", inputs)
         }
+
+        fun intake(): Command =
+            startEnd(
+                {
+                    io.setSpeed(0.7)
+                },
+                {
+                    io.setSpeed(0.0)
+                }
+            )
 
         fun getStatusSignals(): MutableList<BaseStatusSignal> {
             return io.getStatusSignals()
