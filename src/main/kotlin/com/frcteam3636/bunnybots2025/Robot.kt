@@ -163,16 +163,16 @@ object Robot : LoggedRobot() {
         }).ignoringDisable(true))
 
 
-        controller.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
-        controller.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
+//        controller.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
+//        controller.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
+//
+//        controller.y().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+//        controller.a().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+//        controller.b().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
+//        controller.x().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
-        controller.y().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        controller.a().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        controller.b().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        controller.x().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-
-//        controller.leftBumper().whileTrue(Intake.intake())
-//        controller.rightBumper().whileTrue(Intake.outtake())
+        controller.leftBumper().whileTrue(Intake.intake())
+        controller.rightBumper().whileTrue(Intake.outtake())
     }
 
     /** Add data to the driver station dashboard. */
@@ -208,7 +208,6 @@ object Robot : LoggedRobot() {
     }
 
     override fun robotPeriodic() {
-        Dashboard.update()
         reportDiagnostics()
 
         val refresh = BaseStatusSignal.refreshAll(*statusSignals.toTypedArray())

@@ -3,6 +3,8 @@ package com.frcteam3636.bunnybots2025.subsystems.intake
 import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.utils.math.inDegrees
+import com.frcteam3636.bunnybots2025.utils.math.rotations
+import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.util.Color
 import edu.wpi.first.wpilibj.util.Color8Bit
 import edu.wpi.first.wpilibj2.command.Command
@@ -39,9 +41,11 @@ object Intake: Subsystem {
         startEnd(
             {
                 io.setRollerSpeed(0.7)
+                io.setPivotPosition(Position.Deployed.angle)
             },
             {
                 io.setRollerSpeed(0.0)
+                io.setPivotPosition(Position.Stowed.angle)
             }
         )
 
@@ -49,11 +53,18 @@ object Intake: Subsystem {
         startEnd(
             {
                 io.setRollerSpeed(-0.5)
+                io.setPivotPosition(Position.Deployed.angle)
             },
             {
                 io.setRollerSpeed(0.0)
+                io.setPivotPosition(Position.Stowed.angle)
             }
         )
+
+    enum class Position(val angle: Angle) {
+        Stowed(0.rotations),
+        Deployed(5.rotations); // FIXME: Placeholder
+    }
 
     fun getStatusSignals(): MutableList<BaseStatusSignal> {
         return io.getSignals()
