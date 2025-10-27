@@ -1,10 +1,12 @@
 package com.frcteam3636.bunnybots2025.subsystems.intake
 
 import com.ctre.phoenix6.BaseStatusSignal
+import com.ctre.phoenix6.configs.CANcoderConfiguration
 import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.NeutralModeValue
+import com.frcteam3636.bunnybots2025.CANcoder
 import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.REVMotorControllerId
 import com.frcteam3636.bunnybots2025.SparkFlex
@@ -33,7 +35,7 @@ interface IntakeIO {
     }
 }
 
-class IntakeIOReal: IntakeIO {
+class IntakeIOReal : IntakeIO {
 
     private var intakeMotor = SparkFlex(REVMotorControllerId.IntakeMotor, SparkLowLevel.MotorType.kBrushless)
     private var intakePivotMotor = TalonFX(CTREDeviceId.IntakePivotMotor).apply {
@@ -47,6 +49,7 @@ class IntakeIOReal: IntakeIO {
             }
             Feedback.apply {
                 FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder
+                FeedbackRemoteSensorID = CTREDeviceId.IntakePivotEncoder.num
                 SensorToMechanismRatio = ENCODER_TO_PIVOT_GEAR_RATIO
                 RotorToSensorRatio = MOTOR_TO_ENCODER_GEAR_RATIO
             }
@@ -56,6 +59,16 @@ class IntakeIOReal: IntakeIO {
         })
     }
 
+    init {
+        CANcoder(CTREDeviceId.IntakePivotEncoder).apply {
+            configurator.apply(CANcoderConfiguration().apply {
+                MagnetSensor.apply {
+                    MagnetOffset = ENCODER_MAGNET_OFFSET
+                }
+            })
+        }
+    }
+
     private val positionSignal = intakePivotMotor.position
     private val currentSignal = intakePivotMotor.supplyCurrent
     private val velocitySignal = intakePivotMotor.velocity
@@ -63,7 +76,7 @@ class IntakeIOReal: IntakeIO {
     private val positionControl = MotionMagicVoltage(0.0.rotations)
 
     override fun setRollerSpeed(percentage: Double) {
-        assert(percentage in -1.0 .. 1.0)
+        assert(percentage in -1.0..1.0)
         intakeMotor.set(percentage)
     }
 
@@ -87,12 +100,13 @@ class IntakeIOReal: IntakeIO {
         val PID_GAINS = PIDGains(6.0, 0.0, 0.0)
         val CRUISE_VELOCITY = 0.0.rotationsPerSecond
         val ACCELERATION = 0.0.rotationsPerSecondPerSecond
+        const val ENCODER_MAGNET_OFFSET = 0.0
         const val ENCODER_TO_PIVOT_GEAR_RATIO = 0.0
         const val MOTOR_TO_ENCODER_GEAR_RATIO = 0.0
     }
 }
 
-class IntakeIOSim: IntakeIO {
+class IntakeIOSim : IntakeIO {
     override fun setRollerSpeed(percentage: Double) {
         TODO("Not yet implemented")
     }

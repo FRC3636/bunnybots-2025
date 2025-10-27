@@ -13,7 +13,7 @@ import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d
 
-object Intake: Subsystem {
+object Intake : Subsystem {
     private var io: IntakeIO = when (Robot.model) {
         Robot.Model.SIMULATION -> IntakeIOSim()
         Robot.Model.COMPETITION -> IntakeIOReal()

@@ -3,7 +3,6 @@ package com.frcteam3636.bunnybots2025
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.CANBus
 import com.ctre.phoenix6.SignalLogger
-import com.frcteam3636.bunnybots2025.Dashboard.field
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
 import com.frcteam3636.bunnybots2025.subsystems.intake.Intake
 import com.frcteam3636.version.BUILD_DATE
@@ -21,7 +20,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler
 import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.ironmaple.simulation.SimulatedArena
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.LoggedRobot
@@ -178,11 +176,9 @@ object Robot : LoggedRobot() {
     /** Add data to the driver station dashboard. */
     private fun configureDashboard() {
         PathPlannerLogging.setLogTargetPoseCallback {
-            field.getObject("target pose").pose = it
             Logger.recordOutput("Drivetrain/Target Pose", it)
         }
         PathPlannerLogging.setLogActivePathCallback {
-            field.getObject("path").poses = it
             Logger.recordOutput("Drivetrain/Desired Path", *it.toTypedArray())
         }
     }

@@ -130,6 +130,8 @@ class LimelightPoseProvider(
 
     private var currentAlgorithm: LimelightAlgorithm = LimelightAlgorithm.MegaTag
 
+    private var isThrottled = false
+
     init {
         thread(isDaemon = true) {
             while (true) {
@@ -148,28 +150,44 @@ class LimelightPoseProvider(
 
         if ((!Robot.beforeFirstEnable) && currentAlgorithm == LimelightAlgorithm.MegaTag) {
             currentAlgorithm = megaTagV2
+            if (isLL4)
+                LimelightHelpers.SetIMUMode(name, 3)
         }
 
         when (currentAlgorithm) {
             is LimelightAlgorithm.MegaTag ->
                 LimelightHelpers.getBotPoseEstimate_wpiBlue(name)?.let { estimate ->
-                    LimelightHelpers.SetRobotOrientation(
-                        name,
-                        megaTagV2.gyroPosition.degrees,
-                        // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
-                        0.0, 0.0, 0.0, 0.0, 0.0
-                    )
+                    if (!isLL4) {
+                        LimelightHelpers.SetRobotOrientation(
+                            name,
+                            megaTagV2.gyroPosition.degrees,
+                            // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
+                            0.0, 0.0, 0.0, 0.0, 0.0
+                        )
+                    } else {
+                        if (Robot.isDisabled && !isThrottled) {
+                            LimelightHelpers.SetThrottle(name, 100)
+                            isThrottled = true
+                        }
+                        if (Robot.beforeFirstEnable) {
+                            LimelightHelpers.SetIMUMode(name, 1)
+                            LimelightHelpers.SetRobotOrientation(
+                                name,
+                                megaTagV2.gyroPosition.degrees,
+                                // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
+                                0.0, 0.0, 0.0, 0.0, 0.0
+                            )
+                        }
+                    }
 
                     measurement.observedTags = estimate.rawFiducials.mapNotNull { it?.id }.toIntArray()
 
                     // Reject zero tag or low-quality one tag readings
                     if (estimate.tagCount == 0) return measurement
                     if (estimate.tagCount == 1) {
-                        val fiducial = estimate.rawFiducials[0]
-                        if (fiducial == null
-                            || fiducial.ambiguity > AMBIGUITY_THRESHOLD
-                            || fiducial.distToCamera > MAX_SINGLE_TAG_DISTANCE
-                        ) return measurement
+                        val fiducial = estimate.rawFiducials[0]!!
+                        if (fiducial.ambiguity > AMBIGUITY_THRESHOLD || fiducial.distToCamera > MAX_SINGLE_TAG_DISTANCE)
+                            return measurement
                     }
 
                     measurement.poseMeasurement = AbsolutePoseMeasurement(
@@ -180,12 +198,21 @@ class LimelightPoseProvider(
                 }
 
             is LimelightAlgorithm.MegaTag2 -> {
-                LimelightHelpers.SetRobotOrientation(
-                    name,
-                    megaTagV2.gyroPosition.degrees,
-                    // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
-                    0.0, 0.0, 0.0, 0.0, 0.0
-                )
+                if (!isLL4) {
+                    LimelightHelpers.SetRobotOrientation(
+                        name,
+                        megaTagV2.gyroPosition.degrees,
+                        // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
+                        0.0, 0.0, 0.0, 0.0, 0.0
+                    )
+                } else {
+                    if (Robot.isDisabled && !isThrottled) {
+                        LimelightHelpers.SetThrottle(name, 100)
+                        isThrottled = true
+                    } else if (Robot.isEnabled && isThrottled) {
+                        LimelightHelpers.SetThrottle(name, 0)
+                    }
+                }
 
                 LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name)?.let { estimate ->
                     measurement.observedTags = estimate.rawFiducials.mapNotNull { it?.id }.toIntArray()
