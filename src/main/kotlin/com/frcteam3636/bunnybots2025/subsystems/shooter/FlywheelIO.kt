@@ -1,31 +1,25 @@
 package com.frcteam3636.bunnybots2025.subsystems.shooter
 
-import com.ctre.phoenix6.BaseStatusSignal
-import com.ctre.phoenix6.configs.TalonFXConfiguration
-import com.ctre.phoenix6.signals.NeutralModeValue
-import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.REVMotorControllerId
 import com.frcteam3636.bunnybots2025.SparkFlex
-import com.frcteam3636.bunnybots2025.TalonFX
-import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal.Constants.ACCELERATION
-import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal.Constants.CRUISE_VELOCITY
 import com.frcteam3636.bunnybots2025.utils.math.*
+import com.revrobotics.spark.SparkBase
 import com.revrobotics.spark.SparkLowLevel
 import edu.wpi.first.units.Units.*
-import edu.wpi.first.units.measure.Angle
-import edu.wpi.first.units.measure.Voltage
+import edu.wpi.first.units.measure.AngularVelocity
 import org.team9432.annotation.Logged
 
 @Logged
 open class ShooterInputs {
-    var topVelocity = RotationsPerSecond.zero()
-    var topCurrent = Amps.zero()
-    var bottomVelocity = RotationsPerSecond.zero()
-    var bottomCurrent = Amps.zero()
+    var topVelocity = RotationsPerSecond.zero()!!
+    var topCurrent = Amps.zero()!!
+    var bottomVelocity = RotationsPerSecond.zero()!!
+    var bottomCurrent = Amps.zero()!!
 }
 
 interface ShooterIO {
     fun setSpeed(upperPercent: Double, lowerPercent: Double)
+    fun setSpeed(upperVelocity: AngularVelocity, lowerVelocity: AngularVelocity)
     fun updateInputs(inputs: ShooterInputs)
 }
 
@@ -39,6 +33,11 @@ class ShooterIOReal : ShooterIO {
         assert(lowerPercent in -1.0..1.0)
         upperShooterMotor.set(upperPercent)
         bottomShooterMotor.set(lowerPercent)
+    }
+
+    override fun setSpeed(upperVelocity: AngularVelocity, lowerVelocity: AngularVelocity) {
+        upperShooterMotor.closedLoopController.setReference(upperVelocity.inRPM(), SparkBase.ControlType.kVelocity)
+        bottomShooterMotor.closedLoopController.setReference(lowerVelocity.inRPM(), SparkBase.ControlType.kVelocity)
     }
 
     override fun updateInputs(inputs: ShooterInputs) {
@@ -55,6 +54,10 @@ class ShooterIOSim: ShooterIO {
     }
 
     override fun updateInputs(inputs: ShooterInputs) {
+        TODO("Not yet implemented")
+    }
+
+    override fun setSpeed(upperVelocity: AngularVelocity, lowerVelocity: AngularVelocity) {
         TODO("Not yet implemented")
     }
 
