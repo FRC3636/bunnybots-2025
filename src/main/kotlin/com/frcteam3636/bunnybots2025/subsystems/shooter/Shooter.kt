@@ -1,7 +1,9 @@
 package com.frcteam3636.bunnybots2025.subsystems.shooter
 
 import com.ctre.phoenix6.BaseStatusSignal
+import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.Robot
+import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
 import com.frcteam3636.bunnybots2025.subsystems.indexer.Indexer
 import com.frcteam3636.bunnybots2025.utils.math.MotorFFGains
 import com.frcteam3636.bunnybots2025.utils.math.PIDController
@@ -9,6 +11,9 @@ import com.frcteam3636.bunnybots2025.utils.math.PIDGains
 import com.frcteam3636.bunnybots2025.utils.math.SimpleMotorFeedforward
 import com.frcteam3636.bunnybots2025.utils.math.inDegrees
 import com.frcteam3636.bunnybots2025.utils.math.inRadiansPerSecond
+import com.frcteam3636.bunnybots2025.utils.math.radiansPerSecond
+import com.frcteam3636.bunnybots2025.utils.math.volts
+import com.frcteam3636.bunnybots2025.utils.math.voltsPerSecond
 import edu.wpi.first.units.Units.RadiansPerSecond
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
@@ -17,6 +22,7 @@ import edu.wpi.first.wpilibj.util.Color8Bit
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.Subsystem
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d
@@ -28,8 +34,8 @@ object Shooter {
             Robot.Model.SIMULATION -> FlywheelIOSim()
         }
 
-        private val upperSetpoint = RadiansPerSecond.zero()!!
-        private val lowerSetpoint = RadiansPerSecond.zero()!!
+        private var upperSetpoint = RadiansPerSecond.zero()!!
+        private var lowerSetpoint = RadiansPerSecond.zero()!!
 
         private val inputs = LoggedFlywheelInputs()
 
@@ -38,26 +44,40 @@ object Shooter {
         private var upperFFController = SimpleMotorFeedforward(Constants.UPPER_FF_GAINS)
         private var lowerFFController = SimpleMotorFeedforward(Constants.LOWER_FF_GAINS)
 
+        @Suppress("Unused")
+        var sysID = SysIdRoutine(
+            SysIdRoutine.Config(
+                0.5.voltsPerSecond, 2.volts, null, {
+                    SignalLogger.writeString("state", it.toString())
+                }), SysIdRoutine.Mechanism(
+                io::setVoltage,
+                null,
+                this,
+            )
+        )
+
         override fun periodic() {
             io.updateInputs(inputs)
 
             Logger.processInputs("Shooter/Flywheels", inputs)
 
             io.setVoltage(
-                upperFFController.calculate(upperSetpoint.inRadiansPerSecond()) +
-                upperPidController.calculate(inputs.topVelocity.inRadiansPerSecond(), upperSetpoint.inRadiansPerSecond()),
-                lowerFFController.calculate(lowerSetpoint.inRadiansPerSecond()) +
-                lowerPidController.calculate(inputs.bottomVelocity.inRadiansPerSecond(), lowerSetpoint.inRadiansPerSecond()),
+                (upperFFController.calculate(upperSetpoint.inRadiansPerSecond()) +
+                upperPidController.calculate(inputs.topVelocity.inRadiansPerSecond(), upperSetpoint.inRadiansPerSecond())).volts,
+                (lowerFFController.calculate(lowerSetpoint.inRadiansPerSecond()) +
+                lowerPidController.calculate(inputs.bottomVelocity.inRadiansPerSecond(), lowerSetpoint.inRadiansPerSecond())).volts,
             )
         }
 
         fun spinFlywheel(): Command =
             startEnd(
                 {
-                    io.setSpeed(0.5, -0.5)
+                    upperSetpoint = 1.radiansPerSecond
+                    lowerSetpoint = 1.radiansPerSecond
                 },
                 {
-                    io.setSpeed(0.0, 0.0)
+                    upperSetpoint = 0.radiansPerSecond
+                    lowerSetpoint = 0.radiansPerSecond
                 }
             )
 
