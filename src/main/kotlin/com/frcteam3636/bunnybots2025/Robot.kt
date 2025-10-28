@@ -1,7 +1,6 @@
 package com.frcteam3636.bunnybots2025
 
 import com.ctre.phoenix6.BaseStatusSignal
-import com.ctre.phoenix6.CANBus
 import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.Dashboard.field
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
@@ -176,10 +175,10 @@ object Robot : LoggedRobot() {
         controllerDev.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
         controllerDev.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
 
-        controllerDev.y().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        controllerDev.a().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        controllerDev.b().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        controllerDev.x().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        controllerDev.y().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward))
+        controllerDev.a().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse))
+        controllerDev.b().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward))
+        controllerDev.x().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse))
     }
 
     /** Add data to the driver station dashboard. */
