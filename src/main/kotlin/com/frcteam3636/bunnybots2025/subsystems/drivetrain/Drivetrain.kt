@@ -5,6 +5,7 @@ import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.BRAKE_POSITION
+import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.DRIVE_BASE_RADIUS
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.FREE_SPEED
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.JOYSTICK_DEADBAND
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.MODULE_POSITIONS
@@ -21,6 +22,7 @@ import com.pathplanner.lib.commands.PathfindingCommand
 import com.pathplanner.lib.pathfinding.Pathfinding
 import edu.wpi.first.math.VecBuilder
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator
+import edu.wpi.first.math.filter.SlewRateLimiter
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Transform3d
@@ -32,6 +34,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.Joystick
 import edu.wpi.first.wpilibj2.command.Command
+import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.Subsystem
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
@@ -39,6 +42,8 @@ import org.littletonrobotics.junction.Logger
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.abs
 import kotlin.math.absoluteValue
+import kotlin.math.hypot
+import kotlin.math.max
 import kotlin.math.pow
 import kotlin.math.withSign
 
@@ -58,6 +63,55 @@ object Drivetrain : Subsystem {
                 })
     }
     val inputs = LoggedDrivetrainInputs()
+
+    private val limiter = SlewRateLimiter(0.05)
+    private var wheelRadiusModuleStates = DoubleArray(4)
+    private var wheelRadiusLastAngle = Rotation2d()
+    private var wheelRadiusGyroDelta = 0.0
+    fun calculateWheelRadius(): Command = Commands.parallel(
+        Commands.sequence(
+            Commands.runOnce({
+                Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Running", true)
+                limiter.reset(0.0)
+            }),
+            Commands.run({
+                val speed = limiter.calculate(0.1)
+                driveWithoutDeadband(Translation2d(), Translation2d(0.0, speed))
+            }, Drivetrain)
+        ),
+        Commands.sequence(
+            // Wait for modules to orient
+            Commands.waitSeconds(1.0),
+            Commands.runOnce({
+                for (i in 0..3) {
+                    wheelRadiusModuleStates[i] = io.modules.toTypedArray()[i].positionRad.inRadians()
+                }
+                wheelRadiusLastAngle = inputs.gyroRotation
+                wheelRadiusGyroDelta = 0.0
+            }),
+            Commands.run({
+                val rotation = inputs.gyroRotation
+                wheelRadiusGyroDelta += abs(rotation.minus(wheelRadiusLastAngle).radians)
+                wheelRadiusLastAngle = rotation
+                Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Gyro Delta", wheelRadiusGyroDelta)
+            })
+                .finallyDo { ->
+                    var wheelDelta = 0.0
+                    // Someone give me a better way to do this
+                    for (i in 0..3) {
+                        wheelDelta += abs(io.modules.toTypedArray()[i].positionRad.inRadians() - wheelRadiusModuleStates[i]) / 4.0
+                        Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Initial Wheel Position Rad/$i", wheelRadiusModuleStates[i])
+                        Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Final Wheel Position Rad/$i", io.modules.toTypedArray()[i].positionRad.inRadians())
+                    }
+                    val wheelRadius = ((wheelRadiusGyroDelta * DRIVE_BASE_RADIUS) / wheelDelta)
+                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Drive Base Radius", DRIVE_BASE_RADIUS)
+                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Wheel Delta", wheelDelta)
+                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Meters", wheelRadius)
+                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Inches", wheelRadius.meters.inInches())
+                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Running", false)
+                }
+        )
+    )
 
     private val mt2Algo = LimelightAlgorithm.MegaTag2({
         poseEstimator.estimatedPosition.rotation
@@ -269,6 +323,15 @@ object Drivetrain : Subsystem {
         }
     }
 
+    private fun driveWithoutDeadband(translationInput: Translation2d, rotationInput: Translation2d) {
+        desiredChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+            calculateInputCurve(translationInput.x) * FREE_SPEED.baseUnitMagnitude() * TRANSLATION_SENSITIVITY,
+            calculateInputCurve(translationInput.y) * FREE_SPEED.baseUnitMagnitude() * TRANSLATION_SENSITIVITY,
+            rotationInput.y * TAU * ROTATION_SENSITIVITY,
+            estimatedPose.rotation
+        )
+    }
+
     private fun calculateInputCurve(input: Double): Double {
         val exponent = 1.7
 
@@ -384,6 +447,8 @@ object Drivetrain : Subsystem {
                 ), BACK_RIGHT_MAGNET_OFFSET
             ),
         )
+
+        val DRIVE_BASE_RADIUS = hypot(MODULE_POSITIONS.frontLeft.position.x, MODULE_POSITIONS.frontLeft.position.y)
 
         // Chassis Control
         val FREE_SPEED = 6.06.metersPerSecond
