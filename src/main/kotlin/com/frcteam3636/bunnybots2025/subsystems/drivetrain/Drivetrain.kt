@@ -354,30 +354,35 @@ object Drivetrain : Subsystem {
 
         const val JOYSTICK_DEADBAND = 0.075
 
-        val FRONT_RIGHT_MAGNET_OFFSET = TunerConstants.FrontRight!!.EncoderOffset
-        val FRONT_LEFT_MAGNET_OFFSET = TunerConstants.FrontLeft!!.EncoderOffset
-        val BACK_RIGHT_MAGNET_OFFSET = TunerConstants.BackRight!!.EncoderOffset
-        val BACK_LEFT_MAGNET_OFFSET = TunerConstants.BackLeft!!.EncoderOffset
+        val FRONT_LEFT_CONSTANTS = TunerConstants.FrontLeft!!
+        val FRONT_RIGHT_CONSTANTS = TunerConstants.FrontRight!!
+        val BACK_RIGHT_CONSTANTS = TunerConstants.BackRight!!
+        val BACK_LEFT_CONSTANTS = TunerConstants.BackLeft!!
+
+        val FRONT_LEFT_MAGNET_OFFSET = FRONT_LEFT_CONSTANTS.EncoderOffset
+        val FRONT_RIGHT_MAGNET_OFFSET = FRONT_RIGHT_CONSTANTS.EncoderOffset
+        val BACK_RIGHT_MAGNET_OFFSET = BACK_RIGHT_CONSTANTS.EncoderOffset
+        val BACK_LEFT_MAGNET_OFFSET = BACK_LEFT_CONSTANTS.EncoderOffset
 
         val MODULE_POSITIONS = PerCorner(
             frontLeft = Corner(
                 Pose2d(
-                    Translation2d(ROBOT_LENGTH, ROBOT_WIDTH) / 2.0, Rotation2d.fromDegrees(0.0)
+                    Translation2d(FRONT_LEFT_CONSTANTS.LocationX, FRONT_LEFT_CONSTANTS.LocationY), Rotation2d.fromDegrees(0.0)
                 ), FRONT_LEFT_MAGNET_OFFSET
             ),
             frontRight = Corner(
                 Pose2d(
-                    Translation2d(ROBOT_LENGTH, -ROBOT_WIDTH) / 2.0, Rotation2d.fromDegrees(180.0)
+                    Translation2d(FRONT_RIGHT_CONSTANTS.LocationX, FRONT_RIGHT_CONSTANTS.LocationY), Rotation2d.fromDegrees(180.0)
                 ), FRONT_RIGHT_MAGNET_OFFSET
             ),
             backLeft = Corner(
                 Pose2d(
-                    Translation2d(-ROBOT_LENGTH, ROBOT_WIDTH) / 2.0, Rotation2d.fromDegrees(0.0)
+                    Translation2d(BACK_LEFT_CONSTANTS.LocationX, BACK_LEFT_CONSTANTS.LocationY), Rotation2d.fromDegrees(0.0)
                 ), BACK_LEFT_MAGNET_OFFSET
             ),
             backRight = Corner(
                 Pose2d(
-                    Translation2d(-ROBOT_LENGTH, -ROBOT_WIDTH) / 2.0, Rotation2d.fromDegrees(180.0)
+                    Translation2d(BACK_RIGHT_CONSTANTS.LocationX, BACK_RIGHT_CONSTANTS.LocationY), Rotation2d.fromDegrees(180.0)
                 ), BACK_RIGHT_MAGNET_OFFSET
             ),
         )
