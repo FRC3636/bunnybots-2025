@@ -114,8 +114,8 @@ class Mk5nSwerveModule(
         odometryDrivePositions = drivingMotor.odometryDrivePositions
         odometryPositions = Array(odometryTimestamps.size) { index ->
             SwerveModulePosition(
-                odometryDrivePositions[index] * WHEEL_RADIUS.inMeters(),
-                odometryTurnPositions[index]
+                odometryDrivePositions[index].radians.toLinear(WHEEL_RADIUS),
+                odometryTurnPositions[index] + chassisAngle
             )
         }
         timestampQueue.clear()
