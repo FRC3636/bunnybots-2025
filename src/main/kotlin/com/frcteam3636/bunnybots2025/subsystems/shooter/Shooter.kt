@@ -9,11 +9,14 @@ import com.frcteam3636.bunnybots2025.utils.math.MotorFFGains
 import com.frcteam3636.bunnybots2025.utils.math.PIDController
 import com.frcteam3636.bunnybots2025.utils.math.PIDGains
 import com.frcteam3636.bunnybots2025.utils.math.SimpleMotorFeedforward
+import com.frcteam3636.bunnybots2025.utils.math.degrees
 import com.frcteam3636.bunnybots2025.utils.math.inDegrees
 import com.frcteam3636.bunnybots2025.utils.math.inRadiansPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.radiansPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.volts
 import com.frcteam3636.bunnybots2025.utils.math.voltsPerSecond
+import edu.wpi.first.math.geometry.Rotation2d
+import edu.wpi.first.units.Units.Degrees
 import edu.wpi.first.units.Units.RadiansPerSecond
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
@@ -97,6 +100,8 @@ object Shooter {
 
         private val inputs = LoggedPivotInputs()
 
+        private var currentTarget = Target.STOWED
+
         var mechanism = LoggedMechanism2d(100.0, 200.0)
         var pivotAngleLigament = LoggedMechanismLigament2d("Pivot Ligament", 50.0, 180.0, 5.0, Color8Bit(Color.kGreen))
 
@@ -119,11 +124,34 @@ object Shooter {
             return io.getStatusSignals()
         }
 
-        fun followTarget(angle: Angle): Command =
-            // should follow carrot box
+        fun setTarget(target: Target): Command =
             runOnce {
-                io.turnToAngle(angle)
+                io.turnToAngle(target.profile.position())
             }
+
+        enum class Target(val profile: PivotProfile) {
+            AIM(
+                PivotProfile(
+                    {
+                        Degrees.zero()!! // FIXME: Actually calculate the angle lol
+                    }
+                )
+            ),
+            PETTINGZOO(
+                PivotProfile(
+                    {
+                        45.degrees
+                    }
+                )
+            ),
+            STOWED(
+                PivotProfile(
+                    {
+                        Degrees.zero()!!
+                    }
+                )
+            )
+        }
     }
 
     object Feeder : Subsystem {
@@ -159,3 +187,7 @@ object Shooter {
         }
     }
 }
+
+data class PivotProfile(
+    val position: () -> Angle
+)
