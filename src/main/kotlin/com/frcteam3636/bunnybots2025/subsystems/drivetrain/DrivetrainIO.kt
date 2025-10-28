@@ -76,10 +76,11 @@ abstract class DrivetrainIO {
             for (i in 0..<MODULE_POSITIONS.size) {
                 val trans = MODULE_POSITIONS[i].position.translation
                 var angle = atan2(trans.y, trans.x)
-                angle += 90.degrees.inRadians()
                 if (MODULE_POSITIONS[i] == MODULE_POSITIONS.frontRight || MODULE_POSITIONS[i] == MODULE_POSITIONS.backRight) {
+//                    angle -= 90.degrees.inRadians()
                     modules[i].characterize(voltage, Rotation2d(angle.radians).unaryMinus().measure)
                 } else {
+                    angle += 90.degrees.inRadians()
                     modules[i].characterize(voltage, Rotation2d(angle.radians).measure)
                 }
             }
