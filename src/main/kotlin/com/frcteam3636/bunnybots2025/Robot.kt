@@ -50,7 +50,10 @@ object Robot : LoggedRobot() {
     private val joystickRight = CommandJoystick(1)
 
     @Suppress("unused")
-    private val joystickDev = Joystick(3)
+    private val joystickDev = CommandJoystick(3)
+
+    @Suppress("unused")
+    private val controllerDev = CommandXboxController(4)
 
     private var autoCommand: Command? = null
 
@@ -70,8 +73,8 @@ object Robot : LoggedRobot() {
 
         SignalLogger.enableAutoLogging(false)
 
-        // Joysticks are likely to be missing in simulation, which usually isn't a problem.
-        DriverStation.silenceJoystickConnectionWarning(model != Model.COMPETITION)
+        // We use our own warnings, also ignore warning from developer HID devices.
+        DriverStation.silenceJoystickConnectionWarning(true)
 
         configureAdvantageKit()
         configureSubsystems()
@@ -161,20 +164,22 @@ object Robot : LoggedRobot() {
             Drivetrain.zeroGyro()
         }).ignoringDisable(true))
 
-        joystickLeft.button(1).onTrue(
+        joystickDev.button(2).onTrue(
             Commands.runOnce({
                 Drivetrain.zeroFull()
             })
         )
 
 
-        controller.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
-        controller.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
+        joystickDev.button(1).whileTrue(Drivetrain.calculateWheelRadius())
 
-        controller.y().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        controller.a().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        controller.b().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        controller.x().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        controllerDev.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
+        controllerDev.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
+
+        controllerDev.y().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        controllerDev.a().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        controllerDev.b().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        controllerDev.x().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
     }
 
     /** Add data to the driver station dashboard. */
