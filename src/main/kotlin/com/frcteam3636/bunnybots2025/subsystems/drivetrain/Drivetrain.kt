@@ -25,7 +25,6 @@ import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Transform3d
 import edu.wpi.first.math.geometry.Translation2d
-import edu.wpi.first.math.geometry.Twist2d
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics
 import edu.wpi.first.math.kinematics.SwerveModulePosition
@@ -37,7 +36,6 @@ import edu.wpi.first.wpilibj2.command.Subsystem
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.littletonrobotics.junction.Logger
-import java.util.concurrent.locks.ReentrantLock
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.abs
 import kotlin.math.absoluteValue
@@ -49,7 +47,7 @@ object Drivetrain : Subsystem {
     private val io = when (Robot.model) {
         Robot.Model.SIMULATION -> DrivetrainIOSim()
         Robot.Model.COMPETITION -> DrivetrainIOReal(
-            MODULE_POSITIONS.zip(Drivetrain.Constants.KRAKEN_MODULE_CAN_IDS)
+            MODULE_POSITIONS.zip(Drivetrain.Constants.MODULE_CAN_IDS)
                 .map { (corner, ids) ->
                     val (driveId, turnId, encoderId) = ids
                     Mk5nSwerveModule(
@@ -394,7 +392,7 @@ object Drivetrain : Subsystem {
         val PATH_FOLLOWING_ROTATION_GAINS = PIDGains(5.0).toPPLib()
 
         // CAN IDs
-        val KRAKEN_MODULE_CAN_IDS =
+        val MODULE_CAN_IDS =
             PerCorner(
                 frontLeft =
                     Triple(
