@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler
 import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.ironmaple.simulation.SimulatedArena
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.LoggedRobot
@@ -29,6 +30,7 @@ import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 
@@ -50,17 +52,20 @@ object Robot : LoggedRobot() {
     private val joystickRight = CommandJoystick(1)
 
     @Suppress("unused")
-    private val joystickDev = Joystick(3)
+    private val joystickDev = CommandJoystick(3)
+
+    @Suppress("unused")
+    private val controllerDev = CommandXboxController(4)
 
     private var autoCommand: Command? = null
 
-    private val rioCANBus = CANBus("rio")
-    private val canivore = CANBus("*")
     var didRefreshSucceed = true
 
     private val statusSignals = mutableListOf<BaseStatusSignal>()
 
     var beforeFirstEnable = true
+
+    val odometryLock = ReentrantLock()
 
     override fun robotInit() {
         // Report the use of the Kotlin Language for "FRC Usage Report" statistics
@@ -70,8 +75,8 @@ object Robot : LoggedRobot() {
 
         SignalLogger.enableAutoLogging(false)
 
-        // Joysticks are likely to be missing in simulation, which usually isn't a problem.
-        DriverStation.silenceJoystickConnectionWarning(model != Model.COMPETITION)
+        // We use our own warnings, also ignore warning from developer HID devices.
+        DriverStation.silenceJoystickConnectionWarning(true)
 
         configureAdvantageKit()
         configureSubsystems()
@@ -179,20 +184,28 @@ object Robot : LoggedRobot() {
             Drivetrain.zeroGyro()
         }).ignoringDisable(true))
 
+        joystickDev.button(2).onTrue(
+            Commands.runOnce({
+                Drivetrain.zeroFull()
+            })
+        )
 
-//        controller.leftBumper().onTrue(Commands.runOnce(SignalLogger::start).ignoringDisable(true))
-//        controller.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop).ignoringDisable(true))
-//
-//        controller.y().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-//        controller.a().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-//        controller.b().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
-//        controller.x().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+
+        joystickDev.button(1).whileTrue(Drivetrain.calculateWheelRadius())
 
         controller.leftBumper().whileTrue(doIntakeSequence())
         controller.rightBumper().whileTrue(Commands.parallel(
             Intake.outtake(),
             Indexer.outtake()
         ))
+
+        controllerDev.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
+        controllerDev.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
+
+        controllerDev.y().whileTrue(Drivetrain.sysIdQuasistaticSpin(SysIdRoutine.Direction.kForward))
+        controllerDev.a().whileTrue(Drivetrain.sysIdQuasistaticSpin(SysIdRoutine.Direction.kReverse))
+        controllerDev.b().whileTrue(Drivetrain.sysIdDynamicSpin(SysIdRoutine.Direction.kForward))
+        controllerDev.x().whileTrue(Drivetrain.sysIdDynamicSpin(SysIdRoutine.Direction.kReverse))
     }
 
     /** Add data to the driver station dashboard. */
@@ -219,7 +232,7 @@ object Robot : LoggedRobot() {
     private fun reportDiagnostics() {
         Diagnostics.periodic()
         Diagnostics.report(rioCANBus)
-        Diagnostics.report(canivore)
+        Diagnostics.report(canivoreBus)
         Diagnostics.reportDSPeripheral(joystickLeft.hid, isController = false)
         Diagnostics.reportDSPeripheral(joystickRight.hid, isController = false)
         Diagnostics.reportDSPeripheral(controller.hid, isController = true)

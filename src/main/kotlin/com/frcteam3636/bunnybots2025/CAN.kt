@@ -8,7 +8,8 @@ import com.revrobotics.spark.SparkFlex
 import com.revrobotics.spark.SparkLowLevel
 import com.revrobotics.spark.SparkMax
 
-private val canivoreBus = CANBus("*")
+val canivoreBus = CANBus("*")
+val rioCANBus = CANBus("rio")
 
 enum class CTREDeviceId(val num: Int, val bus: CANBus) {
     FrontLeftDrivingMotor(1, canivoreBus),
