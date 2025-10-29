@@ -8,6 +8,7 @@ import com.frcteam3636.bunnybots2025.utils.math.*
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation3d
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap
 import edu.wpi.first.math.util.Units
 import edu.wpi.first.units.Units.Degrees
 import edu.wpi.first.units.Units.RadiansPerSecond
@@ -104,7 +105,14 @@ object Shooter {
         var mechanism = LoggedMechanism2d(100.0, 200.0)
         var pivotAngleLigament = LoggedMechanismLigament2d("Pivot Ligament", 50.0, 180.0, 5.0, Color8Bit(Color.kGreen))
 
+        private val interpolationTable = InterpolatingDoubleTreeMap()
         init {
+            //FIXME plot points to create regression
+            interpolationTable.put(5.0, 60.0)
+            interpolationTable.put(7.5, 45.0)
+            interpolationTable.put(10.0, 30.0)
+            interpolationTable.put(12.5, 25.0)
+
             mechanism.getRoot("Shooter/Pivot", 50.0, 150.0).apply {
                 append(pivotAngleLigament)
             }
@@ -140,7 +148,7 @@ object Shooter {
                             Rotation2d()
                         )
                         val distance = zooPose.translation.minus(Drivetrain.estimatedPose.translation).norm
-                        atan(pettingZooTranslation.z / distance).degrees
+                        interpolationTable.get(distance).degrees
                     }
                 )
             ),
