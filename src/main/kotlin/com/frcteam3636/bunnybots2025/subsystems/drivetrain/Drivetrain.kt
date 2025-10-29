@@ -9,6 +9,7 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.FREE_SPEED
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.JOYSTICK_DEADBAND
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.MODULE_POSITIONS
+import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.PATH_FOLLOWING_ROTATION_GAINS
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.ROTATION_SENSITIVITY
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.TRANSLATION_SENSITIVITY
 import com.frcteam3636.bunnybots2025.utils.fieldRelativeTranslation2d
@@ -305,6 +306,9 @@ object Drivetrain : Subsystem {
             )
         }
 
+    val polarDrivingPIDController = PIDController(PATH_FOLLOWING_ROTATION_GAINS).apply {
+        enableContinuousInput(0.0, TAU)
+    }
 
     fun getStatusSignals(): MutableList<BaseStatusSignal> {
         return io.getStatusSignals()
@@ -334,6 +338,37 @@ object Drivetrain : Subsystem {
             rotationInput.y * TAU * ROTATION_SENSITIVITY,
             estimatedPose.rotation
         )
+    }
+
+    @Suppress("unused")
+    fun driveWithJoystickPointingTowards(translationJoystick: Joystick, target: Translation2d): Command {
+        Logger.recordOutput("Drivetrain/Polar Driving/Target", target)
+        Logger.recordOutput("Drivetrain/Polar Driving/Active", true)
+        polarDrivingPIDController.reset()
+        return run {
+            val translationInput = if (abs(translationJoystick.x) > JOYSTICK_DEADBAND
+                || abs(translationJoystick.y) > JOYSTICK_DEADBAND
+            ) {
+                Translation2d(-translationJoystick.y, -translationJoystick.x)
+            } else {
+                Translation2d()
+            }
+            val magnitude = polarDrivingPIDController.calculate(
+                target.minus(estimatedPose.translation).angle.radians - (TAU / 2),
+                estimatedPose.rotation.radians
+            ).unaryMinus()
+
+            Logger.recordOutput("Drivetrain/Polar Driving/PID Output", magnitude)
+
+            desiredChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                translationInput.x * FREE_SPEED.baseUnitMagnitude() * TRANSLATION_SENSITIVITY,
+                translationInput.y * FREE_SPEED.baseUnitMagnitude() * TRANSLATION_SENSITIVITY,
+                magnitude,
+                inputs.gyroRotation
+            )
+        }.finallyDo { ->
+            Logger.recordOutput("Drivetrain/Polar Driving/Active", false)
+        }
     }
 
     private fun calculateInputCurve(input: Double): Double {
@@ -460,10 +495,10 @@ object Drivetrain : Subsystem {
         val DRIVE_BASE_RADIUS = hypot(MODULE_POSITIONS.frontLeft.position.x, MODULE_POSITIONS.frontLeft.position.y)
 
         // Chassis Control
-        val FREE_SPEED = 6.06.metersPerSecond
+        val FREE_SPEED = TunerConstants.kSpeedAt12Volts
 
-        val PATH_FOLLOWING_TRANSLATION_GAINS = PIDGains(5.0).toPPLib()
-        val PATH_FOLLOWING_ROTATION_GAINS = PIDGains(5.0).toPPLib()
+        val PATH_FOLLOWING_TRANSLATION_GAINS = PIDGains(5.0)
+        val PATH_FOLLOWING_ROTATION_GAINS = PIDGains(5.0)
 
         // CAN IDs
         val MODULE_CAN_IDS =
