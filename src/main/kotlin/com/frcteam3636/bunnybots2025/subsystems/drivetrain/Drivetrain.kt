@@ -13,6 +13,7 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.ROTATION_SENSITIVITY
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.TRANSLATION_SENSITIVITY
 import com.frcteam3636.bunnybots2025.utils.fieldRelativeTranslation2d
+import com.frcteam3636.bunnybots2025.utils.getObjectPose
 import com.frcteam3636.bunnybots2025.utils.math.*
 import com.frcteam3636.bunnybots2025.utils.swerve.Corner
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
@@ -369,6 +370,11 @@ object Drivetrain : Subsystem {
         }.finallyDo { ->
             Logger.recordOutput("Drivetrain/Polar Driving/Active", false)
         }
+    }
+
+    fun alignToCarrot() {
+        val carrotPose = getObjectPose()
+
     }
 
     private fun calculateInputCurve(input: Double): Double {
