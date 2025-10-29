@@ -39,6 +39,7 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
+import kotlin.math.pow
 
 
 class AbsolutePoseProviderInputs : LoggableInputs {
@@ -143,10 +144,13 @@ class LimelightPoseProvider(
         thread(isDaemon = true) {
             while (true) {
                 val temp = updateCurrentMeasurement()
-                lock.lock()
-                measurement = temp.poseMeasurement
-                observedTags = temp.observedTags
-                lock.unlock()
+                try {
+                    lock.lock()
+                    measurement = temp.poseMeasurement
+                    observedTags = temp.observedTags
+                } finally {
+                    lock.unlock()
+                }
                 Thread.sleep(Robot.period.toLong())
             }
         }
@@ -200,7 +204,7 @@ class LimelightPoseProvider(
                     measurement.poseMeasurement = AbsolutePoseMeasurement(
                         estimate.pose,
                         estimate.timestampSeconds.seconds,
-                        VecBuilder.fill(.5, .5, .25)
+                        APRIL_TAG_STD_DEV(estimate.avgTagDist, estimate.tagCount)
                     )
                 }
 
@@ -223,14 +227,14 @@ class LimelightPoseProvider(
 
                 LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name)?.let { estimate ->
                     measurement.observedTags = estimate.rawFiducials.mapNotNull { it?.id }.toIntArray()
-                    val highSpeed = megaTagV2.gyroVelocity.abs(DegreesPerSecond) > 720.0
+                    val highSpeed = megaTagV2.gyroVelocity.abs(DegreesPerSecond) > 360.0
                     if (estimate.tagCount == 0 || highSpeed) return measurement
 
                     measurement.poseMeasurement = AbsolutePoseMeasurement(
                         estimate.pose,
                         estimate.timestampSeconds.seconds,
                         // This value is pulled directly from the Limelight docs (linked at the top of this class)
-                        VecBuilder.fill(.5, .5, 9999999.0)
+                        MEGATAG2_STD_DEV(estimate.avgTagDist, estimate.tagCount)
                     )
                 }
             }
@@ -457,6 +461,23 @@ class AbsolutePoseMeasurementStruct : Struct<AbsolutePoseMeasurement> {
         bb.putDouble(value.stdDeviation[1, 0])
         bb.putDouble(value.stdDeviation[2, 0])
     }
+}
+
+internal val APRIL_TAG_STD_DEV = { distance: Double, count: Int ->
+    val stdDevFactor = distance.pow(2) / count.toDouble()
+    val linearStdDev = 0.02 * stdDevFactor
+    val angularStdDev = 0.06 * stdDevFactor
+    VecBuilder.fill(
+        linearStdDev, linearStdDev, angularStdDev
+    )
+}
+
+internal val MEGATAG2_STD_DEV = { distance: Double, count: Int ->
+    val stdDevFactor = distance.pow(2) / count.toDouble()
+    var linearStdDev = (0.02 * stdDevFactor) * 0.5
+    VecBuilder.fill(
+        linearStdDev, linearStdDev, Double.POSITIVE_INFINITY
+    )
 }
 
 val LIMELIGHT_FOV = 75.76079874010732.degrees
