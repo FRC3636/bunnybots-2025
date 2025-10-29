@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.units.measure.AngularVelocity
 import org.ironmaple.simulation.drivesims.GyroSimulation
 import org.littletonrobotics.junction.Logger
+import java.util.Queue
 import kotlin.math.sign
 
 interface Gyro {
@@ -29,6 +30,9 @@ interface Gyro {
 
     /** Whether the gyro is connected. */
     val connected: Boolean
+
+    var odometryYawPositions: DoubleArray
+    var odometryYawTimestamps: DoubleArray
 
     fun periodic() {}
     fun getStatusSignals(): Array<BaseStatusSignal> {
@@ -54,42 +58,66 @@ class GyroNavX(private val ahrs: AHRS) : Gyro {
     override val velocity: AngularVelocity
         get() = 0.degreesPerSecond // NavX get rate broken... use the Pigeon lol
 
+    override var odometryYawPositions: DoubleArray = doubleArrayOf()
+    override var odometryYawTimestamps: DoubleArray = doubleArrayOf()
+
     override val connected
         get() = ahrs.isConnected
 }
 
 class GyroPigeon(private val pigeon: Pigeon2) : Gyro {
+    private val yawSignal = pigeon.yaw
+    private val pitchSignal = pigeon.pitch
+    private val rollSignal = pigeon.roll
+    private val angularVelocitySignal = pigeon.angularVelocityZWorld
+    private var yawTimestampQueue: Queue<Double>
+    private var yawPositionQueue: Queue<Double>
+
     init {
         BaseStatusSignal.setUpdateFrequencyForAll(
-            100.0,
-            pigeon.yaw,
-            pigeon.pitch,
-            pigeon.roll,
-            pigeon.angularVelocityZWorld
+            250.0,
+            yawSignal
+        )
+        BaseStatusSignal.setUpdateFrequencyForAll(50.0,
+            pitchSignal,
+            rollSignal,
+            angularVelocitySignal
         )
         pigeon.optimizeBusUtilization()
+        yawTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue()
+        yawPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(yawSignal.clone())
     }
 
     override var rotation: Rotation2d
         // Basically just pigeon.rotation2d but bypasses the refresh
-        get() = Rotation2d.fromDegrees(pigeon.getYaw(false).valueAsDouble)
+        get() = Rotation2d.fromDegrees(yawSignal.valueAsDouble)
         set(goal) {
             pigeon.setYaw(goal.measure)
         }
 
+    override var odometryYawPositions: DoubleArray = doubleArrayOf()
+    override var odometryYawTimestamps: DoubleArray = doubleArrayOf()
+
     override val velocity: AngularVelocity
-        get() = pigeon.getAngularVelocityZWorld(false).value
+        get() = angularVelocitySignal.value
 
     override val connected
-        get() = pigeon.getYaw(false).status.isOK
+        get() = yawSignal.status.isOK
 
     override fun getStatusSignals(): Array<BaseStatusSignal> {
         return arrayOf(
-            pigeon.getYaw(false),
-            pigeon.getPitch(false),
-            pigeon.getRoll(false),
-            pigeon.getAngularVelocityZWorld(false)
+            yawSignal,
+            pitchSignal,
+            rollSignal,
+            angularVelocitySignal
         )
+    }
+
+    override fun periodic() {
+        odometryYawTimestamps = yawTimestampQueue.toDoubleArray()
+        odometryYawPositions = yawPositionQueue.toDoubleArray()
+        yawTimestampQueue.clear()
+        yawPositionQueue.clear()
     }
 }
 
@@ -98,7 +126,12 @@ class GyroSim(private val modules: PerCorner<SwerveModule>) : Gyro {
     override var velocity: AngularVelocity = 0.radiansPerSecond
         private set
     override val connected = true
-
+    override var odometryYawPositions: DoubleArray
+        get() = TODO("Not yet implemented")
+        set(value) = TODO("Not yet implemented")
+    override var odometryYawTimestamps: DoubleArray
+        get() = TODO("Not yet implemented")
+        set(value) = TODO("Not yet implemented")
     override fun periodic() {
         // Calculate the average translation velocity of each module
         val moduleVelocities = modules.map { it.state.translation2dPerSecond }
@@ -116,6 +149,12 @@ class GyroSim(private val modules: PerCorner<SwerveModule>) : Gyro {
 }
 
 class GyroMapleSim(val gyroSimulation: GyroSimulation) : Gyro {
+    override var odometryYawPositions: DoubleArray
+        get() = TODO("Not yet implemented")
+        set(value) = TODO("Not yet implemented")
+    override var odometryYawTimestamps: DoubleArray
+        get() = TODO("Not yet implemented")
+        set(value) = TODO("Not yet implemented")
     override var rotation: Rotation2d
         get() = gyroSimulation.gyroReading
         set(value) {
