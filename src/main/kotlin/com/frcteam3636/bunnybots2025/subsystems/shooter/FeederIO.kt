@@ -29,8 +29,9 @@ interface FeederIO {
     }
 }
 
-class FeederIOReal: FeederIO {
-    private val shooterFeederMotor = SparkFlex(REVMotorControllerId.ShooterFeederMotor, SparkLowLevel.MotorType.kBrushless)
+class FeederIOReal : FeederIO {
+    private val shooterFeederMotor =
+        SparkFlex(REVMotorControllerId.ShooterFeederMotor, SparkLowLevel.MotorType.kBrushless)
 
     private var canRange = CANrange(CTREDeviceId.CANRange.num).apply {
         configurator.apply(
@@ -51,7 +52,7 @@ class FeederIOReal: FeederIO {
     }
 
     override fun setSpeed(percent: Double) {
-        assert(percent in -1.0 .. 1.0)
+        assert(percent in -1.0..1.0)
         shooterFeederMotor.set(percent)
     }
 
@@ -66,7 +67,7 @@ class FeederIOReal: FeederIO {
     }
 }
 
-class FeederIOSim: FeederIO {
+class FeederIOSim : FeederIO {
     override fun setSpeed(percent: Double) {
         TODO("Not yet implemented")
     }

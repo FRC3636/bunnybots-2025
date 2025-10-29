@@ -4,26 +4,24 @@ import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
-import com.frcteam3636.bunnybots2025.subsystems.indexer.Indexer
 import com.frcteam3636.bunnybots2025.utils.math.*
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.util.Units
-import edu.wpi.first.units.Units.*
+import edu.wpi.first.units.Units.Degrees
+import edu.wpi.first.units.Units.RadiansPerSecond
 import edu.wpi.first.units.measure.Angle
-import edu.wpi.first.units.measure.Distance
+import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.util.Color
 import edu.wpi.first.wpilibj.util.Color8Bit
 import edu.wpi.first.wpilibj2.command.Command
-import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj2.command.Subsystem
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d
 import kotlin.math.atan
-import java.sql.Driver
 
 object Shooter {
     object Flywheel : Subsystem {
@@ -61,9 +59,15 @@ object Shooter {
 
             io.setVoltage(
                 (upperFFController.calculate(upperSetpoint.inRadiansPerSecond()) +
-                upperPidController.calculate(inputs.topVelocity.inRadiansPerSecond(), upperSetpoint.inRadiansPerSecond())).volts,
+                        upperPidController.calculate(
+                            inputs.topVelocity.inRadiansPerSecond(),
+                            upperSetpoint.inRadiansPerSecond()
+                        )).volts,
                 (lowerFFController.calculate(lowerSetpoint.inRadiansPerSecond()) +
-                lowerPidController.calculate(inputs.bottomVelocity.inRadiansPerSecond(), lowerSetpoint.inRadiansPerSecond())).volts,
+                        lowerPidController.calculate(
+                            inputs.bottomVelocity.inRadiansPerSecond(),
+                            lowerSetpoint.inRadiansPerSecond()
+                        )).volts,
             )
         }
 
@@ -196,12 +200,13 @@ data class PivotProfile(
 )
 
 val DriverStation.Alliance.zooTranslation: Translation3d
-    get() = when(this) { // got these values from field CAD
+    get() = when (this) { // got these values from field CAD
         DriverStation.Alliance.Blue -> Translation3d(
             Units.inchesToMeters(240.0),
             Units.inchesToMeters(180.0),
             Units.inchesToMeters(48.125)
         )
+
         else -> Translation3d(
             Units.inchesToMeters(600.0),
             Units.inchesToMeters(180.0),

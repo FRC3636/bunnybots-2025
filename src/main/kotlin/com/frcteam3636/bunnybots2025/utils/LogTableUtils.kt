@@ -1,8 +1,6 @@
 package com.frcteam3636.bunnybots2025.utils
 
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
-import edu.wpi.first.math.geometry.Rotation2d
-import edu.wpi.first.math.kinematics.SwerveModulePosition
 import edu.wpi.first.util.struct.StructSerializable
 import org.littletonrobotics.junction.LogTable
 

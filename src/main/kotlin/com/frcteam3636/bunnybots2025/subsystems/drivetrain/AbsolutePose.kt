@@ -34,7 +34,7 @@ import org.photonvision.PhotonPoseEstimator
 import org.photonvision.simulation.PhotonCameraSim
 import org.photonvision.simulation.SimCameraProperties
 import java.nio.ByteBuffer
-import java.util.Queue
+import java.util.*
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
@@ -350,7 +350,7 @@ class PhoenixOdometryThread : Thread("PhoenixOdometry") {
                 if (!phoenixSignals.isEmpty())
                     timestamp -= latency / phoenixSignals.size
 
-                for (i in 0 ..<phoenixSignals.size) {
+                for (i in 0..<phoenixSignals.size) {
                     phoenixQueues[i].offer(phoenixSignals[i].valueAsDouble)
                 }
 

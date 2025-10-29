@@ -131,6 +131,7 @@ interface SwerveTurningMotor {
     fun getSignals(): Array<BaseStatusSignal> {
         return arrayOf()
     }
+
     fun periodic() {}
 }
 
@@ -143,6 +144,7 @@ interface SwerveDrivingMotor {
     fun getSignals(): Array<BaseStatusSignal> {
         return arrayOf()
     }
+
     fun periodic() {}
 }
 
@@ -169,7 +171,8 @@ class DrivingTalon(id: CTREDeviceId) : SwerveDrivingMotor {
     private val positionSignal = inner.position
     private val velocitySignal = inner.velocity
 
-    private val positionQueue: Queue<Double> = PhoenixOdometryThread.getInstance().registerSignal(positionSignal.clone())
+    private val positionQueue: Queue<Double> =
+        PhoenixOdometryThread.getInstance().registerSignal(positionSignal.clone())
 
     init {
         BaseStatusSignal.setUpdateFrequencyForAll(250.0, positionSignal, velocitySignal)
@@ -235,7 +238,8 @@ class TurningTalon(id: CTREDeviceId, encoderId: CTREDeviceId, magnetOffset: Doub
 
     private val positionSignal = inner.position
 
-    private val positionQueue: Queue<Double> = PhoenixOdometryThread.getInstance().registerSignal(positionSignal.clone())
+    private val positionQueue: Queue<Double> =
+        PhoenixOdometryThread.getInstance().registerSignal(positionSignal.clone())
     override var odometryTurnPositions: Array<Rotation2d> = emptyArray()
 
     init {

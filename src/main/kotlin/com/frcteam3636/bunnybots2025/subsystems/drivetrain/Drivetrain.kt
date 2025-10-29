@@ -40,19 +40,14 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.littletonrobotics.junction.Logger
 import kotlin.jvm.optionals.getOrNull
-import kotlin.math.abs
-import kotlin.math.absoluteValue
-import kotlin.math.hypot
-import kotlin.math.max
-import kotlin.math.pow
-import kotlin.math.withSign
+import kotlin.math.*
 
 /** A singleton object representing the drivetrain. */
 object Drivetrain : Subsystem {
     private val io = when (Robot.model) {
         Robot.Model.SIMULATION -> DrivetrainIOSim()
         Robot.Model.COMPETITION -> DrivetrainIOReal(
-            MODULE_POSITIONS.zip(Drivetrain.Constants.MODULE_CAN_IDS)
+            MODULE_POSITIONS.zip(Constants.MODULE_CAN_IDS)
                 .map { (corner, ids) ->
                     val (driveId, turnId, encoderId) = ids
                     Mk5nSwerveModule(
@@ -100,8 +95,14 @@ object Drivetrain : Subsystem {
                     // Someone give me a better way to do this
                     for (i in 0..3) {
                         wheelDelta += abs(io.modules.toTypedArray()[i].positionRad.inRadians() - wheelRadiusModuleStates[i]) / 4.0
-                        Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Initial Wheel Position Rad/$i", wheelRadiusModuleStates[i])
-                        Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Final Wheel Position Rad/$i", io.modules.toTypedArray()[i].positionRad.inRadians())
+                        Logger.recordOutput(
+                            "/Drivetrain/Wheel Radius Calculated/Initial Wheel Position Rad/$i",
+                            wheelRadiusModuleStates[i]
+                        )
+                        Logger.recordOutput(
+                            "/Drivetrain/Wheel Radius Calculated/Final Wheel Position Rad/$i",
+                            io.modules.toTypedArray()[i].positionRad.inRadians()
+                        )
                     }
                     val wheelRadius = ((wheelRadiusGyroDelta * DRIVE_BASE_RADIUS) / wheelDelta)
                     Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Drive Base Radius", DRIVE_BASE_RADIUS)
@@ -196,30 +197,34 @@ object Drivetrain : Subsystem {
     }
 
     override fun periodic() {
-        Robot.odometryLock.lock()
-        io.updateInputs(inputs)
-        Logger.processInputs("Drivetrain", inputs)
-        val odometryTimestamps = io.getOdometryTimestamps()
-        val odometryPositions = io.getOdometryPositions()
-        Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions[0].size)
-        for (i in 0..<odometryTimestamps.size) {
-            val modulePositions = Array(4) { index ->
-                odometryPositions[index][i]
-            }
-            val moduleDeltas = Array(4) { index ->
-                SwerveModulePosition(
-                    modulePositions[index].distanceMeters - lastModulePositions[index].distanceMeters,
-                    modulePositions[index].angle - lastModulePositions[index].angle
-                )
-            }
-            for (moduleIndex in 0..3) {
-                lastModulePositions[moduleIndex] = modulePositions[moduleIndex]
-            }
+        try {
+            Robot.odometryLock.lock()
+            io.updateInputs(inputs)
+            Logger.processInputs("Drivetrain", inputs)
+            val odometryTimestamps = io.getOdometryTimestamps()
+            val odometryPositions = io.getOdometryPositions()
+            Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions[0].size)
+            for (i in 0..<odometryTimestamps.size) {
+                val modulePositions = Array(4) { index ->
+                    odometryPositions[index][i]
+                }
+                Array(4) { index ->
+                    SwerveModulePosition(
+                        modulePositions[index].distanceMeters - lastModulePositions[index].distanceMeters,
+                        modulePositions[index].angle - lastModulePositions[index].angle
+                    )
+                }
+                for (moduleIndex in 0..3) {
+                    lastModulePositions[moduleIndex] = modulePositions[moduleIndex]
+                }
 
-            val odometryYawPosition = Rotation2d.fromDegrees(inputs.odometryYawPositions[i])
-            poseEstimator.updateWithTime(odometryTimestamps[i], odometryYawPosition, modulePositions)
+                val odometryYawPosition = Rotation2d.fromDegrees(inputs.odometryYawPositions[i])
+                poseEstimator.updateWithTime(odometryTimestamps[i], odometryYawPosition, modulePositions)
+            }
+        } finally {
+            Robot.odometryLock.unlock()
         }
-        Robot.odometryLock.unlock()
+
 
         // Update absolute pose sensors and add their measurements to the pose estimator
         for ((name, ioPair) in absolutePoseIOs) {
@@ -429,22 +434,26 @@ object Drivetrain : Subsystem {
         val MODULE_POSITIONS = PerCorner(
             frontLeft = Corner(
                 Pose2d(
-                    Translation2d(FRONT_LEFT_CONSTANTS.LocationX, FRONT_LEFT_CONSTANTS.LocationY), Rotation2d.fromDegrees(0.0)
+                    Translation2d(FRONT_LEFT_CONSTANTS.LocationX, FRONT_LEFT_CONSTANTS.LocationY),
+                    Rotation2d.fromDegrees(0.0)
                 ), FRONT_LEFT_MAGNET_OFFSET
             ),
             frontRight = Corner(
                 Pose2d(
-                    Translation2d(FRONT_RIGHT_CONSTANTS.LocationX, FRONT_RIGHT_CONSTANTS.LocationY), Rotation2d.fromDegrees(180.0)
+                    Translation2d(FRONT_RIGHT_CONSTANTS.LocationX, FRONT_RIGHT_CONSTANTS.LocationY),
+                    Rotation2d.fromDegrees(180.0)
                 ), FRONT_RIGHT_MAGNET_OFFSET
             ),
             backLeft = Corner(
                 Pose2d(
-                    Translation2d(BACK_LEFT_CONSTANTS.LocationX, BACK_LEFT_CONSTANTS.LocationY), Rotation2d.fromDegrees(0.0)
+                    Translation2d(BACK_LEFT_CONSTANTS.LocationX, BACK_LEFT_CONSTANTS.LocationY),
+                    Rotation2d.fromDegrees(0.0)
                 ), BACK_LEFT_MAGNET_OFFSET
             ),
             backRight = Corner(
                 Pose2d(
-                    Translation2d(BACK_RIGHT_CONSTANTS.LocationX, BACK_RIGHT_CONSTANTS.LocationY), Rotation2d.fromDegrees(180.0)
+                    Translation2d(BACK_RIGHT_CONSTANTS.LocationX, BACK_RIGHT_CONSTANTS.LocationY),
+                    Rotation2d.fromDegrees(180.0)
                 ), BACK_RIGHT_MAGNET_OFFSET
             ),
         )

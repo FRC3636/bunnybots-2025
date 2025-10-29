@@ -1,7 +1,6 @@
 package com.frcteam3636.bunnybots2025
 
 import com.ctre.phoenix6.BaseStatusSignal
-import com.ctre.phoenix6.CANBus
 import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
 import com.frcteam3636.bunnybots2025.subsystems.indexer.Indexer
@@ -15,7 +14,10 @@ import com.pathplanner.lib.util.PathPlannerLogging
 import edu.wpi.first.hal.FRCNetComm.tInstances
 import edu.wpi.first.hal.FRCNetComm.tResourceType
 import edu.wpi.first.hal.HAL
-import edu.wpi.first.wpilibj.*
+import edu.wpi.first.wpilibj.Alert
+import edu.wpi.first.wpilibj.DriverStation
+import edu.wpi.first.wpilibj.PowerDistribution
+import edu.wpi.first.wpilibj.Preferences
 import edu.wpi.first.wpilibj.util.WPILibVersion
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
@@ -194,10 +196,12 @@ object Robot : LoggedRobot() {
         joystickDev.button(1).whileTrue(Drivetrain.calculateWheelRadius())
 
         controller.leftBumper().whileTrue(doIntakeSequence())
-        controller.rightBumper().whileTrue(Commands.parallel(
-            Intake.outtake(),
-            Indexer.outtake()
-        ))
+        controller.rightBumper().whileTrue(
+            Commands.parallel(
+                Intake.outtake(),
+                Indexer.outtake()
+            )
+        )
 
         controllerDev.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
         controllerDev.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))

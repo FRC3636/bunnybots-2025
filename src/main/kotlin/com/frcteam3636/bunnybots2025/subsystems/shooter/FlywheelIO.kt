@@ -2,9 +2,12 @@ package com.frcteam3636.bunnybots2025.subsystems.shooter
 
 import com.frcteam3636.bunnybots2025.REVMotorControllerId
 import com.frcteam3636.bunnybots2025.SparkFlex
-import com.frcteam3636.bunnybots2025.utils.math.*
+import com.frcteam3636.bunnybots2025.utils.math.amps
+import com.frcteam3636.bunnybots2025.utils.math.inVolts
+import com.frcteam3636.bunnybots2025.utils.math.rpm
 import com.revrobotics.spark.SparkLowLevel
-import edu.wpi.first.units.Units.*
+import edu.wpi.first.units.Units.Amps
+import edu.wpi.first.units.Units.RotationsPerSecond
 import edu.wpi.first.units.measure.Voltage
 import org.team9432.annotation.Logged
 
@@ -25,8 +28,10 @@ interface FlywheelIO {
 
 class FlywheelIOReal : FlywheelIO {
 
-    private val upperShooterMotor = SparkFlex(REVMotorControllerId.UpperShooterMotor, SparkLowLevel.MotorType.kBrushless)
-    private val lowerShooterMotor = SparkFlex(REVMotorControllerId.LowerShooterMotor, SparkLowLevel.MotorType.kBrushless)
+    private val upperShooterMotor =
+        SparkFlex(REVMotorControllerId.UpperShooterMotor, SparkLowLevel.MotorType.kBrushless)
+    private val lowerShooterMotor =
+        SparkFlex(REVMotorControllerId.LowerShooterMotor, SparkLowLevel.MotorType.kBrushless)
 
     override fun setSpeed(upperPercent: Double, lowerPercent: Double) {
         assert(upperPercent in -1.0..1.0)
@@ -56,7 +61,7 @@ class FlywheelIOReal : FlywheelIO {
     }
 }
 
-class FlywheelIOSim: FlywheelIO {
+class FlywheelIOSim : FlywheelIO {
     override fun setSpeed(upperPercent: Double, lowerPercent: Double) {
         TODO("Not yet implemented")
     }

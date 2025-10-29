@@ -2,20 +2,19 @@ package com.frcteam3636.bunnybots2025.subsystems.shooter
 
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.configs.TalonFXConfiguration
-import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC
 import com.ctre.phoenix6.controls.MotionMagicVoltage
-import com.ctre.phoenix6.hardware.ParentDevice
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.NeutralModeValue
 import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.TalonFX
-import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal
 import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal.Constants.ACCELERATION
 import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal.Constants.CRUISE_VELOCITY
-import com.frcteam3636.bunnybots2025.utils.math.*
+import com.frcteam3636.bunnybots2025.utils.math.PIDGains
+import com.frcteam3636.bunnybots2025.utils.math.inRotationsPerSecond
+import com.frcteam3636.bunnybots2025.utils.math.inRotationsPerSecondPerSecond
+import com.frcteam3636.bunnybots2025.utils.math.pidGains
 import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.Angle
-import org.littletonrobotics.junction.Logger
 import org.team9432.annotation.Logged
 
 @Logged
@@ -31,10 +30,11 @@ interface PivotIO {
     fun getStatusSignals(): MutableList<BaseStatusSignal> {
         return mutableListOf()
     }
+
     fun updateInputs(inputs: PivotInputs)
 }
 
-class PivotIOReal: PivotIO {
+class PivotIOReal : PivotIO {
     private val shooterPivotMotor = TalonFX(CTREDeviceId.ShooterPivotMotor).apply {
         configurator.apply(TalonFXConfiguration().apply {
             Slot0.apply {
@@ -103,7 +103,7 @@ class PivotIOReal: PivotIO {
     }
 }
 
-class PivotIOSim: PivotIO {
+class PivotIOSim : PivotIO {
     override fun turnToAngle(angle: Angle) {
         TODO("Not yet implemented")
     }

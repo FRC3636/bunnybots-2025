@@ -10,12 +10,7 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.MODULE_POSITIONS
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.ROBOT_LENGTH
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.ROBOT_WIDTH
-import com.frcteam3636.bunnybots2025.utils.math.degrees
-import com.frcteam3636.bunnybots2025.utils.math.degreesPerSecond
-import com.frcteam3636.bunnybots2025.utils.math.inRadians
-import com.frcteam3636.bunnybots2025.utils.math.kilogramSquareMeters
-import com.frcteam3636.bunnybots2025.utils.math.radians
-import com.frcteam3636.bunnybots2025.utils.math.volts
+import com.frcteam3636.bunnybots2025.utils.math.*
 import com.frcteam3636.bunnybots2025.utils.swerve.DrivetrainCorner
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
 import edu.wpi.first.apriltag.AprilTagFieldLayout
@@ -81,7 +76,10 @@ abstract class DrivetrainIO {
                     if (MODULE_POSITIONS[i] == MODULE_POSITIONS.backRight) {
                         modules[i].characterize(voltage, Rotation2d(angle.radians).unaryMinus().measure)
                     } else {
-                        modules[i].characterize(voltage, Rotation2d(angle.radians).unaryMinus().measure + Rotation2d.k180deg.measure)
+                        modules[i].characterize(
+                            voltage,
+                            Rotation2d(angle.radians).unaryMinus().measure + Rotation2d.k180deg.measure
+                        )
                     }
                 } else {
                     angle += 90.degrees.inRadians()

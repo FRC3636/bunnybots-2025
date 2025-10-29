@@ -6,11 +6,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.NeutralModeValue
-import com.frcteam3636.bunnybots2025.CANcoder
-import com.frcteam3636.bunnybots2025.CTREDeviceId
-import com.frcteam3636.bunnybots2025.REVMotorControllerId
-import com.frcteam3636.bunnybots2025.SparkFlex
-import com.frcteam3636.bunnybots2025.TalonFX
+import com.frcteam3636.bunnybots2025.*
 import com.frcteam3636.bunnybots2025.utils.math.*
 import com.revrobotics.spark.SparkLowLevel
 import edu.wpi.first.units.Units.*
