@@ -88,7 +88,7 @@ object Drivetrain : Subsystem {
                 val rotation = inputs.gyroRotation
                 wheelRadiusGyroDelta += abs(rotation.minus(wheelRadiusLastAngle).radians)
                 wheelRadiusLastAngle = rotation
-                Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Gyro Delta", wheelRadiusGyroDelta)
+                Logger.recordOutput("Drivetrain/Wheel Radius Calculated/Gyro Delta", wheelRadiusGyroDelta)
             })
                 .finallyDo { ->
                     var wheelDelta = 0.0
@@ -96,20 +96,20 @@ object Drivetrain : Subsystem {
                     for (i in 0..3) {
                         wheelDelta += abs(io.modules.toTypedArray()[i].positionRad.inRadians() - wheelRadiusModuleStates[i]) / 4.0
                         Logger.recordOutput(
-                            "/Drivetrain/Wheel Radius Calculated/Initial Wheel Position Rad/$i",
+                            "Drivetrain/Wheel Radius Calculated/Initial Wheel Position Rad/$i",
                             wheelRadiusModuleStates[i]
                         )
                         Logger.recordOutput(
-                            "/Drivetrain/Wheel Radius Calculated/Final Wheel Position Rad/$i",
+                            "Drivetrain/Wheel Radius Calculated/Final Wheel Position Rad/$i",
                             io.modules.toTypedArray()[i].positionRad.inRadians()
                         )
                     }
                     val wheelRadius = ((wheelRadiusGyroDelta * DRIVE_BASE_RADIUS) / wheelDelta)
-                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Drive Base Radius", DRIVE_BASE_RADIUS)
-                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Wheel Delta", wheelDelta)
-                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Meters", wheelRadius)
-                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Inches", wheelRadius.meters.inInches())
-                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Running", false)
+                    Logger.recordOutput("Drivetrain/Wheel Radius Calculated/Drive Base Radius", DRIVE_BASE_RADIUS)
+                    Logger.recordOutput("Drivetrain/Wheel Radius Calculated/Wheel Delta", wheelDelta)
+                    Logger.recordOutput("Drivetrain/Wheel Radius Calculated/Meters", wheelRadius)
+                    Logger.recordOutput("Drivetrain/Wheel Radius Calculated/Inches", wheelRadius.meters.inInches())
+                    Logger.recordOutput("Drivetrain/Wheel Radius Calculated/Running", false)
                 }
         )
     )
