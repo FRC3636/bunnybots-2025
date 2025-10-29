@@ -1,7 +1,9 @@
 package com.frcteam3636.bunnybots2025.subsystems.indexer
 
 import com.frcteam3636.bunnybots2025.Robot
+import com.frcteam3636.bunnybots2025.RobotState
 import edu.wpi.first.wpilibj2.command.Command
+import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.Subsystem
 import org.littletonrobotics.junction.Logger
 
@@ -13,12 +15,14 @@ object Indexer : Subsystem {
 
     var inputs = LoggedIndexerInputs()
 
+    private var wasDetected = false
+
     override fun periodic() {
         io.updateInputs(inputs)
         Logger.processInputs("Indexer", inputs)
     }
 
-    fun intake(): Command =
+    fun index(): Command =
         startEnd(
             {
                 io.setIndexerSpeed(0.7)
@@ -26,7 +30,18 @@ object Indexer : Subsystem {
             {
                 io.setIndexerSpeed(0.0)
             }
-        )
+        ).alongWith(
+            Commands.run({
+                if (!wasDetected && inputs.isDetected) {
+                    RobotState.numPieces++
+                    wasDetected = true
+                } else if (!inputs.isDetected) {
+                    wasDetected = false
+                }
+            })
+        ).finallyDo { ->
+            wasDetected = false
+        }
 
     fun outtake(): Command =
         startEnd(
@@ -36,5 +51,16 @@ object Indexer : Subsystem {
             {
                 io.setIndexerSpeed(0.0)
             }
-        )
+        ).alongWith(
+            Commands.run({
+                if (!wasDetected && inputs.isDetected) {
+                    RobotState.numPieces--
+                    wasDetected = true
+                } else if (!inputs.isDetected) {
+                    wasDetected = false
+                }
+            })
+        ).finallyDo { ->
+            wasDetected = false
+        }
 }

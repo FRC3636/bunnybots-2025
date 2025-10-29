@@ -18,14 +18,15 @@ import edu.wpi.first.wpilibj.util.Color
 import edu.wpi.first.wpilibj.util.Color8Bit
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Subsystem
+import edu.wpi.first.wpilibj2.command.button.Trigger
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d
-import kotlin.math.atan
+import kotlin.math.absoluteValue
 
 object Shooter {
-    object Flywheel : Subsystem {
+    object Flywheels : Subsystem {
         private var io = when (Robot.model) {
             Robot.Model.COMPETITION -> FlywheelIOReal()
             Robot.Model.SIMULATION -> FlywheelIOSim()
@@ -33,6 +34,22 @@ object Shooter {
 
         private var upperSetpoint = RadiansPerSecond.zero()!!
         private var lowerSetpoint = RadiansPerSecond.zero()!!
+
+        val isDetected: Trigger =
+            Trigger {
+                inputs.isDetected
+            }
+
+        val atDesiredVelocity =
+            Trigger {
+                val velocityDifference = (inputs.topVelocity.minus(upperSetpoint).baseUnitMagnitude().absoluteValue)
+                Logger.recordOutput("Shooter/Flywheels/Velocity Difference", velocityDifference)
+                Logger.recordOutput(
+                    "Shooter/Flywheels/At Desired Velocity",
+                    velocityDifference < FLYWHEEL_VELOCITY_TOLERANCE.baseUnitMagnitude()
+                )
+                velocityDifference < FLYWHEEL_VELOCITY_TOLERANCE.baseUnitMagnitude()
+            }
 
         private val inputs = LoggedFlywheelInputs()
 
@@ -72,7 +89,7 @@ object Shooter {
             )
         }
 
-        fun pulse(): Command =
+        fun idle(): Command =
             startEnd(
                 {
                     upperSetpoint = 1.radiansPerSecond
@@ -81,6 +98,18 @@ object Shooter {
                 {
                     upperSetpoint = 0.radiansPerSecond
                     lowerSetpoint = 0.radiansPerSecond
+                }
+            )
+
+        fun shoot(): Command =
+            startEnd(
+                {
+                    upperSetpoint = 5000.rpm
+                    lowerSetpoint = 5000.rpm
+                },
+                {
+                    upperSetpoint = 5000.rpm
+                    lowerSetpoint = 5000.rpm
                 }
             )
 
@@ -133,24 +162,25 @@ object Shooter {
 
         fun setTarget(target: Target): Command =
             runOnce {
-                io.turnToAngle(target.profile.position())
+                currentTarget = target
             }
+
+        fun moveToActiveTarget(): Command =
+            run { io.turnToAngle(currentTarget.profile.getPosition()) }
 
         enum class Target(val profile: PivotProfile) {
             AIM(
-                PivotProfile(
-                    {
-                        val pettingZooTranslation = DriverStation.getAlliance()
-                            .orElse(DriverStation.Alliance.Blue)
-                            .zooTranslation
-                        val zooPose = Pose2d(
-                            pettingZooTranslation.toTranslation2d(),
-                            Rotation2d()
-                        )
-                        val distance = zooPose.translation.minus(Drivetrain.estimatedPose.translation).norm
-                        interpolationTable.get(distance).degrees
-                    }
-                )
+                PivotProfile {
+                    val pettingZooTranslation = DriverStation.getAlliance()
+                        .orElse(DriverStation.Alliance.Blue)
+                        .zooTranslation
+                    val zooPose = Pose2d(
+                        pettingZooTranslation.toTranslation2d(),
+                        Rotation2d()
+                    )
+                    val distance = zooPose.translation.minus(Drivetrain.estimatedPose.translation).norm
+                    interpolationTable.get(distance).degrees
+                }
             ),
             PETTINGZOO(
                 PivotProfile(
@@ -177,17 +207,12 @@ object Shooter {
 
         private val inputs = LoggedFeederInputs()
 
-        val isDetected: Boolean
-            get() {
-                return inputs.isDetected
-            }
-
         override fun periodic() {
             io.updateInputs(inputs)
             Logger.processInputs("Shooter/Feeder", inputs)
         }
 
-        fun intake(): Command =
+        fun feed(interruptBehavior: Command.InterruptionBehavior = Command.InterruptionBehavior.kCancelSelf): Command =
             startEnd(
                 {
                     io.setSpeed(0.7)
@@ -195,7 +220,7 @@ object Shooter {
                 {
                     io.setSpeed(0.0)
                 }
-            )
+            ).withInterruptBehavior(interruptBehavior)
 
         fun getStatusSignals(): MutableList<BaseStatusSignal> {
             return io.getStatusSignals()
@@ -204,7 +229,7 @@ object Shooter {
 }
 
 data class PivotProfile(
-    val position: () -> Angle
+    val getPosition: () -> Angle
 )
 
 val DriverStation.Alliance.zooTranslation: Translation3d
@@ -221,3 +246,5 @@ val DriverStation.Alliance.zooTranslation: Translation3d
             Units.inchesToMeters(48.125)
         )
     }
+
+internal val FLYWHEEL_VELOCITY_TOLERANCE = 2.radiansPerSecond

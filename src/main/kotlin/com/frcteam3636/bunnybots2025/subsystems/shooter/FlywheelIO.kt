@@ -1,5 +1,10 @@
 package com.frcteam3636.bunnybots2025.subsystems.shooter
 
+import com.ctre.phoenix6.BaseStatusSignal
+import com.ctre.phoenix6.configs.CANrangeConfiguration
+import com.ctre.phoenix6.hardware.CANrange
+import com.ctre.phoenix6.signals.UpdateModeValue
+import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.REVMotorControllerId
 import com.frcteam3636.bunnybots2025.SparkFlex
 import com.frcteam3636.bunnybots2025.utils.math.amps
@@ -17,6 +22,7 @@ open class FlywheelInputs {
     var topCurrent = Amps.zero()!!
     var bottomVelocity = RotationsPerSecond.zero()!!
     var bottomCurrent = Amps.zero()!!
+    var isDetected = false
 }
 
 interface FlywheelIO {
@@ -24,6 +30,9 @@ interface FlywheelIO {
     fun setVoltage(upperVoltage: Voltage, lowerVoltage: Voltage)
     fun setVoltage(voltage: Voltage)
     fun updateInputs(inputs: FlywheelInputs)
+    fun getStatusSignals(): MutableList<BaseStatusSignal> {
+        return mutableListOf()
+    }
 }
 
 class FlywheelIOReal : FlywheelIO {
@@ -32,6 +41,24 @@ class FlywheelIOReal : FlywheelIO {
         SparkFlex(REVMotorControllerId.UpperShooterMotor, SparkLowLevel.MotorType.kBrushless)
     private val lowerShooterMotor =
         SparkFlex(REVMotorControllerId.LowerShooterMotor, SparkLowLevel.MotorType.kBrushless)
+
+    private var canRange = CANrange(CTREDeviceId.CANRangeShooter.num).apply {
+        configurator.apply(
+            CANrangeConfiguration().apply {
+                ProximityParams.ProximityThreshold = 0.35 // fix
+                FovParams.FOVCenterY = 10.0 // fix
+                FovParams.FOVRangeY = 7.0 // fix
+                ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz
+            }
+        )
+    }
+
+    private val detectedSignal = canRange.isDetected
+
+    init {
+        BaseStatusSignal.setUpdateFrequencyForAll(100.0, detectedSignal)
+        canRange.optimizeBusUtilization()
+    }
 
     override fun setSpeed(upperPercent: Double, lowerPercent: Double) {
         assert(upperPercent in -1.0..1.0)
@@ -58,6 +85,11 @@ class FlywheelIOReal : FlywheelIO {
         inputs.topCurrent = upperShooterMotor.outputCurrent.amps
         inputs.bottomVelocity = lowerShooterMotor.encoder.velocity.rpm
         inputs.bottomCurrent = lowerShooterMotor.outputCurrent.amps
+        inputs.isDetected = detectedSignal.value
+    }
+
+    override fun getStatusSignals(): MutableList<BaseStatusSignal> {
+        return mutableListOf(detectedSignal)
     }
 }
 

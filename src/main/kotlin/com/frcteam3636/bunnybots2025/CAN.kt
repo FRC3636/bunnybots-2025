@@ -31,7 +31,8 @@ enum class CTREDeviceId(val num: Int, val bus: CANBus) {
     IntakePivotMotor(14, canivoreBus),
     IntakePivotEncoder(15, canivoreBus),
     ShooterPivotEncoder(16, canivoreBus),
-    CANRange(17, canivoreBus),
+    CANRangeShooter(17, canivoreBus),
+    CANRangeIndexer(18, canivoreBus),
     PigeonGyro(20, canivoreBus),
 }
 

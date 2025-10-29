@@ -18,7 +18,6 @@ import org.team9432.annotation.Logged
 open class FeederInputs {
     var feederVelocity = RotationsPerSecond.zero()!!
     var feederCurrent = Amps.zero()!!
-    var isDetected = false
 }
 
 interface FeederIO {
@@ -33,24 +32,6 @@ class FeederIOReal : FeederIO {
     private val shooterFeederMotor =
         SparkFlex(REVMotorControllerId.ShooterFeederMotor, SparkLowLevel.MotorType.kBrushless)
 
-    private var canRange = CANrange(CTREDeviceId.CANRange.num).apply {
-        configurator.apply(
-            CANrangeConfiguration().apply {
-                ProximityParams.ProximityThreshold = 0.35 // fix
-                FovParams.FOVCenterY = 10.0 // fix
-                FovParams.FOVRangeY = 7.0 // fix
-                ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz
-            }
-        )
-    }
-
-    private val detectedSignal = canRange.isDetected
-
-    init {
-        BaseStatusSignal.setUpdateFrequencyForAll(100.0, detectedSignal)
-        canRange.optimizeBusUtilization()
-    }
-
     override fun setSpeed(percent: Double) {
         assert(percent in -1.0..1.0)
         shooterFeederMotor.set(percent)
@@ -59,11 +40,6 @@ class FeederIOReal : FeederIO {
     override fun updateInputs(inputs: FeederInputs) {
         inputs.feederVelocity = shooterFeederMotor.encoder.velocity.rpm
         inputs.feederCurrent = shooterFeederMotor.outputCurrent.amps
-        inputs.isDetected = detectedSignal.value
-    }
-
-    override fun getStatusSignals(): MutableList<BaseStatusSignal> {
-        return mutableListOf(detectedSignal)
     }
 }
 

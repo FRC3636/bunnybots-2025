@@ -164,23 +164,48 @@ object Robot : LoggedRobot() {
     }
 
     private fun doIntakeSequence(): Command {
-        return Commands.either(
-            Commands.parallel(
-                Intake.intake(),
-                Indexer.intake(),
-                Shooter.Feeder.intake()
-            ).until { Shooter.Feeder.isDetected },
-            Commands.parallel(
-                Intake.intake(),
-                Indexer.intake(),
-            ),
-        ) { !Shooter.Feeder.isDetected }
+        return Commands.parallel(
+            Intake.intake(),
+            Commands.sequence(
+                Commands.either(
+                    Indexer.index(),
+                    Commands.parallel(
+                        Shooter.Feeder.feed(),
+                        Indexer.index(),
+                    ).until(Shooter.Flywheels.isDetected),
+                    Shooter.Flywheels.isDetected
+                ),
+                Indexer.index(),
+            )
+        )
+    }
 
+    private fun doShootSequence(): Command {
+        return Commands.parallel(
+            Shooter.Flywheels.shoot(),
+            Commands.sequence(
+                Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                Commands.parallel(
+                    Shooter.Feeder.feed(Command.InterruptionBehavior.kCancelIncoming),
+                    Indexer.index(),
+                ).alongWith(
+                    Commands.sequence(
+                        Commands.waitUntil(Shooter.Flywheels.isDetected),
+                        Commands.runOnce({
+                            RobotState.numPieces--
+                        }),
+                        Commands.waitUntil(Shooter.Flywheels.isDetected.negate())
+                    ).repeatedly()
+                )
+            )
+        )
     }
 
     /** Configure which commands each joystick button triggers. */
     private fun configureBindings() {
         Drivetrain.defaultCommand = Drivetrain.driveWithJoysticks(joystickLeft.hid, joystickRight.hid)
+        Shooter.Flywheels.defaultCommand = Shooter.Flywheels.idle()
+        Shooter.Pivot.defaultCommand = Shooter.Pivot.moveToActiveTarget()
         // (The button with the yellow tape on it)
         joystickLeft.button(8).onTrue(Commands.runOnce({
             println("Zeroing gyro.")
@@ -198,6 +223,8 @@ object Robot : LoggedRobot() {
             }, setOf(Drivetrain))
         )
 
+        joystickRight.button(1).whileTrue(doShootSequence())
+
         joystickDev.button(2).onTrue(
             Commands.runOnce({
                 Drivetrain.zeroFull()
@@ -214,6 +241,10 @@ object Robot : LoggedRobot() {
                 Indexer.outtake()
             )
         )
+
+        controller.a().onTrue(Shooter.Pivot.setTarget(Shooter.Pivot.Target.STOWED))
+        controller.b().onTrue(Shooter.Pivot.setTarget(Shooter.Pivot.Target.PETTINGZOO))
+        controller.y().onTrue(Shooter.Pivot.setTarget(Shooter.Pivot.Target.AIM))
 
         controllerDev.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
         controllerDev.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
