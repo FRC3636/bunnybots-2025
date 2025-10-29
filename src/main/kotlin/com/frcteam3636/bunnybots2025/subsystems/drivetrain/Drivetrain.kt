@@ -227,6 +227,7 @@ object Drivetrain : Subsystem {
             Robot.odometryLock.unlock()
         }
 
+        getObjectPose()
 
         // Update absolute pose sensors and add their measurements to the pose estimator
         for ((name, ioPair) in absolutePoseIOs) {
@@ -374,7 +375,6 @@ object Drivetrain : Subsystem {
 
     fun alignToCarrot() {
         val carrotPose = getObjectPose()
-
     }
 
     private fun calculateInputCurve(input: Double): Double {

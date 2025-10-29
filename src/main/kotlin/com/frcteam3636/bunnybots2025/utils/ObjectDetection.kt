@@ -1,13 +1,13 @@
 package com.frcteam3636.bunnybots2025.utils
 
-import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
+import com.frcteam3636.bunnybots2025.utils.math.degrees
+import com.frcteam3636.bunnybots2025.utils.math.inRadians
+import com.frcteam3636.bunnybots2025.utils.math.inches
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Pose3d
-import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Rotation3d
 import edu.wpi.first.math.geometry.Transform3d
-import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.util.Units
 import org.littletonrobotics.junction.Logger
@@ -16,11 +16,7 @@ import kotlin.math.sin
 
 fun getObjectPose(): Pose2d {
     val robotPose = Pose3d(Drivetrain.estimatedPose)
-    val limelightPose = robotPose.transformBy(
-        Transform3d(
-            .25, .25, 0.0, Rotation3d()
-        )
-    )
+    val limelightPose = robotPose.transformBy(LIMELIGHT_TRANSFORM)
     Logger.recordOutput("Drivetrain/Object Camera Pose", limelightPose)
 
     var ty = 0.0
@@ -31,7 +27,7 @@ fun getObjectPose(): Pose2d {
         ty = LimelightHelpers.getTY(OBJECT_DETECTOR_NAME)
         tx = LimelightHelpers.getTX(OBJECT_DETECTOR_NAME)
         estimatedDistance = abs(
-            (limelightPose.z - CAMERA_Z_OFFSET)
+            (limelightPose.z + CAMERA_Z_OFFSET)
                     / sin(Units.degreesToRadians(ty) - limelightPose.rotation.y)
         )
     } else {
@@ -55,5 +51,10 @@ fun getObjectPose(): Pose2d {
     return pose
 }
 
-const val OBJECT_DETECTOR_NAME = "carrotvision"
-const val CAMERA_Z_OFFSET = 0.025
+const val OBJECT_DETECTOR_NAME = "limelight"
+const val CAMERA_Z_OFFSET = 0.125
+val LIMELIGHT_TRANSFORM = Transform3d(
+    16.inches, 0.0.inches, 5.inches, Rotation3d(
+        0.0, -10.0.degrees.inRadians(), 0.0
+    )
+)
