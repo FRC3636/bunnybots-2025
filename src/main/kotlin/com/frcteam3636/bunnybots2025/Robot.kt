@@ -68,6 +68,11 @@ object Robot : LoggedRobot() {
 
     var beforeFirstEnable = true
 
+    // This is here because if we put it in drivetrain a NullPointException is thrown
+    // from PhoenixOdometryThread.
+    // I'm guessing this is some sort of race condition.
+    // We should look into waiting to initialize PhoenixOdometryThread
+    // until the first call to PhoenixOdometryThread.getInstance()
     val odometryLock = ReentrantLock()
 
     override fun robotInit() {
