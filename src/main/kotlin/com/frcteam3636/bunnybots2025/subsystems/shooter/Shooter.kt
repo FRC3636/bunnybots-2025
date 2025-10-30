@@ -76,17 +76,27 @@ object Shooter {
 
             Logger.processInputs("Shooter/Flywheels", inputs)
 
+            Logger.recordOutput("Shooter/Flywheels/Upper Setpoint", upperSetpoint)
+            Logger.recordOutput("Shooter/Flywheels/Lower Setpoint", lowerSetpoint)
+
+            val upperVoltage = (upperFFController.calculate(upperSetpoint.inRadiansPerSecond()) +
+                    upperPidController.calculate(
+                        inputs.topVelocity.inRadiansPerSecond(),
+                        upperSetpoint.inRadiansPerSecond()
+                    )).volts
+
+            val lowerVoltage = (lowerFFController.calculate(lowerSetpoint.inRadiansPerSecond()) +
+                    lowerPidController.calculate(
+                        inputs.bottomVelocity.inRadiansPerSecond(),
+                        lowerSetpoint.inRadiansPerSecond()
+                    )).volts
+
+            Logger.recordOutput("Shooter/Flywheels/Upper Calculated Voltage", upperVoltage)
+            Logger.recordOutput("Shooter/Flywheels/Lower Calculated Voltage", lowerVoltage)
+
             io.setVoltage(
-                (upperFFController.calculate(upperSetpoint.inRadiansPerSecond()) +
-                        upperPidController.calculate(
-                            inputs.topVelocity.inRadiansPerSecond(),
-                            upperSetpoint.inRadiansPerSecond()
-                        )).volts,
-                (lowerFFController.calculate(lowerSetpoint.inRadiansPerSecond()) +
-                        lowerPidController.calculate(
-                            inputs.bottomVelocity.inRadiansPerSecond(),
-                            lowerSetpoint.inRadiansPerSecond()
-                        )).volts,
+                upperVoltage,
+                lowerVoltage
             )
         }
 
