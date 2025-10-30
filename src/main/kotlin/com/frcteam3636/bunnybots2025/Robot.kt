@@ -155,6 +155,11 @@ object Robot : LoggedRobot() {
     /** Start robot subsystems so that their periodic tasks are run */
     private fun configureSubsystems() {
         Drivetrain.register()
+        Indexer.register()
+        Intake.register()
+        Shooter.Flywheels.register()
+        Shooter.Pivot.register()
+        Shooter.Feeder.register()
     }
 
     /** Expose commands for autonomous routines to use and display an auto picker in Shuffleboard. */
