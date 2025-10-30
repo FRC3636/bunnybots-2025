@@ -92,7 +92,7 @@ object Robot : LoggedRobot() {
         statusSignals += Drivetrain.getStatusSignals()
         statusSignals += Intake.getStatusSignals()
         statusSignals += Shooter.Pivot.getStatusSignals()
-        statusSignals += Shooter.Feeder.getStatusSignals()
+        statusSignals += Indexer.getStatusSignals()
     }
 
     /** Start logging or pull replay logs from a file */

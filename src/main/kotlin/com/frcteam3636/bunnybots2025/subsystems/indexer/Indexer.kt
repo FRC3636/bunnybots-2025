@@ -1,5 +1,6 @@
 package com.frcteam3636.bunnybots2025.subsystems.indexer
 
+import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.RobotState
 import edu.wpi.first.wpilibj2.command.Command
@@ -63,4 +64,8 @@ object Indexer : Subsystem {
         ).finallyDo { ->
             wasDetected = false
         }
+
+    fun getStatusSignals(): MutableList<BaseStatusSignal> {
+        return io.getSignals()
+    }
 }

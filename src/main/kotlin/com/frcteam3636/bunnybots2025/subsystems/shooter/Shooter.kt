@@ -221,10 +221,6 @@ object Shooter {
                     io.setSpeed(0.0)
                 }
             ).withInterruptBehavior(interruptBehavior)
-
-        fun getStatusSignals(): MutableList<BaseStatusSignal> {
-            return io.getStatusSignals()
-        }
     }
 }
 

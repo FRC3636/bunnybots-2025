@@ -23,9 +23,6 @@ open class FeederInputs {
 interface FeederIO {
     fun setSpeed(percent: Double)
     fun updateInputs(inputs: FeederInputs)
-    fun getStatusSignals(): MutableList<BaseStatusSignal> {
-        return mutableListOf()
-    }
 }
 
 class FeederIOReal : FeederIO {
