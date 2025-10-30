@@ -317,6 +317,11 @@ object Robot : LoggedRobot() {
         CommandScheduler.getInstance().run()
 
         Diagnostics.send()
+
+        // clamp held pieces just in case stuff starts to break
+        if (RobotState.heldPieces < 0) {
+            RobotState.heldPieces = 0
+        }
     }
 
     override fun autonomousInit() {
