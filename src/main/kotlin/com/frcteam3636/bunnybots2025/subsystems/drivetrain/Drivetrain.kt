@@ -447,7 +447,7 @@ object Drivetrain : Subsystem {
 
         val ROBOT_LENGTH = 25.5.inches
         val ROBOT_WIDTH = 25.5.inches
-        val TRACK_WIDTH = abs(TunerConstants.FrontRight!!.LocationX + TunerConstants.FrontLeft!!.LocationX)
+        val TRACK_WIDTH = abs(TunerConstants.FrontRight!!.LocationY + TunerConstants.BackLeft!!.LocationY)
 
         val BUMPER_WIDTH = 30.inches
         val BUMPER_LENGTH = 30.inches
