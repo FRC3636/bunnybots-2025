@@ -135,6 +135,7 @@ object Shooter {
         var pivotAngleLigament = LoggedMechanismLigament2d("Pivot Ligament", 50.0, 180.0, 5.0, Color8Bit(Color.kGreen))
 
         private val interpolationTable = InterpolatingDoubleTreeMap()
+
         init {
             //FIXME plot points to create regression
             interpolationTable.put(5.0, 60.0)

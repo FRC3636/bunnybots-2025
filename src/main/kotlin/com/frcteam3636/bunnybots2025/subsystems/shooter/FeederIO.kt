@@ -1,10 +1,5 @@
 package com.frcteam3636.bunnybots2025.subsystems.shooter
 
-import com.ctre.phoenix6.BaseStatusSignal
-import com.ctre.phoenix6.configs.CANrangeConfiguration
-import com.ctre.phoenix6.hardware.CANrange
-import com.ctre.phoenix6.signals.UpdateModeValue
-import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.REVMotorControllerId
 import com.frcteam3636.bunnybots2025.SparkFlex
 import com.frcteam3636.bunnybots2025.utils.math.amps
