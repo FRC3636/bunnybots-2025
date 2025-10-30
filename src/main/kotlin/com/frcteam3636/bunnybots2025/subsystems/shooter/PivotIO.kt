@@ -65,7 +65,13 @@ class PivotIOReal : PivotIO {
     private val temperatureSignal = shooterPivotMotor.deviceTemp
 
     init {
-        BaseStatusSignal.setUpdateFrequencyForAll(100.0, positionSignal, currentSignal, velocitySignal, temperatureSignal)
+        BaseStatusSignal.setUpdateFrequencyForAll(
+            100.0,
+            positionSignal,
+            currentSignal,
+            velocitySignal,
+            temperatureSignal
+        )
         shooterPivotMotor.optimizeBusUtilization()
     }
 

@@ -12,10 +12,7 @@ import com.frcteam3636.bunnybots2025.utils.math.celsius
 import com.frcteam3636.bunnybots2025.utils.math.inVolts
 import com.frcteam3636.bunnybots2025.utils.math.rpm
 import com.revrobotics.spark.SparkLowLevel
-import edu.wpi.first.units.Units.Amps
-import edu.wpi.first.units.Units.Celsius
-import edu.wpi.first.units.Units.RotationsPerSecond
-import edu.wpi.first.units.measure.Temperature
+import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.Voltage
 import org.team9432.annotation.Logged
 

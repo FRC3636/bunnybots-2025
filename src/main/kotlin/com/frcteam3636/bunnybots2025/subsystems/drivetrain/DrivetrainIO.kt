@@ -14,17 +14,13 @@ import com.frcteam3636.bunnybots2025.utils.math.*
 import com.frcteam3636.bunnybots2025.utils.swerve.DrivetrainCorner
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
 import edu.wpi.first.apriltag.AprilTagFieldLayout
-import edu.wpi.first.apriltag.AprilTagFields
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.kinematics.SwerveModulePosition
 import edu.wpi.first.math.kinematics.SwerveModuleState
 import edu.wpi.first.math.system.plant.DCMotor
-import edu.wpi.first.units.Units.Celsius
-import edu.wpi.first.units.measure.Temperature
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.wpilibj.Filesystem
-import edu.wpi.first.wpilibj.RobotController
 import org.ironmaple.simulation.SimulatedArena
 import org.ironmaple.simulation.drivesims.COTS
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation

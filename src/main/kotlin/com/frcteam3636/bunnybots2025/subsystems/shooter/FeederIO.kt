@@ -6,9 +6,7 @@ import com.frcteam3636.bunnybots2025.utils.math.amps
 import com.frcteam3636.bunnybots2025.utils.math.celsius
 import com.frcteam3636.bunnybots2025.utils.math.rpm
 import com.revrobotics.spark.SparkLowLevel
-import edu.wpi.first.units.Units.Amps
-import edu.wpi.first.units.Units.Celsius
-import edu.wpi.first.units.Units.RotationsPerSecond
+import edu.wpi.first.units.Units.*
 import org.team9432.annotation.Logged
 
 @Logged
