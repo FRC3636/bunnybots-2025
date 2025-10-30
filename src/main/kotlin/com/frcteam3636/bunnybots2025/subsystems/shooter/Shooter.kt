@@ -13,6 +13,7 @@ import edu.wpi.first.math.util.Units
 import edu.wpi.first.units.Units.Degrees
 import edu.wpi.first.units.Units.RadiansPerSecond
 import edu.wpi.first.units.measure.Angle
+import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.util.Color
 import edu.wpi.first.wpilibj.util.Color8Bit
@@ -102,16 +103,10 @@ object Shooter {
             )
 
         fun shoot(): Command =
-            startEnd(
-                {
-                    upperSetpoint = 5000.rpm
-                    lowerSetpoint = 5000.rpm
-                },
-                {
-                    upperSetpoint = 5000.rpm
-                    lowerSetpoint = 5000.rpm
-                }
-            )
+            run {
+                upperSetpoint = Pivot.target.profile.getVelocity()
+                lowerSetpoint = Pivot.target.profile.getVelocity()
+            }
 
         object Constants {
             val UPPER_PID_GAINS = PIDGains()
@@ -129,7 +124,7 @@ object Shooter {
 
         private val inputs = LoggedPivotInputs()
 
-        private var currentTarget = Target.STOWED
+        var target = Target.STOWED
 
         var mechanism = LoggedMechanism2d(100.0, 200.0)
         var pivotAngleLigament = LoggedMechanismLigament2d("Pivot Ligament", 50.0, 180.0, 5.0, Color8Bit(Color.kGreen))
@@ -163,30 +158,37 @@ object Shooter {
 
         fun setTarget(target: Target): Command =
             runOnce {
-                currentTarget = target
+                Pivot.target = target
             }
 
         fun moveToActiveTarget(): Command =
-            run { io.turnToAngle(currentTarget.profile.getPosition()) }
+            run { io.turnToAngle(target.profile.getPosition()) }
 
         enum class Target(val profile: PivotProfile) {
             AIM(
-                PivotProfile {
-                    val pettingZooTranslation = DriverStation.getAlliance()
-                        .orElse(DriverStation.Alliance.Blue)
-                        .zooTranslation
-                    val zooPose = Pose2d(
-                        pettingZooTranslation.toTranslation2d(),
-                        Rotation2d()
-                    )
-                    val distance = zooPose.translation.minus(Drivetrain.estimatedPose.translation).norm
-                    interpolationTable.get(distance).degrees
-                }
+                PivotProfile(
+                    {
+                        val pettingZooTranslation = DriverStation.getAlliance()
+                            .orElse(DriverStation.Alliance.Blue)
+                            .zooTranslation
+                        val zooPose = Pose2d(
+                            pettingZooTranslation.toTranslation2d(),
+                            Rotation2d()
+                        )
+                        val distance = zooPose.translation.minus(Drivetrain.estimatedPose.translation).norm
+                        interpolationTable.get(distance).degrees
+                    }, {
+                        5000.rpm
+                    }
+                )
             ),
             PETTINGZOO(
                 PivotProfile(
                     {
                         45.degrees
+                    },
+                    {
+                        1000.rpm
                     }
                 )
             ),
@@ -194,6 +196,9 @@ object Shooter {
                 PivotProfile(
                     {
                         Degrees.zero()!!
+                    },
+                    {
+                        1000.rpm // dude idek what to set this to lmao
                     }
                 )
             )
@@ -226,7 +231,8 @@ object Shooter {
 }
 
 data class PivotProfile(
-    val getPosition: () -> Angle
+    val getPosition: () -> Angle,
+    val getVelocity: () -> AngularVelocity
 )
 
 val DriverStation.Alliance.zooTranslation: Translation3d
