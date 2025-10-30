@@ -356,7 +356,7 @@ object Drivetrain : Subsystem {
                 Translation2d()
             }
             val magnitude = polarDrivingPIDController.calculate(
-                target.minus(estimatedPose.translation).angle.radians - (TAU / 2),
+                target.minus(estimatedPose.translation).angle.radians - PI,
                 estimatedPose.rotation.radians
             ).unaryMinus()
 
