@@ -10,6 +10,8 @@ import com.frcteam3636.bunnybots2025.TalonFX
 import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal.Constants.ACCELERATION
 import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal.Constants.CRUISE_VELOCITY
 import com.frcteam3636.bunnybots2025.utils.math.PIDGains
+import com.frcteam3636.bunnybots2025.utils.math.degrees
+import com.frcteam3636.bunnybots2025.utils.math.degreesPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.inRotationsPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.inRotationsPerSecondPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.pidGains
@@ -78,6 +80,8 @@ class PivotIOReal : PivotIO {
     val positionControl = MotionMagicVoltage(0.0)
 
     override fun turnToAngle(angle: Angle) {
+        assert(angle > 0.degrees)
+        assert(angle < 90.degrees) // TODO: Find out if we need to raise this
         shooterPivotMotor.setControl(positionControl.withPosition(angle))
     }
 
