@@ -233,6 +233,14 @@ object Robot : LoggedRobot() {
             }, setOf(Drivetrain))
         )
 
+        joystickRight.button(3).onTrue(Commands.runOnce({
+            RobotState.numPieces--
+        }))
+
+        joystickRight.button(4).onTrue(Commands.runOnce({
+            RobotState.numPieces++
+        }))
+
         joystickRight.button(1).whileTrue(doShootSequence())
 
         joystickDev.button(2).onTrue(
