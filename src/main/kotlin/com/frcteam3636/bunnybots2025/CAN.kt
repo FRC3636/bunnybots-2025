@@ -2,6 +2,7 @@ package com.frcteam3636.bunnybots2025
 
 import com.ctre.phoenix6.CANBus
 import com.ctre.phoenix6.hardware.CANcoder
+import com.ctre.phoenix6.hardware.CANrange
 import com.ctre.phoenix6.hardware.Pigeon2
 import com.ctre.phoenix6.hardware.TalonFX
 import com.revrobotics.spark.SparkFlex
@@ -39,6 +40,7 @@ enum class CTREDeviceId(val num: Int, val bus: CANBus) {
 fun CANcoder(id: CTREDeviceId) = CANcoder(id.num, id.bus)
 fun TalonFX(id: CTREDeviceId) = TalonFX(id.num, id.bus)
 fun Pigeon2(id: CTREDeviceId) = Pigeon2(id.num, id.bus)
+fun CANrange(id: CTREDeviceId) = CANrange(id.num, id.bus)
 
 enum class REVMotorControllerId(val num: Int) {
     UpperShooterMotor(1),
