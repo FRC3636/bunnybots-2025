@@ -1,6 +1,7 @@
 package com.frcteam3636.bunnybots2025.utils
 
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
+import com.frcteam3636.bunnybots2025.utils.swerve.forEachCornerIndexed
 import edu.wpi.first.util.struct.StructSerializable
 import org.littletonrobotics.junction.LogTable
 
@@ -10,4 +11,5 @@ object LogTableUtils {
 
     inline fun <reified T : StructSerializable> LogTable.kGet(key: String, defaultValue: PerCorner<T>) =
         PerCorner.fromConventionalArray(get(key, *defaultValue.toTypedArray()))
+
 }

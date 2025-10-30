@@ -40,10 +40,10 @@ open class DrivetrainInputs {
     var gyroConnected = true
     var measuredStates = PerCorner.generate { SwerveModuleState() }
     var measuredPositions = PerCorner.generate { SwerveModulePosition() }
-    var temperatures = PerCorner.generate { Array(
-        2,
-        init = { Celsius.zero()!! }
-    ) }
+    var frontRightTemperatures = doubleArrayOf()
+    var frontLeftTemperatures = doubleArrayOf()
+    var backLeftTemperatures = doubleArrayOf()
+    var backRightTemperatures = doubleArrayOf()
 }
 
 abstract class DrivetrainIO {
@@ -60,7 +60,10 @@ abstract class DrivetrainIO {
         inputs.gyroConnected = gyro.connected
         inputs.measuredStates = modules.map { it.state }
         inputs.measuredPositions = modules.map { it.position }
-        inputs.temperatures = modules.map { it.temperatures }
+        inputs.frontRightTemperatures = modules.frontRight.temperatures.map { it.inCelsius() }.toDoubleArray()
+        inputs.backRightTemperatures = modules.backRight.temperatures.map { it.inCelsius() }.toDoubleArray()
+        inputs.frontLeftTemperatures = modules.frontLeft.temperatures.map { it.inCelsius() }.toDoubleArray()
+        inputs.backLeftTemperatures = modules.backLeft.temperatures.map { it.inCelsius() }.toDoubleArray()
     }
 
     var desiredStates: PerCorner<SwerveModuleState>
