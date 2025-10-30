@@ -202,7 +202,7 @@ object Robot : LoggedRobot() {
                     Commands.sequence(
                         Commands.waitUntil(Shooter.Flywheels.isDetected),
                         Commands.runOnce({
-                            RobotState.numPieces--
+                            RobotState.heldPieces--
                         }),
                         Commands.waitUntil(Shooter.Flywheels.isDetected.negate())
                     ).repeatedly()
@@ -234,11 +234,11 @@ object Robot : LoggedRobot() {
         )
 
         joystickRight.button(3).onTrue(Commands.runOnce({
-            RobotState.numPieces--
+            RobotState.heldPieces--
         }))
 
         joystickRight.button(4).onTrue(Commands.runOnce({
-            RobotState.numPieces++
+            RobotState.heldPieces++
         }))
 
         joystickRight.button(1).whileTrue(doShootSequence())

@@ -34,7 +34,7 @@ object Indexer : Subsystem {
         ).alongWith(
             Commands.run({
                 if (!wasDetected && inputs.isDetected) {
-                    RobotState.numPieces++
+                    RobotState.heldPieces++
                     wasDetected = true
                 } else if (!inputs.isDetected) {
                     wasDetected = false
@@ -55,7 +55,7 @@ object Indexer : Subsystem {
         ).alongWith(
             Commands.run({
                 if (!wasDetected && inputs.isDetected) {
-                    RobotState.numPieces--
+                    RobotState.heldPieces--
                     wasDetected = true
                 } else if (!inputs.isDetected) {
                     wasDetected = false
