@@ -233,12 +233,14 @@ object Drivetrain : Subsystem {
             sensorIO.updateInputs(inputs)
             Logger.processInputs("Drivetrain/Absolute Pose/$name", inputs)
 
-            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Has Measurement", inputs.measurement != null)
-            inputs.measurement?.let {
-                poseEstimator.addAbsolutePoseMeasurement(it)
-                Logger.recordOutput("Drivetrain/Absolute Pose/$name/Measurement", it)
-                Logger.recordOutput("Drivetrain/Last Added Pose", it.pose)
-                Logger.recordOutput("Drivetrain/Absolute Pose/$name/Pose", it.pose)
+            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Measurement Rejected", inputs.measurementRejected)
+            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Measurement", inputs.measurement)
+            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Pose", inputs.measurement?.pose)
+            if (!inputs.measurementRejected) {
+                inputs.measurement?.let {
+                    poseEstimator.addAbsolutePoseMeasurement(it)
+                    Logger.recordOutput("Drivetrain/Last Added Pose", it.pose)
+                }
             }
         }
 

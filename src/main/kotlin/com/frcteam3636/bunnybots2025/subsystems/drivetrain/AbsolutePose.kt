@@ -55,18 +55,22 @@ class AbsolutePoseProviderInputs : LoggableInputs {
 
     var observedTags: IntArray = intArrayOf()
 
+    var measurementRejected = false
+
     override fun toLog(table: LogTable) {
         if (measurement != null) {
             table.put("Measurement", measurement)
         }
         table.put("Connected", connected)
         table.put("ObservedTags", observedTags)
+        table.put("MeasurementRejected", measurementRejected)
     }
 
     override fun fromLog(table: LogTable) {
         measurement = table.get("Measurement", measurement)[0]
         connected = table.get("Connected", connected)
         observedTags = table.get("ObservedTags", observedTags)
+        measurementRejected = table.get("MeasurementRejected", measurementRejected)
     }
 }
 
@@ -98,6 +102,7 @@ sealed class LimelightAlgorithm {
 data class LimelightMeasurement(
     var poseMeasurement: AbsolutePoseMeasurement? = null,
     var observedTags: IntArray = intArrayOf(),
+    var shouldReject: Boolean = false,
 ) /* --- BEGIN KOTLIN COMPILER GENERATED CODE ---- */ {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -107,6 +112,7 @@ data class LimelightMeasurement(
 
         if (poseMeasurement != other.poseMeasurement) return false
         if (!observedTags.contentEquals(other.observedTags)) return false
+        if (shouldReject != other.shouldReject) return false
 
         return true
     }
@@ -130,6 +136,7 @@ class LimelightPoseProvider(
     private var observedTags = intArrayOf()
 
     private var measurement: AbsolutePoseMeasurement? = null
+    private var shouldReject: Boolean = false
     private var lock = ReentrantLock()
 
     private var lastSeenHb: Double = 0.0
@@ -148,6 +155,7 @@ class LimelightPoseProvider(
                     lock.lock()
                     measurement = temp.poseMeasurement
                     observedTags = temp.observedTags
+                    shouldReject = temp.shouldReject
                 } finally {
                     lock.unlock()
                 }
@@ -194,11 +202,13 @@ class LimelightPoseProvider(
                     measurement.observedTags = estimate.rawFiducials.mapNotNull { it?.id }.toIntArray()
 
                     // Reject zero tag or low-quality one tag readings
-                    if (estimate.tagCount == 0) return measurement
+                    if (estimate.tagCount == 0) {
+                        measurement.shouldReject = true
+                    }
                     if (estimate.tagCount == 1) {
                         val fiducial = estimate.rawFiducials[0]!!
                         if (fiducial.ambiguity > AMBIGUITY_THRESHOLD || fiducial.distToCamera > MAX_SINGLE_TAG_DISTANCE)
-                            return measurement
+                            measurement.shouldReject = true
                     }
 
                     measurement.poseMeasurement = AbsolutePoseMeasurement(
@@ -228,12 +238,11 @@ class LimelightPoseProvider(
                 LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name)?.let { estimate ->
                     measurement.observedTags = estimate.rawFiducials.mapNotNull { it?.id }.toIntArray()
                     val highSpeed = megaTagV2.gyroVelocity.abs(DegreesPerSecond) > 360.0
-                    if (estimate.tagCount == 0 || highSpeed) return measurement
+                    if (estimate.tagCount == 0 || highSpeed) measurement.shouldReject = true
 
                     measurement.poseMeasurement = AbsolutePoseMeasurement(
                         estimate.pose,
                         estimate.timestampSeconds.seconds,
-                        // This value is pulled directly from the Limelight docs (linked at the top of this class)
                         MEGATAG2_STD_DEV(estimate.avgTagDist, estimate.tagCount)
                     )
                 }
@@ -245,10 +254,14 @@ class LimelightPoseProvider(
     }
 
     override fun updateInputs(inputs: AbsolutePoseProviderInputs) {
-        lock.lock()
-        inputs.measurement = measurement
-        inputs.observedTags = observedTags
-        lock.unlock()
+        try {
+            lock.lock()
+            inputs.measurement = measurement
+            inputs.observedTags = observedTags
+            inputs.measurementRejected = shouldReject
+        } finally {
+            lock.unlock()
+        }
 
         // We assume the camera has disconnected if there are no new updates for several ticks.
         val hb = hbSub.get()
