@@ -3,9 +3,11 @@ package com.frcteam3636.bunnybots2025.subsystems.shooter
 import com.frcteam3636.bunnybots2025.REVMotorControllerId
 import com.frcteam3636.bunnybots2025.SparkFlex
 import com.frcteam3636.bunnybots2025.utils.math.amps
+import com.frcteam3636.bunnybots2025.utils.math.celsius
 import com.frcteam3636.bunnybots2025.utils.math.rpm
 import com.revrobotics.spark.SparkLowLevel
 import edu.wpi.first.units.Units.Amps
+import edu.wpi.first.units.Units.Celsius
 import edu.wpi.first.units.Units.RotationsPerSecond
 import org.team9432.annotation.Logged
 
@@ -13,6 +15,7 @@ import org.team9432.annotation.Logged
 open class FeederInputs {
     var feederVelocity = RotationsPerSecond.zero()!!
     var feederCurrent = Amps.zero()!!
+    var feederTemperature = Celsius.zero()!!
 }
 
 interface FeederIO {
@@ -32,6 +35,7 @@ class FeederIOReal : FeederIO {
     override fun updateInputs(inputs: FeederInputs) {
         inputs.feederVelocity = shooterFeederMotor.encoder.velocity.rpm
         inputs.feederCurrent = shooterFeederMotor.outputCurrent.amps
+        inputs.feederTemperature = shooterFeederMotor.motorTemperature.celsius
     }
 }
 

@@ -67,7 +67,7 @@ object Drivetrain : Subsystem {
     fun calculateWheelRadius(): Command = Commands.parallel(
         Commands.sequence(
             Commands.runOnce({
-                Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Running", true)
+                Logger.recordOutput("Drivetrain/Wheel Radius Calculated/Running", true)
                 limiter.reset(0.0)
             }),
             Commands.run({
@@ -204,6 +204,7 @@ object Drivetrain : Subsystem {
             Logger.processInputs("Drivetrain", inputs)
             val odometryTimestamps = io.getOdometryTimestamps()
             val odometryPositions = io.getOdometryPositions()
+            val odometryYawPositons = io.getOdometryYawPositions()
             Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions[0].size)
             for (i in 0..<odometryTimestamps.size) {
                 val modulePositions = Array(4) { index ->
@@ -219,7 +220,7 @@ object Drivetrain : Subsystem {
                     lastModulePositions[moduleIndex] = modulePositions[moduleIndex]
                 }
 
-                val odometryYawPosition = Rotation2d.fromDegrees(inputs.odometryYawPositions[i])
+                val odometryYawPosition = Rotation2d.fromDegrees(odometryYawPositons[i])
                 poseEstimator.updateWithTime(odometryTimestamps[i], odometryYawPosition, modulePositions)
             }
         } finally {

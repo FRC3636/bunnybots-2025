@@ -8,11 +8,14 @@ import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.REVMotorControllerId
 import com.frcteam3636.bunnybots2025.SparkFlex
 import com.frcteam3636.bunnybots2025.utils.math.amps
+import com.frcteam3636.bunnybots2025.utils.math.celsius
 import com.frcteam3636.bunnybots2025.utils.math.inVolts
 import com.frcteam3636.bunnybots2025.utils.math.rpm
 import com.revrobotics.spark.SparkLowLevel
 import edu.wpi.first.units.Units.Amps
+import edu.wpi.first.units.Units.Celsius
 import edu.wpi.first.units.Units.RotationsPerSecond
+import edu.wpi.first.units.measure.Temperature
 import edu.wpi.first.units.measure.Voltage
 import org.team9432.annotation.Logged
 
@@ -22,6 +25,8 @@ open class FlywheelInputs {
     var topCurrent = Amps.zero()!!
     var bottomVelocity = RotationsPerSecond.zero()!!
     var bottomCurrent = Amps.zero()!!
+    var topTemperature = Celsius.zero()!!
+    var bottomTemperature = Celsius.zero()!!
     var isDetected = false
 }
 
@@ -86,6 +91,8 @@ class FlywheelIOReal : FlywheelIO {
         inputs.bottomVelocity = lowerShooterMotor.encoder.velocity.rpm
         inputs.bottomCurrent = lowerShooterMotor.outputCurrent.amps
         inputs.isDetected = detectedSignal.value
+        inputs.topTemperature = upperShooterMotor.motorTemperature.celsius
+        inputs.bottomTemperature = lowerShooterMotor.motorTemperature.celsius
     }
 
     override fun getStatusSignals(): MutableList<BaseStatusSignal> {

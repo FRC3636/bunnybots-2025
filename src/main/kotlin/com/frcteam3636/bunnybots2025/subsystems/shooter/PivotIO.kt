@@ -22,6 +22,7 @@ open class PivotInputs {
     var pivotAngle = Rotations.zero()!!
     var pivotCurrent = Amps.zero()!!
     var pivotVelocity = RotationsPerSecond.zero()!!
+    var pivotMotorTemperature = Celsius.zero()!!
 }
 
 interface PivotIO {
@@ -61,9 +62,10 @@ class PivotIOReal : PivotIO {
     private val positionSignal = shooterPivotMotor.position
     private val currentSignal = shooterPivotMotor.supplyCurrent
     private val velocitySignal = shooterPivotMotor.velocity
+    private val temperatureSignal = shooterPivotMotor.deviceTemp
 
     init {
-        BaseStatusSignal.setUpdateFrequencyForAll(100.0, positionSignal, currentSignal, velocitySignal)
+        BaseStatusSignal.setUpdateFrequencyForAll(100.0, positionSignal, currentSignal, velocitySignal, temperatureSignal)
         shooterPivotMotor.optimizeBusUtilization()
     }
 
@@ -91,6 +93,7 @@ class PivotIOReal : PivotIO {
         inputs.pivotAngle = positionSignal.value
         inputs.pivotCurrent = currentSignal.value
         inputs.pivotVelocity = velocitySignal.value
+        inputs.pivotMotorTemperature = temperatureSignal.value
     }
 
     internal companion object Constants {

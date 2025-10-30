@@ -20,6 +20,8 @@ import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.kinematics.SwerveModulePosition
 import edu.wpi.first.math.kinematics.SwerveModuleState
 import edu.wpi.first.math.system.plant.DCMotor
+import edu.wpi.first.units.Units.Celsius
+import edu.wpi.first.units.measure.Temperature
 import edu.wpi.first.units.measure.Voltage
 import org.ironmaple.simulation.SimulatedArena
 import org.ironmaple.simulation.drivesims.COTS
@@ -38,8 +40,10 @@ open class DrivetrainInputs {
     var gyroConnected = true
     var measuredStates = PerCorner.generate { SwerveModuleState() }
     var measuredPositions = PerCorner.generate { SwerveModulePosition() }
-    var odometryYawTimestamps: DoubleArray = doubleArrayOf()
-    var odometryYawPositions: DoubleArray = doubleArrayOf()
+    var temperatures = PerCorner.generate { Array(
+        2,
+        init = { Celsius.zero()!! }
+    ) }
 }
 
 abstract class DrivetrainIO {
@@ -54,10 +58,9 @@ abstract class DrivetrainIO {
         inputs.gyroRotation = gyro.rotation
         inputs.gyroVelocity = gyro.velocity
         inputs.gyroConnected = gyro.connected
-        inputs.odometryYawPositions = gyro.odometryYawPositions
-        inputs.odometryYawTimestamps = gyro.odometryYawTimestamps
         inputs.measuredStates = modules.map { it.state }
         inputs.measuredPositions = modules.map { it.position }
+        inputs.temperatures = modules.map { it.temperatures }
     }
 
     var desiredStates: PerCorner<SwerveModuleState>
@@ -105,6 +108,15 @@ abstract class DrivetrainIO {
 
     fun getOdometryTimestamps(): DoubleArray {
         return modules[DrivetrainCorner.FRONT_LEFT].odometryTimestamps
+    }
+
+    @Suppress("unused")
+    fun getOdometryYawTimestamps(): DoubleArray {
+        return gyro.odometryYawTimestamps
+    }
+
+    fun getOdometryYawPositions(): DoubleArray {
+        return gyro.odometryYawPositions
     }
 
     fun getStatusSignals(): MutableList<BaseStatusSignal> {

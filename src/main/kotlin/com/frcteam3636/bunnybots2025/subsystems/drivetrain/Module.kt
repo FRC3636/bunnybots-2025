@@ -21,6 +21,7 @@ import edu.wpi.first.units.Units.Volts
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.units.measure.LinearVelocity
+import edu.wpi.first.units.measure.Temperature
 import edu.wpi.first.units.measure.Voltage
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation
 import org.ironmaple.simulation.motorsims.SimulatedMotorController
@@ -49,6 +50,7 @@ interface SwerveModule {
     var odometryTurnPositions: Array<Rotation2d>
     var odometryDrivePositions: DoubleArray
     var odometryPositions: Array<SwerveModulePosition>
+    var temperatures: Array<Temperature>
 
     fun getSignals(): Array<BaseStatusSignal> {
         return arrayOf()
@@ -67,6 +69,9 @@ class Mk5nSwerveModule(
     override var odometryDrivePositions = doubleArrayOf()
     override var odometryTurnPositions: Array<Rotation2d> = emptyArray()
     override var odometryPositions: Array<SwerveModulePosition> = emptyArray()
+    override var temperatures: Array<Temperature>
+        get() = TODO("Not yet implemented")
+        set(value) {}
 
     override val state: SwerveModuleState
         get() = SwerveModuleState(
@@ -122,12 +127,14 @@ class Mk5nSwerveModule(
             )
         }
         timestampQueue.clear()
+        temperatures = arrayOf(drivingMotor.temperature, turningMotor.temperature)
     }
 }
 
 interface SwerveTurningMotor {
     var position: Angle
     var odometryTurnPositions: Array<Rotation2d>
+    val temperature: Temperature
     fun getSignals(): Array<BaseStatusSignal> {
         return arrayOf()
     }
@@ -140,6 +147,7 @@ interface SwerveDrivingMotor {
     val positionRad: Angle
     var velocity: LinearVelocity
     var odometryDrivePositions: DoubleArray
+    val temperature: Temperature
     fun setVoltage(voltage: Voltage)
     fun getSignals(): Array<BaseStatusSignal> {
         return arrayOf()
@@ -170,12 +178,14 @@ class DrivingTalon(id: CTREDeviceId) : SwerveDrivingMotor {
 
     private val positionSignal = inner.position
     private val velocitySignal = inner.velocity
+    private val temperatureSignal = inner.deviceTemp
 
     private val positionQueue: Queue<Double> =
         PhoenixOdometryThread.getInstance().registerSignal(positionSignal.clone())
 
     init {
-        BaseStatusSignal.setUpdateFrequencyForAll(250.0, positionSignal, velocitySignal)
+        BaseStatusSignal.setUpdateFrequencyForAll(250.0, positionSignal)
+        BaseStatusSignal.setUpdateFrequencyForAll(100.0, velocitySignal)
         inner.optimizeBusUtilization()
     }
 
@@ -195,6 +205,9 @@ class DrivingTalon(id: CTREDeviceId) : SwerveDrivingMotor {
             inner.setControl(velocityControl.withVelocity(value.toAngular(WHEEL_RADIUS)))
         }
 
+    override val temperature: Temperature
+        get() = temperatureSignal.value
+
     private val voltageControl = VoltageOut(0.0).apply {
         EnableFOC = true
     }
@@ -204,7 +217,7 @@ class DrivingTalon(id: CTREDeviceId) : SwerveDrivingMotor {
     }
 
     override fun getSignals(): Array<BaseStatusSignal> {
-        return arrayOf(positionSignal, velocitySignal)
+        return arrayOf(positionSignal, velocitySignal, temperatureSignal)
     }
 
     override fun periodic() {
@@ -237,6 +250,7 @@ class TurningTalon(id: CTREDeviceId, encoderId: CTREDeviceId, magnetOffset: Doub
     }
 
     private val positionSignal = inner.position
+    private val temperatureSignal = inner.deviceTemp
 
     private val positionQueue: Queue<Double> =
         PhoenixOdometryThread.getInstance().registerSignal(positionSignal.clone())
@@ -256,6 +270,9 @@ class TurningTalon(id: CTREDeviceId, encoderId: CTREDeviceId, magnetOffset: Doub
         EnableFOC = true
     }
 
+    override val temperature: Temperature
+        get() = temperatureSignal.value
+
     override var position: Angle
         set(value) {
             inner.setControl(positonControl.withPosition(value))
@@ -263,7 +280,7 @@ class TurningTalon(id: CTREDeviceId, encoderId: CTREDeviceId, magnetOffset: Doub
         get() = positionSignal.value
 
     override fun getSignals(): Array<BaseStatusSignal> {
-        return arrayOf(positionSignal)
+        return arrayOf(positionSignal, temperatureSignal)
     }
 
     override fun periodic() {
@@ -277,6 +294,7 @@ class SimSwerveModule(val sim: SwerveModuleSimulation) : SwerveModule {
     override var odometryDrivePositions: DoubleArray = doubleArrayOf()
     override var odometryTurnPositions: Array<Rotation2d> = emptyArray()
     override var odometryPositions: Array<SwerveModulePosition> = emptyArray()
+    override var temperatures: Array<Temperature> = emptyArray()
     private val driveMotor: SimulatedMotorController.GenericMotorController = sim.useGenericMotorControllerForDrive()
 //        .withCurrentLimit(DRIVING_CURRENT_LIMIT)
 

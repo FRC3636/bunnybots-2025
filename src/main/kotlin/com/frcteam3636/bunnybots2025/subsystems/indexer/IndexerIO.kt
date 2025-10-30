@@ -8,16 +8,20 @@ import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.REVMotorControllerId
 import com.frcteam3636.bunnybots2025.SparkFlex
 import com.frcteam3636.bunnybots2025.utils.math.amps
+import com.frcteam3636.bunnybots2025.utils.math.celsius
 import com.frcteam3636.bunnybots2025.utils.math.rpm
 import com.revrobotics.spark.SparkLowLevel
 import edu.wpi.first.units.Units.Amps
+import edu.wpi.first.units.Units.Celsius
 import edu.wpi.first.units.Units.RotationsPerSecond
+import edu.wpi.first.units.measure.Temperature
 import org.team9432.annotation.Logged
 
 @Logged
 open class IndexerInputs {
     var indexerVelocity = RotationsPerSecond.zero()!!
     var indexerCurrent = Amps.zero()!!
+    var indexerTemperature = Celsius.zero()!!
     var isDetected = false
 }
 
@@ -52,6 +56,7 @@ class IndexerIOReal : IndexerIO {
     override fun updateInputs(inputs: IndexerInputs) {
         inputs.indexerCurrent = indexerMotor.outputCurrent.amps
         inputs.indexerVelocity = indexerMotor.encoder.velocity.rpm
+        inputs.indexerTemperature = indexerMotor.motorTemperature.celsius
     }
 
     override fun getSignals(): MutableList<BaseStatusSignal> {

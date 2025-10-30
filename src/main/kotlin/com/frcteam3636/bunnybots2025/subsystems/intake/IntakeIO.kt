@@ -17,9 +17,11 @@ import org.team9432.annotation.Logged
 open class IntakeInputs {
     var rollerVelocity = RotationsPerSecond.zero()!!
     var rollerCurrent = Amps.zero()!!
+    var rollerTemperature = Celsius.zero()!!
     var pivotPosition = Rotations.zero()!!
     var pivotCurrent = Amps.zero()!!
     var pivotVelocity = RotationsPerSecond.zero()!!
+    var pivotTemperature = Celsius.zero()!!
 }
 
 interface IntakeIO {
@@ -68,6 +70,7 @@ class IntakeIOReal : IntakeIO {
     private val positionSignal = intakePivotMotor.position
     private val currentSignal = intakePivotMotor.supplyCurrent
     private val velocitySignal = intakePivotMotor.velocity
+    private val temperatureSignal = intakePivotMotor.deviceTemp
 
     private val positionControl = MotionMagicVoltage(0.0.rotations)
 
@@ -86,10 +89,12 @@ class IntakeIOReal : IntakeIO {
         inputs.pivotPosition = positionSignal.value
         inputs.pivotCurrent = currentSignal.value
         inputs.rollerVelocity = velocitySignal.value
+        inputs.pivotTemperature = temperatureSignal.value
+        inputs.rollerTemperature = intakeMotor.motorTemperature.celsius
     }
 
     override fun getSignals(): MutableList<BaseStatusSignal> {
-        return mutableListOf(positionSignal, currentSignal)
+        return mutableListOf(positionSignal, currentSignal, temperatureSignal)
     }
 
     internal companion object Constants {
