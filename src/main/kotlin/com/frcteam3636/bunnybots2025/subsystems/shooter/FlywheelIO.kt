@@ -47,9 +47,7 @@ class FlywheelIOReal : FlywheelIO {
     private var canRange = CANrange(CTREDeviceId.CANRangeShooter.num).apply {
         configurator.apply(
             CANrangeConfiguration().apply {
-                ProximityParams.ProximityThreshold = 0.35 // fix
-                FovParams.FOVCenterY = 10.0 // fix
-                FovParams.FOVRangeY = 7.0 // fix
+                ProximityParams.ProximityThreshold = 0.1 // fix
                 ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz
             }
         )

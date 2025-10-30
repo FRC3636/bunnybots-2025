@@ -36,8 +36,6 @@ class IndexerIOReal : IndexerIO {
         configurator.apply(
             CANrangeConfiguration().apply {
                 ProximityParams.ProximityThreshold = 0.35 // fix
-                FovParams.FOVCenterY = 10.0 // fix
-                FovParams.FOVRangeY = 7.0 // fix
                 ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz
             }
         )
