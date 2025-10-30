@@ -23,6 +23,8 @@ import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.units.Units.Celsius
 import edu.wpi.first.units.measure.Temperature
 import edu.wpi.first.units.measure.Voltage
+import edu.wpi.first.wpilibj.Filesystem
+import edu.wpi.first.wpilibj.RobotController
 import org.ironmaple.simulation.SimulatedArena
 import org.ironmaple.simulation.drivesims.COTS
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation
@@ -209,5 +211,5 @@ class DrivetrainIOSim : DrivetrainIO() {
 }
 
 val FIELD_LAYOUT = AprilTagFieldLayout.loadFromResource(
-    AprilTagFields.k2025ReefscapeWelded.m_resourceFile
+    Filesystem.getDeployDirectory().path + "/Bunnybots-2025-AprilTagMap.json"
 )!!
