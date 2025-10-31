@@ -37,8 +37,7 @@ object Shooter {
             Robot.Model.SIMULATION -> FlywheelIOSim()
         }
 
-        private var upperSetpoint = RadiansPerSecond.zero()!!
-        private var lowerSetpoint = RadiansPerSecond.zero()!!
+        private var setpoint = RadiansPerSecond.zero()!!
 
         val isDetected: Trigger =
             Trigger {
@@ -47,7 +46,7 @@ object Shooter {
 
         val atDesiredVelocity =
             Trigger {
-                val velocityDifference = (inputs.topVelocity.minus(upperSetpoint).baseUnitMagnitude().absoluteValue)
+                val velocityDifference = (inputs.topVelocity.minus(setpoint).baseUnitMagnitude().absoluteValue)
                 Logger.recordOutput("Shooter/Flywheels/Velocity Difference", velocityDifference)
                 Logger.recordOutput(
                     "Shooter/Flywheels/At Desired Velocity",
@@ -72,11 +71,6 @@ object Shooter {
 
         private val inputs = LoggedFlywheelInputs()
 
-        private var upperPidController = PIDController(Constants.UPPER_PID_GAINS)
-        private var lowerPidController = PIDController(Constants.LOWER_PID_GAINS)
-        private var upperFFController = SimpleMotorFeedforward(Constants.UPPER_FF_GAINS)
-        private var lowerFFController = SimpleMotorFeedforward(Constants.LOWER_FF_GAINS)
-
         @Suppress("Unused")
         var sysID = SysIdRoutine(
             SysIdRoutine.Config(
@@ -95,54 +89,24 @@ object Shooter {
 
             Logger.processInputs("Shooter/Flywheels", inputs)
 
-            Logger.recordOutput("Shooter/Flywheels/Upper Setpoint", upperSetpoint)
-            Logger.recordOutput("Shooter/Flywheels/Lower Setpoint", lowerSetpoint)
-
-            val upperVoltage = (upperFFController.calculate(upperSetpoint.inRadiansPerSecond()) +
-                    upperPidController.calculate(
-                        inputs.topVelocity.inRadiansPerSecond(),
-                        upperSetpoint.inRadiansPerSecond()
-                    )).volts
-
-            val lowerVoltage = (lowerFFController.calculate(lowerSetpoint.inRadiansPerSecond()) +
-                    lowerPidController.calculate(
-                        inputs.bottomVelocity.inRadiansPerSecond(),
-                        lowerSetpoint.inRadiansPerSecond()
-                    )).volts
-
-            Logger.recordOutput("Shooter/Flywheels/Upper Calculated Voltage", upperVoltage)
-            Logger.recordOutput("Shooter/Flywheels/Lower Calculated Voltage", lowerVoltage)
-
-            io.setVoltage(
-                upperVoltage,
-                lowerVoltage
-            )
+            Logger.recordOutput("Shooter/Flywheels/Setpoint", setpoint)
+            io.setVelocity(setpoint) // move this into commands?
         }
 
         fun idle(): Command =
             startEnd(
                 {
-                    upperSetpoint = 1.radiansPerSecond
-                    lowerSetpoint = 1.radiansPerSecond
+                    setpoint = 1.radiansPerSecond
                 },
                 {
-                    upperSetpoint = 0.radiansPerSecond
-                    lowerSetpoint = 0.radiansPerSecond
+                    setpoint = 0.radiansPerSecond
                 }
             )
 
         fun shoot(): Command =
             run {
-                upperSetpoint = Pivot.target.profile.getVelocity()
-                lowerSetpoint = Pivot.target.profile.getVelocity()
+                setpoint = Pivot.target.profile.getVelocity()
             }
-
-        object Constants {
-            val UPPER_PID_GAINS = PIDGains()
-            val LOWER_PID_GAINS = PIDGains()
-            val UPPER_FF_GAINS = MotorFFGains()
-            val LOWER_FF_GAINS = MotorFFGains()
-        }
     }
 
     object Pivot : Subsystem {
