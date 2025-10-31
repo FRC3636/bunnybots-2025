@@ -157,8 +157,8 @@ class DrivingTalon(id: CTREDeviceId) : SwerveDrivingMotor {
     private val inner = TalonFX(id).apply {
         configurator.apply(TalonFXConfiguration().apply {
             Slot0.apply {
-                pidGains = DRIVING_PID_GAINS_TALON
-                motorFFGains = DRIVING_FF_GAINS_TALON
+                pidGains = DRIVING_PID_GAINS
+                motorFFGains = DRIVING_FF_GAINS
             }
             CurrentLimits.apply {
                 StatorCurrentLimit = DRIVING_CURRENT_LIMIT.inAmps()
@@ -299,8 +299,8 @@ class SimSwerveModule(val sim: SwerveModuleSimulation) : SwerveModule {
 //        .withCurrentLimit(TURNING_CURRENT_LIMIT)
 
     // TODO: figure out what the moment of inertia actually is and if it even matters
-    private val drivingFeedforward = SimpleMotorFeedforward(DRIVING_FF_GAINS_TALON)
-    private val drivingFeedback = PIDController(DRIVING_PID_GAINS_TALON)
+    private val drivingFeedforward = SimpleMotorFeedforward(DRIVING_FF_GAINS)
+    private val drivingFeedback = PIDController(DRIVING_PID_GAINS)
 
     private val turningFeedback = PIDController(TURNING_PID_GAINS).apply { enableContinuousInput(0.0, TAU) }
 
@@ -353,8 +353,8 @@ internal val WHEEL_RADIUS = 2.inches
 const val DRIVING_GEAR_RATIO = TunerConstants.kDriveGearRatio
 const val TURNING_GEAR_RATIO = TunerConstants.kSteerGearRatio
 
-internal val DRIVING_PID_GAINS_TALON: PIDGains = TunerConstants.driveGains!!.pidGains
-internal val DRIVING_FF_GAINS_TALON: MotorFFGains = TunerConstants.driveGains!!.motorFFGains
+internal val DRIVING_PID_GAINS: PIDGains = TunerConstants.driveGains!!.pidGains
+internal val DRIVING_FF_GAINS: MotorFFGains = TunerConstants.driveGains!!.motorFFGains
 
 internal val TURNING_PID_GAINS: PIDGains = TunerConstants.steerGains!!.pidGains
 internal val TURNING_FF_GAINS: MotorFFGains = TunerConstants.steerGains!!.motorFFGains

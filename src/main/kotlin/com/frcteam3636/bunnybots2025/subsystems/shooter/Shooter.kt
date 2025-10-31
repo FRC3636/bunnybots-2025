@@ -64,10 +64,6 @@ object Shooter {
             speedInterpolationTable.putVelocity(7.5.meters, 45.0.radiansPerSecond)
             speedInterpolationTable.putVelocity(10.0.meters, 30.0.radiansPerSecond)
             speedInterpolationTable.putVelocity(12.5.meters, 25.0.radiansPerSecond)
-
-            mechanism.getRoot("Shooter/Pivot", 50.0, 150.0).apply {
-                append(pivotAngleLigament)
-            }
         }
 
         private val inputs = LoggedFlywheelInputs()
@@ -132,7 +128,7 @@ object Shooter {
             angleInterpolationTable.putAngle(10.0.meters, 30.0.degrees)
             angleInterpolationTable.putAngle(12.5.meters, 25.0.degrees)
 
-            mechanism.getRoot("Shooter/Pivot", 50.0, 150.0).apply {
+            mechanism.getRoot("Shooter Pivot", 50.0, 150.0).apply {
                 append(pivotAngleLigament)
             }
         }
