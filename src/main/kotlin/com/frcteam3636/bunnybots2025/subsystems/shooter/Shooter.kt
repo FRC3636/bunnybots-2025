@@ -4,6 +4,10 @@ import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
+import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Flywheels.speedInterpolationTable
+import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Pivot.angleInterpolationTable
+import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Pivot.mechanism
+import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Pivot.pivotAngleLigament
 import com.frcteam3636.bunnybots2025.utils.math.*
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
@@ -51,6 +55,20 @@ object Shooter {
                 )
                 velocityDifference < FLYWHEEL_VELOCITY_TOLERANCE.baseUnitMagnitude()
             }
+
+        val speedInterpolationTable = InterpolatingDoubleTreeMap()
+
+        init {
+            //FIXME plot points to create regression
+            speedInterpolationTable.put(5.0, 60.0)
+            speedInterpolationTable.put(7.5, 45.0)
+            speedInterpolationTable.put(10.0, 30.0)
+            speedInterpolationTable.put(12.5, 25.0)
+
+            mechanism.getRoot("Shooter/Pivot", 50.0, 150.0).apply {
+                append(pivotAngleLigament)
+            }
+        }
 
         private val inputs = LoggedFlywheelInputs()
 
@@ -140,14 +158,14 @@ object Shooter {
         var mechanism = LoggedMechanism2d(100.0, 200.0)
         var pivotAngleLigament = LoggedMechanismLigament2d("Pivot Ligament", 50.0, 180.0, 5.0, Color8Bit(Color.kGreen))
 
-        private val interpolationTable = InterpolatingDoubleTreeMap()
+        val angleInterpolationTable = InterpolatingDoubleTreeMap()
 
         init {
             //FIXME plot points to create regression
-            interpolationTable.put(5.0, 60.0)
-            interpolationTable.put(7.5, 45.0)
-            interpolationTable.put(10.0, 30.0)
-            interpolationTable.put(12.5, 25.0)
+            angleInterpolationTable.put(5.0, 60.0)
+            angleInterpolationTable.put(7.5, 45.0)
+            angleInterpolationTable.put(10.0, 30.0)
+            angleInterpolationTable.put(12.5, 25.0)
 
             mechanism.getRoot("Shooter/Pivot", 50.0, 150.0).apply {
                 append(pivotAngleLigament)
@@ -174,46 +192,6 @@ object Shooter {
 
         fun moveToActiveTarget(): Command =
             run { io.turnToAngle(target.profile.getPosition()) }
-
-        enum class Target(val profile: PivotProfile) {
-            AIM(
-                PivotProfile(
-                    {
-                        val pettingZooTranslation = DriverStation.getAlliance()
-                            .orElse(DriverStation.Alliance.Blue)
-                            .zooTranslation
-                        val zooPose = Pose2d(
-                            pettingZooTranslation.toTranslation2d(),
-                            Rotation2d()
-                        )
-                        val distance = zooPose.translation.minus(Drivetrain.estimatedPose.translation).norm
-                        interpolationTable.get(distance).degrees
-                    }, {
-                        5000.rpm
-                    }
-                )
-            ),
-            PETTINGZOO(
-                PivotProfile(
-                    {
-                        45.degrees
-                    },
-                    {
-                        1000.rpm
-                    }
-                )
-            ),
-            STOWED(
-                PivotProfile(
-                    {
-                        Degrees.zero()!!
-                    },
-                    {
-                        1000.rpm // dude idek what to set this to lmao
-                    }
-                )
-            )
-        }
     }
 
     object Feeder : Subsystem {
@@ -245,6 +223,52 @@ data class PivotProfile(
     val getPosition: () -> Angle,
     val getVelocity: () -> AngularVelocity
 )
+
+fun distanceToZoo(): Double {
+    val pettingZooTranslation = DriverStation.getAlliance()
+        .orElse(DriverStation.Alliance.Blue)
+        .zooTranslation
+    val zooPose = Pose2d(
+        pettingZooTranslation.toTranslation2d(),
+        Rotation2d()
+    )
+    val distance = zooPose.translation.minus(Drivetrain.estimatedPose.translation).norm
+    return distance
+}
+
+
+// should we move this inside the shooter object?
+enum class Target(val profile: PivotProfile) {
+    AIM(
+        PivotProfile(
+            {
+                angleInterpolationTable.get(distanceToZoo()).degrees
+            }, {
+                speedInterpolationTable.get(distanceToZoo()).rpm
+            }
+        )
+    ),
+    PETTINGZOO(
+        PivotProfile(
+            {
+                45.degrees
+            },
+            {
+                1000.rpm
+            }
+        )
+    ),
+    STOWED(
+        PivotProfile(
+            {
+                Degrees.zero()!!
+            },
+            {
+                1000.rpm // dude idek what to set this to lmao
+            }
+        )
+    )
+}
 
 val DriverStation.Alliance.zooTranslation: Translation3d
     get() = when (this) { // got these values from field CAD

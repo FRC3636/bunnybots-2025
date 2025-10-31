@@ -6,6 +6,7 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
 import com.frcteam3636.bunnybots2025.subsystems.indexer.Indexer
 import com.frcteam3636.bunnybots2025.subsystems.intake.Intake
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
+import com.frcteam3636.bunnybots2025.subsystems.shooter.Target
 import com.frcteam3636.bunnybots2025.subsystems.shooter.zooTranslation
 import com.frcteam3636.version.BUILD_DATE
 import com.frcteam3636.version.DIRTY
@@ -260,9 +261,9 @@ object Robot : LoggedRobot() {
             )
         )
 
-        controller.a().onTrue(Shooter.Pivot.setTarget(Shooter.Pivot.Target.STOWED))
-        controller.b().onTrue(Shooter.Pivot.setTarget(Shooter.Pivot.Target.PETTINGZOO))
-        controller.y().onTrue(Shooter.Pivot.setTarget(Shooter.Pivot.Target.AIM))
+        controller.a().onTrue(Shooter.Pivot.setTarget(Target.STOWED))
+        controller.b().onTrue(Shooter.Pivot.setTarget(Target.PETTINGZOO))
+        controller.y().onTrue(Shooter.Pivot.setTarget(Target.AIM))
 
         controllerDev.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
         controllerDev.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
