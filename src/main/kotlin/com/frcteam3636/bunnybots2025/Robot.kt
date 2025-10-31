@@ -65,7 +65,7 @@ object Robot : LoggedRobot() {
 
     var didRefreshSucceed = true
 
-    private val statusSignals = mutableListOf<BaseStatusSignal>()
+    private var statusSignals: Array<BaseStatusSignal> = arrayOf()
 
     var beforeFirstEnable = true
 
@@ -313,7 +313,7 @@ object Robot : LoggedRobot() {
         reportDiagnostics()
 
         if (isReal()) {
-            val refresh = BaseStatusSignal.refreshAll(*statusSignals.toTypedArray())
+            val refresh = BaseStatusSignal.refreshAll(*statusSignals)
             didRefreshSucceed = refresh.isOK
         }
 
