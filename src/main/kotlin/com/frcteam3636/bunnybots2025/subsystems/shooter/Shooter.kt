@@ -62,9 +62,10 @@ object Shooter {
         @Suppress("Unused")
         var sysID = SysIdRoutine(
             SysIdRoutine.Config(
-                0.5.voltsPerSecond, 2.volts, null, {
-                    SignalLogger.writeString("state", it.toString())
-                }), SysIdRoutine.Mechanism(
+                0.5.voltsPerSecond, 2.volts, null
+            ) {
+                SignalLogger.writeString("state", it.toString())
+            }, SysIdRoutine.Mechanism(
                 io::setVoltage,
                 null,
                 this,
