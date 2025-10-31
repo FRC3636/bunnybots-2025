@@ -67,8 +67,6 @@ object Robot : LoggedRobot() {
 
     private var statusSignals: Array<BaseStatusSignal> = arrayOf()
 
-    var beforeFirstEnable = true
-
     // This is here because if we put it in drivetrain a NullPointException is thrown
     // from PhoenixOdometryThread.
     // I'm guessing this is some sort of race condition.
@@ -327,18 +325,21 @@ object Robot : LoggedRobot() {
         if (RobotState.heldPieces < 0) {
             RobotState.heldPieces = 0
         }
+
+        Logger.recordOutput("RobotState/Held Pieces", RobotState.heldPieces)
+        Logger.recordOutput("RobotState/Before First Enable", RobotState.beforeFirstEnable)
     }
 
     override fun autonomousInit() {
-        if (beforeFirstEnable)
-            beforeFirstEnable = true
+        if (RobotState.beforeFirstEnable)
+            RobotState.beforeFirstEnable = true
 //        autoCommand = Dashboard.autoChooser.selected
         autoCommand?.schedule()
     }
 
     override fun teleopInit() {
-        if (beforeFirstEnable)
-            beforeFirstEnable = true
+        if (RobotState.beforeFirstEnable)
+            RobotState.beforeFirstEnable = true
         autoCommand?.cancel()
     }
 

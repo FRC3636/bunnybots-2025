@@ -5,6 +5,7 @@ package com.frcteam3636.bunnybots2025.subsystems.drivetrain
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.StatusSignal
 import com.frcteam3636.bunnybots2025.Robot
+import com.frcteam3636.bunnybots2025.RobotState
 import com.frcteam3636.bunnybots2025.utils.LimelightHelpers
 import com.frcteam3636.bunnybots2025.utils.math.degrees
 import com.frcteam3636.bunnybots2025.utils.math.inSeconds
@@ -167,7 +168,7 @@ class LimelightPoseProvider(
     private fun updateCurrentMeasurement(): LimelightMeasurement {
         val measurement = LimelightMeasurement()
 
-        if ((!Robot.beforeFirstEnable) && currentAlgorithm == LimelightAlgorithm.MegaTag) {
+        if ((!RobotState.beforeFirstEnable) && currentAlgorithm == LimelightAlgorithm.MegaTag) {
             currentAlgorithm = megaTagV2
             if (isLL4)
                 LimelightHelpers.SetIMUMode(name, 3)
@@ -188,7 +189,7 @@ class LimelightPoseProvider(
                             LimelightHelpers.SetThrottle(name, 100)
                             isThrottled = true
                         }
-                        if (Robot.beforeFirstEnable) {
+                        if (RobotState.beforeFirstEnable) {
                             LimelightHelpers.SetIMUMode(name, 1)
                             LimelightHelpers.SetRobotOrientation(
                                 name,

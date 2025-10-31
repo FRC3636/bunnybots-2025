@@ -18,6 +18,7 @@ import edu.wpi.first.units.Units.Degrees
 import edu.wpi.first.units.Units.RadiansPerSecond
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
+import edu.wpi.first.units.measure.Distance
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.util.Color
 import edu.wpi.first.wpilibj.util.Color8Bit
@@ -59,10 +60,10 @@ object Shooter {
 
         init {
             //FIXME plot points to create regression
-            speedInterpolationTable.put(5.0, 60.0)
-            speedInterpolationTable.put(7.5, 45.0)
-            speedInterpolationTable.put(10.0, 30.0)
-            speedInterpolationTable.put(12.5, 25.0)
+            speedInterpolationTable.putVelocity(5.0.meters, 60.0.radiansPerSecond)
+            speedInterpolationTable.putVelocity(7.5.meters, 45.0.radiansPerSecond)
+            speedInterpolationTable.putVelocity(10.0.meters, 30.0.radiansPerSecond)
+            speedInterpolationTable.putVelocity(12.5.meters, 25.0.radiansPerSecond)
 
             mechanism.getRoot("Shooter/Pivot", 50.0, 150.0).apply {
                 append(pivotAngleLigament)
@@ -126,10 +127,10 @@ object Shooter {
 
         init {
             //FIXME plot points to create regression
-            angleInterpolationTable.put(5.0, 60.0)
-            angleInterpolationTable.put(7.5, 45.0)
-            angleInterpolationTable.put(10.0, 30.0)
-            angleInterpolationTable.put(12.5, 25.0)
+            angleInterpolationTable.putAngle(5.0.meters, 60.0.degrees)
+            angleInterpolationTable.putAngle(7.5.meters, 45.0.degrees)
+            angleInterpolationTable.putAngle(10.0.meters, 30.0.degrees)
+            angleInterpolationTable.putAngle(12.5.meters, 25.0.degrees)
 
             mechanism.getRoot("Shooter/Pivot", 50.0, 150.0).apply {
                 append(pivotAngleLigament)
@@ -188,7 +189,7 @@ data class PivotProfile(
     val getVelocity: () -> AngularVelocity
 )
 
-fun distanceToZoo(): Double {
+fun distanceToZoo(): Distance {
     val pettingZooTranslation = DriverStation.getAlliance()
         .orElse(DriverStation.Alliance.Blue)
         .zooTranslation
@@ -196,7 +197,7 @@ fun distanceToZoo(): Double {
         pettingZooTranslation.toTranslation2d(),
         Rotation2d()
     )
-    val distance = zooPose.translation.minus(Drivetrain.estimatedPose.translation).norm
+    val distance = Drivetrain.estimatedPose.translation.getDistance(zooPose.translation).meters
     return distance
 }
 
@@ -206,9 +207,9 @@ enum class Target(val profile: PivotProfile) {
     AIM(
         PivotProfile(
             {
-                angleInterpolationTable.get(distanceToZoo()).degrees
+                angleInterpolationTable.getAngle(distanceToZoo())
             }, {
-                speedInterpolationTable.get(distanceToZoo()).rpm
+                speedInterpolationTable.getVelocity(distanceToZoo())
             }
         )
     ),
