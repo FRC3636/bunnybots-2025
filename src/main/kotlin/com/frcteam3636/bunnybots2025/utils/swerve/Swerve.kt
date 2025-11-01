@@ -88,6 +88,13 @@ fun SwerveDriveKinematics.cornerStatesToChassisSpeeds(
 fun SwerveDriveKinematics(translations: PerCorner<Translation2d>) =
     SwerveDriveKinematics(*translations.toList().toTypedArray())
 
+inline fun <T> PerCorner<T>.forEachCornerIndexed(block: (corner: DrivetrainCorner, index: Int, value: T) -> Unit) {
+    block(DrivetrainCorner.FRONT_LEFT, 0, frontLeft)
+    block(DrivetrainCorner.FRONT_RIGHT, 1, frontRight)
+    block(DrivetrainCorner.BACK_LEFT, 2, backLeft)
+    block(DrivetrainCorner.BACK_RIGHT, 3, backRight)
+}
+
 /** The speed of the swerve module. */
 var SwerveModuleState.speed: LinearVelocity
     get() = speedMetersPerSecond.metersPerSecond

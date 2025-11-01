@@ -2,8 +2,12 @@ package com.frcteam3636.bunnybots2025
 
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.SignalLogger
-import com.frcteam3636.bunnybots2025.Dashboard.field
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
+import com.frcteam3636.bunnybots2025.subsystems.indexer.Indexer
+import com.frcteam3636.bunnybots2025.subsystems.intake.Intake
+import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
+import com.frcteam3636.bunnybots2025.subsystems.shooter.Target
+import com.frcteam3636.bunnybots2025.subsystems.shooter.zooTranslation
 import com.frcteam3636.version.BUILD_DATE
 import com.frcteam3636.version.DIRTY
 import com.frcteam3636.version.GIT_BRANCH
@@ -12,7 +16,10 @@ import com.pathplanner.lib.util.PathPlannerLogging
 import edu.wpi.first.hal.FRCNetComm.tInstances
 import edu.wpi.first.hal.FRCNetComm.tResourceType
 import edu.wpi.first.hal.HAL
-import edu.wpi.first.wpilibj.*
+import edu.wpi.first.wpilibj.Alert
+import edu.wpi.first.wpilibj.DriverStation
+import edu.wpi.first.wpilibj.PowerDistribution
+import edu.wpi.first.wpilibj.Preferences
 import edu.wpi.first.wpilibj.util.WPILibVersion
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
@@ -58,10 +65,13 @@ object Robot : LoggedRobot() {
 
     var didRefreshSucceed = true
 
-    private val statusSignals = mutableListOf<BaseStatusSignal>()
+    private var statusSignals: Array<BaseStatusSignal> = arrayOf()
 
-    var beforeFirstEnable = true
-
+    // This is here because if we put it in drivetrain a NullPointException is thrown
+    // from PhoenixOdometryThread.
+    // I'm guessing this is some sort of race condition.
+    // We should look into waiting to initialize PhoenixOdometryThread
+    // until the first call to PhoenixOdometryThread.getInstance()
     val odometryLock = ReentrantLock()
 
     override fun robotInit() {
@@ -84,6 +94,9 @@ object Robot : LoggedRobot() {
 //        Diagnostics.reportLimelightsInBackground(arrayOf("limelight-left", "limelight-right"))
 
         statusSignals += Drivetrain.getStatusSignals()
+        statusSignals += Intake.getStatusSignals()
+        statusSignals += Shooter.Pivot.getStatusSignals()
+        statusSignals += Indexer.getStatusSignals()
     }
 
     /** Start logging or pull replay logs from a file */
@@ -141,6 +154,11 @@ object Robot : LoggedRobot() {
     /** Start robot subsystems so that their periodic tasks are run */
     private fun configureSubsystems() {
         Drivetrain.register()
+        Indexer.register()
+        Intake.register()
+        Shooter.Flywheels.register()
+        Shooter.Pivot.register()
+        Shooter.Feeder.register()
     }
 
     /** Expose commands for autonomous routines to use and display an auto picker in Shuffleboard. */
@@ -154,41 +172,119 @@ object Robot : LoggedRobot() {
 //        )
     }
 
+    private fun doIntakeSequence(): Command {
+        return Commands.parallel(
+            Intake.intake(),
+            Commands.sequence(
+                Commands.either(
+                    Indexer.index(),
+                    Commands.parallel(
+                        Shooter.Feeder.feed(),
+                        Indexer.index(),
+                    ).until(Shooter.Flywheels.isDetected),
+                    Shooter.Flywheels.isDetected
+                ),
+                Indexer.index(),
+            )
+        )
+    }
+
+    private fun doShootSequence(): Command {
+        return Commands.parallel(
+            Shooter.Flywheels.shoot(),
+            Commands.sequence(
+                Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                Commands.parallel(
+                    Shooter.Feeder.feed(Command.InterruptionBehavior.kCancelIncoming),
+                    Indexer.index(),
+                ).alongWith(
+                    Commands.sequence(
+                        Commands.waitUntil(Shooter.Flywheels.isDetected),
+                        Commands.runOnce({
+                            RobotState.heldPieces--
+                        }),
+                        Commands.waitUntil(Shooter.Flywheels.isDetected.negate())
+                    ).repeatedly()
+                )
+            )
+        )
+    }
+
     /** Configure which commands each joystick button triggers. */
     private fun configureBindings() {
         Drivetrain.defaultCommand = Drivetrain.driveWithJoysticks(joystickLeft.hid, joystickRight.hid)
+        Shooter.Flywheels.defaultCommand = Shooter.Flywheels.idle()
+        Shooter.Pivot.defaultCommand = Shooter.Pivot.moveToActiveTarget()
         // (The button with the yellow tape on it)
         joystickLeft.button(8).onTrue(Commands.runOnce({
             println("Zeroing gyro.")
             Drivetrain.zeroGyro()
         }).ignoringDisable(true))
 
-        joystickDev.button(2).onTrue(
-            Commands.runOnce({
-                Drivetrain.zeroFull()
-            })
+        joystickLeft.button(1).whileTrue(
+            Commands.defer({ // TODO: check if this shit really needs to be deferred. it probably does lol.
+                Drivetrain.driveWithJoystickPointingTowards(
+                    joystickLeft.hid,
+                    DriverStation.getAlliance()
+                        .orElse(DriverStation.Alliance.Blue)
+                        .zooTranslation.toTranslation2d()
+                )
+            }, setOf(Drivetrain))
         )
 
+        joystickRight.button(3).onTrue(Commands.runOnce({
+            RobotState.heldPieces--
+        }))
 
-        joystickDev.button(1).whileTrue(Drivetrain.calculateWheelRadius())
+        joystickRight.button(4).onTrue(Commands.runOnce({
+            RobotState.heldPieces++
+        }))
 
-        controllerDev.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
-        controllerDev.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
+        joystickRight.button(1).whileTrue(doShootSequence())
 
-        controllerDev.y().whileTrue(Drivetrain.sysIdQuasistaticSpin(SysIdRoutine.Direction.kForward))
-        controllerDev.a().whileTrue(Drivetrain.sysIdQuasistaticSpin(SysIdRoutine.Direction.kReverse))
-        controllerDev.b().whileTrue(Drivetrain.sysIdDynamicSpin(SysIdRoutine.Direction.kForward))
-        controllerDev.x().whileTrue(Drivetrain.sysIdDynamicSpin(SysIdRoutine.Direction.kReverse))
+
+        controller.leftBumper().whileTrue(doIntakeSequence())
+        controller.rightBumper().whileTrue(
+            Commands.parallel(
+                Intake.outtake(),
+                Indexer.outtake()
+            )
+        )
+
+        controller.a().onTrue(Shooter.Pivot.setTarget(Target.STOWED))
+        controller.b().onTrue(Shooter.Pivot.setTarget(Target.PETTINGZOO))
+        controller.y().onTrue(Shooter.Pivot.setTarget(Target.AIM))
+
+        if (Preferences.getBoolean("DeveloperMode", false)) {
+            controllerDev.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
+            controllerDev.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
+
+            controllerDev.y().whileTrue(Drivetrain.sysIdQuasistaticSpin(SysIdRoutine.Direction.kForward))
+            controllerDev.a().whileTrue(Drivetrain.sysIdQuasistaticSpin(SysIdRoutine.Direction.kReverse))
+            controllerDev.b().whileTrue(Drivetrain.sysIdDynamicSpin(SysIdRoutine.Direction.kForward))
+            controllerDev.x().whileTrue(Drivetrain.sysIdDynamicSpin(SysIdRoutine.Direction.kReverse))
+
+            controllerDev.povUp().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward))
+            controllerDev.povDown().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse))
+            controllerDev.povRight().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward))
+            controllerDev.povLeft().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse))
+
+            joystickDev.button(1).whileTrue(Drivetrain.calculateWheelRadius())
+
+            joystickDev.button(2).onTrue(
+                Commands.runOnce({
+                    Drivetrain.zeroFull()
+                })
+            )
+        }
     }
 
     /** Add data to the driver station dashboard. */
     private fun configureDashboard() {
         PathPlannerLogging.setLogTargetPoseCallback {
-            field.getObject("target pose").pose = it
             Logger.recordOutput("Drivetrain/Target Pose", it)
         }
         PathPlannerLogging.setLogActivePathCallback {
-            field.getObject("path").poses = it
             Logger.recordOutput("Drivetrain/Desired Path", *it.toTypedArray())
         }
     }
@@ -214,27 +310,36 @@ object Robot : LoggedRobot() {
     }
 
     override fun robotPeriodic() {
-        Dashboard.update()
         reportDiagnostics()
 
-        val refresh = BaseStatusSignal.refreshAll(*statusSignals.toTypedArray())
-        didRefreshSucceed = refresh.isOK
+        if (isReal()) {
+            val refresh = BaseStatusSignal.refreshAll(*statusSignals)
+            didRefreshSucceed = refresh.isOK
+        }
 
         CommandScheduler.getInstance().run()
 
         Diagnostics.send()
+
+        // clamp held pieces just in case stuff starts to break
+        if (RobotState.heldPieces < 0) {
+            RobotState.heldPieces = 0
+        }
+
+        Logger.recordOutput("RobotState/Held Pieces", RobotState.heldPieces)
+        Logger.recordOutput("RobotState/Before First Enable", RobotState.beforeFirstEnable)
     }
 
     override fun autonomousInit() {
-        if (beforeFirstEnable)
-            beforeFirstEnable = true
+        if (RobotState.beforeFirstEnable)
+            RobotState.beforeFirstEnable = true
 //        autoCommand = Dashboard.autoChooser.selected
         autoCommand?.schedule()
     }
 
     override fun teleopInit() {
-        if (beforeFirstEnable)
-            beforeFirstEnable = true
+        if (RobotState.beforeFirstEnable)
+            RobotState.beforeFirstEnable = true
         autoCommand?.cancel()
     }
 

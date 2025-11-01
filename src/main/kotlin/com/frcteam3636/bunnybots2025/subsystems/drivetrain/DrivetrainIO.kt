@@ -10,22 +10,17 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.MODULE_POSITIONS
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.ROBOT_LENGTH
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.ROBOT_WIDTH
-import com.frcteam3636.bunnybots2025.utils.math.degrees
-import com.frcteam3636.bunnybots2025.utils.math.degreesPerSecond
-import com.frcteam3636.bunnybots2025.utils.math.inRadians
-import com.frcteam3636.bunnybots2025.utils.math.kilogramSquareMeters
-import com.frcteam3636.bunnybots2025.utils.math.radians
-import com.frcteam3636.bunnybots2025.utils.math.volts
+import com.frcteam3636.bunnybots2025.utils.math.*
 import com.frcteam3636.bunnybots2025.utils.swerve.DrivetrainCorner
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
 import edu.wpi.first.apriltag.AprilTagFieldLayout
-import edu.wpi.first.apriltag.AprilTagFields
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.kinematics.SwerveModulePosition
 import edu.wpi.first.math.kinematics.SwerveModuleState
 import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.units.measure.Voltage
+import edu.wpi.first.wpilibj.Filesystem
 import org.ironmaple.simulation.SimulatedArena
 import org.ironmaple.simulation.drivesims.COTS
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation
@@ -43,8 +38,10 @@ open class DrivetrainInputs {
     var gyroConnected = true
     var measuredStates = PerCorner.generate { SwerveModuleState() }
     var measuredPositions = PerCorner.generate { SwerveModulePosition() }
-    var odometryYawTimestamps: DoubleArray = doubleArrayOf()
-    var odometryYawPositions: DoubleArray = doubleArrayOf()
+    var frontRightTemperatures = doubleArrayOf()
+    var frontLeftTemperatures = doubleArrayOf()
+    var backLeftTemperatures = doubleArrayOf()
+    var backRightTemperatures = doubleArrayOf()
 }
 
 abstract class DrivetrainIO {
@@ -59,10 +56,12 @@ abstract class DrivetrainIO {
         inputs.gyroRotation = gyro.rotation
         inputs.gyroVelocity = gyro.velocity
         inputs.gyroConnected = gyro.connected
-        inputs.odometryYawPositions = gyro.odometryYawPositions
-        inputs.odometryYawTimestamps = gyro.odometryYawTimestamps
         inputs.measuredStates = modules.map { it.state }
         inputs.measuredPositions = modules.map { it.position }
+        inputs.frontRightTemperatures = modules.frontRight.temperatures.map { it.inCelsius() }.toDoubleArray()
+        inputs.backRightTemperatures = modules.backRight.temperatures.map { it.inCelsius() }.toDoubleArray()
+        inputs.frontLeftTemperatures = modules.frontLeft.temperatures.map { it.inCelsius() }.toDoubleArray()
+        inputs.backLeftTemperatures = modules.backLeft.temperatures.map { it.inCelsius() }.toDoubleArray()
     }
 
     var desiredStates: PerCorner<SwerveModuleState>
@@ -81,7 +80,10 @@ abstract class DrivetrainIO {
                     if (MODULE_POSITIONS[i] == MODULE_POSITIONS.backRight) {
                         modules[i].characterize(voltage, Rotation2d(angle.radians).unaryMinus().measure)
                     } else {
-                        modules[i].characterize(voltage, Rotation2d(angle.radians).unaryMinus().measure + Rotation2d.k180deg.measure)
+                        modules[i].characterize(
+                            voltage,
+                            Rotation2d(angle.radians).unaryMinus().measure + Rotation2d.k180deg.measure
+                        )
                     }
                 } else {
                     angle += 90.degrees.inRadians()
@@ -107,6 +109,15 @@ abstract class DrivetrainIO {
 
     fun getOdometryTimestamps(): DoubleArray {
         return modules[DrivetrainCorner.FRONT_LEFT].odometryTimestamps
+    }
+
+    @Suppress("unused")
+    fun getOdometryYawTimestamps(): DoubleArray {
+        return gyro.odometryYawTimestamps
+    }
+
+    fun getOdometryYawPositions(): DoubleArray {
+        return gyro.odometryYawPositions
     }
 
     fun getStatusSignals(): MutableList<BaseStatusSignal> {
@@ -196,5 +207,5 @@ class DrivetrainIOSim : DrivetrainIO() {
 }
 
 val FIELD_LAYOUT = AprilTagFieldLayout.loadFromResource(
-    AprilTagFields.k2025ReefscapeWelded.m_resourceFile
+    Filesystem.getDeployDirectory().path + "/Bunnybots-2025-AprilTagMap.json"
 )!!

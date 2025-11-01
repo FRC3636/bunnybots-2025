@@ -13,7 +13,7 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.units.measure.AngularVelocity
 import org.ironmaple.simulation.drivesims.GyroSimulation
 import org.littletonrobotics.junction.Logger
-import java.util.Queue
+import java.util.*
 import kotlin.math.sign
 
 interface Gyro {
@@ -78,7 +78,8 @@ class GyroPigeon(private val pigeon: Pigeon2) : Gyro {
             250.0,
             yawSignal
         )
-        BaseStatusSignal.setUpdateFrequencyForAll(50.0,
+        BaseStatusSignal.setUpdateFrequencyForAll(
+            50.0,
             pitchSignal,
             rollSignal,
             angularVelocitySignal
@@ -132,6 +133,7 @@ class GyroSim(private val modules: PerCorner<SwerveModule>) : Gyro {
     override var odometryYawTimestamps: DoubleArray
         get() = TODO("Not yet implemented")
         set(value) = TODO("Not yet implemented")
+
     override fun periodic() {
         // Calculate the average translation velocity of each module
         val moduleVelocities = modules.map { it.state.translation2dPerSecond }

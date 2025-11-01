@@ -9,6 +9,7 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.FREE_SPEED
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.JOYSTICK_DEADBAND
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.MODULE_POSITIONS
+import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.PATH_FOLLOWING_ROTATION_GAINS
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.ROTATION_SENSITIVITY
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.TRANSLATION_SENSITIVITY
 import com.frcteam3636.bunnybots2025.utils.fieldRelativeTranslation2d
@@ -40,19 +41,14 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.littletonrobotics.junction.Logger
 import kotlin.jvm.optionals.getOrNull
-import kotlin.math.abs
-import kotlin.math.absoluteValue
-import kotlin.math.hypot
-import kotlin.math.max
-import kotlin.math.pow
-import kotlin.math.withSign
+import kotlin.math.*
 
 /** A singleton object representing the drivetrain. */
 object Drivetrain : Subsystem {
     private val io = when (Robot.model) {
         Robot.Model.SIMULATION -> DrivetrainIOSim()
         Robot.Model.COMPETITION -> DrivetrainIOReal(
-            MODULE_POSITIONS.zip(Drivetrain.Constants.MODULE_CAN_IDS)
+            MODULE_POSITIONS.zip(Constants.MODULE_CAN_IDS)
                 .map { (corner, ids) ->
                     val (driveId, turnId, encoderId) = ids
                     Mk5nSwerveModule(
@@ -71,7 +67,7 @@ object Drivetrain : Subsystem {
     fun calculateWheelRadius(): Command = Commands.parallel(
         Commands.sequence(
             Commands.runOnce({
-                Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Running", true)
+                Logger.recordOutput("Drivetrain/Wheel Radius Calculated/Running", true)
                 limiter.reset(0.0)
             }),
             Commands.run({
@@ -93,22 +89,28 @@ object Drivetrain : Subsystem {
                 val rotation = inputs.gyroRotation
                 wheelRadiusGyroDelta += abs(rotation.minus(wheelRadiusLastAngle).radians)
                 wheelRadiusLastAngle = rotation
-                Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Gyro Delta", wheelRadiusGyroDelta)
+                Logger.recordOutput("Drivetrain/Wheel Radius Calculated/Gyro Delta", wheelRadiusGyroDelta)
             })
                 .finallyDo { ->
                     var wheelDelta = 0.0
                     // Someone give me a better way to do this
                     for (i in 0..3) {
                         wheelDelta += abs(io.modules.toTypedArray()[i].positionRad.inRadians() - wheelRadiusModuleStates[i]) / 4.0
-                        Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Initial Wheel Position Rad/$i", wheelRadiusModuleStates[i])
-                        Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Final Wheel Position Rad/$i", io.modules.toTypedArray()[i].positionRad.inRadians())
+                        Logger.recordOutput(
+                            "Drivetrain/Wheel Radius Calculated/Initial Wheel Position Rad/$i",
+                            wheelRadiusModuleStates[i]
+                        )
+                        Logger.recordOutput(
+                            "Drivetrain/Wheel Radius Calculated/Final Wheel Position Rad/$i",
+                            io.modules.toTypedArray()[i].positionRad.inRadians()
+                        )
                     }
                     val wheelRadius = ((wheelRadiusGyroDelta * DRIVE_BASE_RADIUS) / wheelDelta)
-                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Drive Base Radius", DRIVE_BASE_RADIUS)
-                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Wheel Delta", wheelDelta)
-                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Meters", wheelRadius)
-                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Inches", wheelRadius.meters.inInches())
-                    Logger.recordOutput("/Drivetrain/Wheel Radius Calculated/Running", false)
+                    Logger.recordOutput("Drivetrain/Wheel Radius Calculated/Drive Base Radius", DRIVE_BASE_RADIUS)
+                    Logger.recordOutput("Drivetrain/Wheel Radius Calculated/Wheel Delta", wheelDelta)
+                    Logger.recordOutput("Drivetrain/Wheel Radius Calculated/Meters", wheelRadius)
+                    Logger.recordOutput("Drivetrain/Wheel Radius Calculated/Inches", wheelRadius.meters.inInches())
+                    Logger.recordOutput("Drivetrain/Wheel Radius Calculated/Running", false)
                 }
         )
     )
@@ -196,30 +198,34 @@ object Drivetrain : Subsystem {
     }
 
     override fun periodic() {
-        Robot.odometryLock.lock()
-        io.updateInputs(inputs)
-        Logger.processInputs("Drivetrain", inputs)
-        val odometryTimestamps = io.getOdometryTimestamps()
-        val odometryPositions = io.getOdometryPositions()
-        Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions[0].size)
-        for (i in 0..<odometryTimestamps.size) {
-            val modulePositions = Array(4) { index ->
-                odometryPositions[index][i]
-            }
-            val moduleDeltas = Array(4) { index ->
-                SwerveModulePosition(
-                    modulePositions[index].distanceMeters - lastModulePositions[index].distanceMeters,
-                    modulePositions[index].angle - lastModulePositions[index].angle
-                )
-            }
-            for (moduleIndex in 0..3) {
-                lastModulePositions[moduleIndex] = modulePositions[moduleIndex]
-            }
+        try {
+            Robot.odometryLock.lock()
+            io.updateInputs(inputs)
+            Logger.processInputs("Drivetrain", inputs)
+            val odometryTimestamps = io.getOdometryTimestamps()
+            val odometryPositions = io.getOdometryPositions()
+            val odometryYawPositons = io.getOdometryYawPositions()
+            Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions[0].size)
+            for (i in 0..<odometryTimestamps.size) {
+                val modulePositions = Array(4) { index ->
+                    odometryPositions[index][i]
+                }
+                Array(4) { index ->
+                    SwerveModulePosition(
+                        modulePositions[index].distanceMeters - lastModulePositions[index].distanceMeters,
+                        modulePositions[index].angle - lastModulePositions[index].angle
+                    )
+                }
+                for (moduleIndex in 0..3) {
+                    lastModulePositions[moduleIndex] = modulePositions[moduleIndex]
+                }
 
-            val odometryYawPosition = Rotation2d.fromDegrees(inputs.odometryYawPositions[i])
-            poseEstimator.updateWithTime(odometryTimestamps[i], odometryYawPosition, modulePositions)
+                val odometryYawPosition = Rotation2d.fromDegrees(odometryYawPositons[i])
+                poseEstimator.updateWithTime(odometryTimestamps[i], odometryYawPosition, modulePositions)
+            }
+        } finally {
+            Robot.odometryLock.unlock()
         }
-        Robot.odometryLock.unlock()
 
         // Update absolute pose sensors and add their measurements to the pose estimator
         for ((name, ioPair) in absolutePoseIOs) {
@@ -228,12 +234,14 @@ object Drivetrain : Subsystem {
             sensorIO.updateInputs(inputs)
             Logger.processInputs("Drivetrain/Absolute Pose/$name", inputs)
 
-            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Has Measurement", inputs.measurement != null)
-            inputs.measurement?.let {
-                poseEstimator.addAbsolutePoseMeasurement(it)
-                Logger.recordOutput("Drivetrain/Absolute Pose/$name/Measurement", it)
-                Logger.recordOutput("Drivetrain/Last Added Pose", it.pose)
-                Logger.recordOutput("Drivetrain/Absolute Pose/$name/Pose", it.pose)
+            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Measurement Rejected", inputs.measurementRejected)
+            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Measurement", inputs.measurement)
+            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Pose", inputs.measurement?.pose)
+            if (!inputs.measurementRejected) {
+                inputs.measurement?.let {
+                    poseEstimator.addAbsolutePoseMeasurement(it)
+                    Logger.recordOutput("Drivetrain/Last Added Pose", it.pose)
+                }
             }
         }
 
@@ -244,7 +252,6 @@ object Drivetrain : Subsystem {
 //        )
 
         Logger.recordOutput("Drivetrain/Pose Estimator/Estimated Pose", poseEstimator.estimatedPosition)
-        Logger.recordOutput("Drivetrain/Estimated Pose", estimatedPose)
         Logger.recordOutput("Drivetrain/Chassis Speeds", measuredChassisSpeeds)
         Logger.recordOutput("Drivetrain/Desired Chassis Speeds", desiredChassisSpeeds)
 
@@ -301,6 +308,9 @@ object Drivetrain : Subsystem {
             )
         }
 
+    val polarDrivingPIDController = PIDController(PATH_FOLLOWING_ROTATION_GAINS).apply {
+        enableContinuousInput(0.0, TAU)
+    }
 
     fun getStatusSignals(): MutableList<BaseStatusSignal> {
         return io.getStatusSignals()
@@ -330,6 +340,37 @@ object Drivetrain : Subsystem {
             rotationInput.y * TAU * ROTATION_SENSITIVITY,
             estimatedPose.rotation
         )
+    }
+
+    @Suppress("unused")
+    fun driveWithJoystickPointingTowards(translationJoystick: Joystick, target: Translation2d): Command {
+        Logger.recordOutput("Drivetrain/Polar Driving/Target", target)
+        Logger.recordOutput("Drivetrain/Polar Driving/Active", true)
+        polarDrivingPIDController.reset()
+        return run {
+            val translationInput = if (abs(translationJoystick.x) > JOYSTICK_DEADBAND
+                || abs(translationJoystick.y) > JOYSTICK_DEADBAND
+            ) {
+                Translation2d(-translationJoystick.y, -translationJoystick.x)
+            } else {
+                Translation2d()
+            }
+            val magnitude = polarDrivingPIDController.calculate(
+                target.minus(estimatedPose.translation).angle.radians - PI,
+                estimatedPose.rotation.radians
+            ).unaryMinus()
+
+            Logger.recordOutput("Drivetrain/Polar Driving/PID Output", magnitude)
+
+            desiredChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                translationInput.x * FREE_SPEED.baseUnitMagnitude() * TRANSLATION_SENSITIVITY,
+                translationInput.y * FREE_SPEED.baseUnitMagnitude() * TRANSLATION_SENSITIVITY,
+                magnitude,
+                inputs.gyroRotation
+            )
+        }.finallyDo { ->
+            Logger.recordOutput("Drivetrain/Polar Driving/Active", false)
+        }
     }
 
     private fun calculateInputCurve(input: Double): Double {
@@ -374,9 +415,10 @@ object Drivetrain : Subsystem {
 
     var sysID = SysIdRoutine(
         SysIdRoutine.Config(
-            0.5.voltsPerSecond, 2.volts, null, {
-                SignalLogger.writeString("state", it.toString())
-            }), SysIdRoutine.Mechanism(
+            0.5.voltsPerSecond, 2.volts, null
+        ) {
+            SignalLogger.writeString("state", it.toString())
+        }, SysIdRoutine.Mechanism(
             io::runCharacterization,
             null,
             this,
@@ -409,6 +451,7 @@ object Drivetrain : Subsystem {
 
         val ROBOT_LENGTH = 25.5.inches
         val ROBOT_WIDTH = 25.5.inches
+        val TRACK_WIDTH = abs(TunerConstants.FrontRight!!.LocationY + TunerConstants.BackLeft!!.LocationY)
 
         val BUMPER_WIDTH = 30.inches
         val BUMPER_LENGTH = 30.inches
@@ -428,22 +471,26 @@ object Drivetrain : Subsystem {
         val MODULE_POSITIONS = PerCorner(
             frontLeft = Corner(
                 Pose2d(
-                    Translation2d(FRONT_LEFT_CONSTANTS.LocationX, FRONT_LEFT_CONSTANTS.LocationY), Rotation2d.fromDegrees(0.0)
+                    Translation2d(FRONT_LEFT_CONSTANTS.LocationX, FRONT_LEFT_CONSTANTS.LocationY),
+                    Rotation2d.fromDegrees(0.0)
                 ), FRONT_LEFT_MAGNET_OFFSET
             ),
             frontRight = Corner(
                 Pose2d(
-                    Translation2d(FRONT_RIGHT_CONSTANTS.LocationX, FRONT_RIGHT_CONSTANTS.LocationY), Rotation2d.fromDegrees(180.0)
+                    Translation2d(FRONT_RIGHT_CONSTANTS.LocationX, FRONT_RIGHT_CONSTANTS.LocationY),
+                    Rotation2d.fromDegrees(180.0)
                 ), FRONT_RIGHT_MAGNET_OFFSET
             ),
             backLeft = Corner(
                 Pose2d(
-                    Translation2d(BACK_LEFT_CONSTANTS.LocationX, BACK_LEFT_CONSTANTS.LocationY), Rotation2d.fromDegrees(0.0)
+                    Translation2d(BACK_LEFT_CONSTANTS.LocationX, BACK_LEFT_CONSTANTS.LocationY),
+                    Rotation2d.fromDegrees(0.0)
                 ), BACK_LEFT_MAGNET_OFFSET
             ),
             backRight = Corner(
                 Pose2d(
-                    Translation2d(BACK_RIGHT_CONSTANTS.LocationX, BACK_RIGHT_CONSTANTS.LocationY), Rotation2d.fromDegrees(180.0)
+                    Translation2d(BACK_RIGHT_CONSTANTS.LocationX, BACK_RIGHT_CONSTANTS.LocationY),
+                    Rotation2d.fromDegrees(180.0)
                 ), BACK_RIGHT_MAGNET_OFFSET
             ),
         )
@@ -451,10 +498,10 @@ object Drivetrain : Subsystem {
         val DRIVE_BASE_RADIUS = hypot(MODULE_POSITIONS.frontLeft.position.x, MODULE_POSITIONS.frontLeft.position.y)
 
         // Chassis Control
-        val FREE_SPEED = 6.06.metersPerSecond
+        val FREE_SPEED = TunerConstants.kSpeedAt12Volts
 
-        val PATH_FOLLOWING_TRANSLATION_GAINS = PIDGains(5.0).toPPLib()
-        val PATH_FOLLOWING_ROTATION_GAINS = PIDGains(5.0).toPPLib()
+        val PATH_FOLLOWING_TRANSLATION_GAINS = PIDGains(5.0)
+        val PATH_FOLLOWING_ROTATION_GAINS = PIDGains(5.0)
 
         // CAN IDs
         val MODULE_CAN_IDS =
