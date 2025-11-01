@@ -65,9 +65,7 @@ class Mk5nSwerveModule(
     override var odometryDrivePositions = doubleArrayOf()
     override var odometryTurnPositions: Array<Rotation2d> = emptyArray()
     override var odometryPositions: Array<SwerveModulePosition> = emptyArray()
-    override var temperatures: Array<Temperature>
-        get() = TODO("Not yet implemented")
-        set(value) {}
+    override var temperatures: Array<Temperature> = emptyArray()
 
     override val state: SwerveModuleState
         get() = SwerveModuleState(
