@@ -58,20 +58,23 @@ class AbsolutePoseProviderInputs : LoggableInputs {
 
     var measurementRejected = false
 
+    var cornerCount = 0
+
     override fun toLog(table: LogTable) {
         if (measurement != null) {
             table.put("Measurement", measurement)
         }
         table.put("Connected", connected)
-        table.put("ObservedTags", observedTags)
-        table.put("MeasurementRejected", measurementRejected)
+        table.put("Observed Tags", observedTags)
+        table.put("Measurement Rejected", measurementRejected)
+        table.put("Corner Count", cornerCount)
     }
 
     override fun fromLog(table: LogTable) {
         measurement = table.get("Measurement", measurement)[0]
         connected = table.get("Connected", connected)
-        observedTags = table.get("ObservedTags", observedTags)
-        measurementRejected = table.get("MeasurementRejected", measurementRejected)
+        observedTags = table.get("Observed Tags", observedTags)
+        measurementRejected = table.get("Measurement Rejected", measurementRejected)
     }
 }
 
@@ -142,11 +145,14 @@ class LimelightPoseProvider(
 
     private var lastSeenHb: Double = 0.0
     private var hbSub = NetworkTableInstance.getDefault().getTable(name).getDoubleTopic("hb").subscribe(0.0)
+    private var cornerSub = NetworkTableInstance.getDefault().getTable(name).getDoubleArrayTopic("tcornxy").subscribe(doubleArrayOf())
     private var loopsSinceLastSeen: Int = 0
 
     private var currentAlgorithm: LimelightAlgorithm = LimelightAlgorithm.MegaTag
 
     private var isThrottled = false
+
+    private var cornerCount = 0
 
     init {
         thread(isDaemon = true) {
@@ -172,6 +178,11 @@ class LimelightPoseProvider(
             currentAlgorithm = megaTagV2
             if (isLL4)
                 LimelightHelpers.SetIMUMode(name, 3)
+        }
+
+        cornerCount = cornerSub.get(doubleArrayOf()).size
+        if (cornerCount < 8) {
+            measurement.shouldReject = true
         }
 
         when (currentAlgorithm) {
@@ -260,6 +271,7 @@ class LimelightPoseProvider(
             inputs.measurement = measurement
             inputs.observedTags = observedTags
             inputs.measurementRejected = shouldReject
+            inputs.cornerCount = cornerCount
         } finally {
             lock.unlock()
         }
