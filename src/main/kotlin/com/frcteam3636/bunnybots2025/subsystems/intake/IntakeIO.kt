@@ -39,6 +39,7 @@ interface IntakeIO {
 
 class IntakeIOReal : IntakeIO {
     private var pivotDisabled = false
+    private var brakeModeEnabled = true
 
     private var intakeMotor = SparkFlex(REVMotorControllerId.IntakeMotor, SparkLowLevel.MotorType.kBrushless)
     private var intakePivotMotor = TalonFX(CTREDeviceId.IntakePivotMotor).apply {
@@ -119,7 +120,8 @@ class IntakeIOReal : IntakeIO {
         pivotDisabled = true
         // this causes a sizeable loop overrun, but I'm willing to do this
         // to prevent the robot from tearing itself apart
-        setBrakeMode(true)
+        if (!brakeModeEnabled)
+            setBrakeMode(true)
         intakePivotMotor.setControl(NeutralOut())
     }
 

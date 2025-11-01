@@ -43,6 +43,7 @@ interface PivotIO {
 
 class PivotIOReal : PivotIO {
     private var pivotDisabled = false
+    private var brakeModeEnabled = true
 
     private val shooterPivotMotor = TalonFX(CTREDeviceId.ShooterPivotMotor).apply {
         configurator.apply(TalonFXConfiguration().apply {
@@ -94,6 +95,7 @@ class PivotIOReal : PivotIO {
     }
 
     override fun setBrakeMode(enabled: Boolean) {
+        brakeModeEnabled = enabled
         shooterPivotMotor.setNeutralMode(
             if (enabled) {
                 NeutralModeValue.Brake
@@ -117,9 +119,11 @@ class PivotIOReal : PivotIO {
 
     override fun disablePivot() {
         pivotDisabled = true
-        // this causes a sizeable loop overrun, but I'm willing to do this
-        // to prevent the robot from tearing itself apart
-        setBrakeMode(true)
+        // this causes a sizeable loop overrun if we aren't in brake mode,
+        // but I'm willing to do this to prevent the
+        // robot from tearing itself apart
+        if (!brakeModeEnabled)
+            setBrakeMode(true)
         shooterPivotMotor.setControl(NeutralOut())
     }
 
