@@ -19,6 +19,7 @@ import edu.wpi.first.units.Units.RadiansPerSecond
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Distance
+import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.util.Color
 import edu.wpi.first.wpilibj.util.Color8Bit
@@ -121,6 +122,9 @@ object Shooter {
 
         val angleInterpolationTable = InterpolatingDoubleTreeMap()
 
+        private val pivotDisabledAlert = Alert("The shooter pivot has been disabled due to an error. To re-enable please restart robot code",
+            Alert.AlertType.kError)
+
         init {
             //FIXME plot points to create regression
             angleInterpolationTable.putAngle(5.0.meters, 60.0.degrees)
@@ -135,8 +139,13 @@ object Shooter {
 
         override fun periodic() {
             io.updateInputs(inputs)
-
             Logger.processInputs("Shooter/Pivot", inputs)
+
+            // the extra degree is to account for encoder noise
+            if ((inputs.pivotAngle < (-1).degrees || inputs.pivotAngle > 91.degrees) && !inputs.pivotDisabled) {
+                io.disablePivot()
+                pivotDisabledAlert.set(true)
+            }
 
             pivotAngleLigament.angle = inputs.pivotAngle.inDegrees()
             Logger.recordOutput("Shooter/Pivot/Mechanism", mechanism)
@@ -152,7 +161,10 @@ object Shooter {
             }
 
         fun moveToActiveTarget(): Command =
-            run { io.turnToAngle(target.profile.getPosition()) }
+            run {
+                if (!inputs.pivotDisabled)
+                    io.turnToAngle(target.profile.getPosition())
+            }
     }
 
     object Feeder : Subsystem {

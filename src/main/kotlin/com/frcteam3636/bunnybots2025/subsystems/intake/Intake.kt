@@ -2,9 +2,11 @@ package com.frcteam3636.bunnybots2025.subsystems.intake
 
 import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
+import com.frcteam3636.bunnybots2025.utils.math.degrees
 import com.frcteam3636.bunnybots2025.utils.math.inDegrees
 import com.frcteam3636.bunnybots2025.utils.math.rotations
 import edu.wpi.first.units.measure.Angle
+import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.util.Color
 import edu.wpi.first.wpilibj.util.Color8Bit
 import edu.wpi.first.wpilibj2.command.Command
@@ -30,11 +32,20 @@ object Intake : Subsystem {
         }
     }
 
+    private val pivotDisabledAlert = Alert("The intake pivot has been disabled due to an error. To re-enable please restart robot code",
+        Alert.AlertType.kError)
+
     override fun periodic() {
         io.updateInputs(inputs)
         Logger.processInputs("Intake", inputs)
         intakeAngleLigament.angle = inputs.pivotPosition.inDegrees()
         Logger.recordOutput("Intake/Pivot/Mechanism", mechanism)
+
+        // FIXME: tune these
+        if ((inputs.pivotPosition > 100.degrees || inputs.pivotPosition < (-1).degrees) && !inputs.pivotDisabled) {
+            io.disablePivot()
+            pivotDisabledAlert.set(true)
+        }
     }
 
     fun intake(): Command =

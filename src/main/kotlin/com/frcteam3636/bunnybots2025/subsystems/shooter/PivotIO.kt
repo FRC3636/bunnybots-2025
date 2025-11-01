@@ -3,6 +3,7 @@ package com.frcteam3636.bunnybots2025.subsystems.shooter
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.MotionMagicVoltage
+import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.NeutralModeValue
 import com.frcteam3636.bunnybots2025.CTREDeviceId
@@ -17,6 +18,7 @@ import com.frcteam3636.bunnybots2025.utils.math.inRotationsPerSecondPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.pidGains
 import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.Angle
+import edu.wpi.first.wpilibj.Alert
 import org.team9432.annotation.Logged
 
 @Logged
@@ -25,11 +27,13 @@ open class PivotInputs {
     var pivotCurrent = Amps.zero()!!
     var pivotVelocity = RotationsPerSecond.zero()!!
     var pivotMotorTemperature = Celsius.zero()!!
+    var pivotDisabled = false
 }
 
 interface PivotIO {
     fun turnToAngle(angle: Angle)
     fun setBrakeMode(enabled: Boolean) {}
+    fun disablePivot() {}
     fun getStatusSignals(): MutableList<BaseStatusSignal> {
         return mutableListOf()
     }
@@ -38,6 +42,8 @@ interface PivotIO {
 }
 
 class PivotIOReal : PivotIO {
+    private var pivotDisabled = false
+
     private val shooterPivotMotor = TalonFX(CTREDeviceId.ShooterPivotMotor).apply {
         configurator.apply(TalonFXConfiguration().apply {
             Slot0.apply {
@@ -82,6 +88,8 @@ class PivotIOReal : PivotIO {
     override fun turnToAngle(angle: Angle) {
         assert(angle > 0.degrees)
         assert(angle < 90.degrees) // TODO: Find out if we need to raise this
+        if (pivotDisabled)
+            return
         shooterPivotMotor.setControl(positionControl.withPosition(angle))
     }
 
@@ -104,6 +112,15 @@ class PivotIOReal : PivotIO {
         inputs.pivotCurrent = currentSignal.value
         inputs.pivotVelocity = velocitySignal.value
         inputs.pivotMotorTemperature = temperatureSignal.value
+        inputs.pivotDisabled = pivotDisabled
+    }
+
+    override fun disablePivot() {
+        pivotDisabled = true
+        // this causes a sizeable loop overrun, but I'm willing to do this
+        // to prevent the robot from tearing itself apart
+        setBrakeMode(true)
+        shooterPivotMotor.setControl(NeutralOut())
     }
 
     internal companion object Constants {

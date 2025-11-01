@@ -4,6 +4,7 @@ import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.configs.CANcoderConfiguration
 import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.MotionMagicVoltage
+import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.NeutralModeValue
 import com.frcteam3636.bunnybots2025.*
@@ -22,18 +23,22 @@ open class IntakeInputs {
     var pivotCurrent = Amps.zero()!!
     var pivotVelocity = RotationsPerSecond.zero()!!
     var pivotTemperature = Celsius.zero()!!
+    var pivotDisabled = false
 }
 
 interface IntakeIO {
     fun setRollerSpeed(percentage: Double)
     fun setPivotPosition(pivotPosition: Angle)
     fun updateInputs(inputs: IntakeInputs)
+    fun disablePivot() {}
+    fun setBrakeMode(enabled: Boolean) {}
     fun getSignals(): MutableList<BaseStatusSignal> {
         return mutableListOf()
     }
 }
 
 class IntakeIOReal : IntakeIO {
+    private var pivotDisabled = false
 
     private var intakeMotor = SparkFlex(REVMotorControllerId.IntakeMotor, SparkLowLevel.MotorType.kBrushless)
     private var intakePivotMotor = TalonFX(CTREDeviceId.IntakePivotMotor).apply {
@@ -80,7 +85,19 @@ class IntakeIOReal : IntakeIO {
     }
 
     override fun setPivotPosition(pivotPosition: Angle) {
+        if (pivotDisabled)
+            return
         intakePivotMotor.setControl(positionControl.withPosition(pivotPosition))
+    }
+
+    override fun setBrakeMode(enabled: Boolean) {
+        intakePivotMotor.setNeutralMode(
+            if (enabled) {
+                NeutralModeValue.Brake
+            } else {
+                NeutralModeValue.Coast
+            }
+        )
     }
 
     override fun updateInputs(inputs: IntakeInputs) {
@@ -91,10 +108,19 @@ class IntakeIOReal : IntakeIO {
         inputs.rollerVelocity = velocitySignal.value
         inputs.pivotTemperature = temperatureSignal.value
         inputs.rollerTemperature = intakeMotor.motorTemperature.celsius
+        inputs.pivotDisabled = pivotDisabled
     }
 
     override fun getSignals(): MutableList<BaseStatusSignal> {
         return mutableListOf(positionSignal, currentSignal, temperatureSignal)
+    }
+
+    override fun disablePivot() {
+        pivotDisabled = true
+        // this causes a sizeable loop overrun, but I'm willing to do this
+        // to prevent the robot from tearing itself apart
+        setBrakeMode(true)
+        intakePivotMotor.setControl(NeutralOut())
     }
 
     internal companion object Constants {
