@@ -42,7 +42,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 import kotlin.math.pow
 
-
+// we can't use @Logged here because measurement is a nullable SerializableStruct :(
 class AbsolutePoseProviderInputs : LoggableInputs {
     /**
      * The most recent measurement from the pose estimator.
