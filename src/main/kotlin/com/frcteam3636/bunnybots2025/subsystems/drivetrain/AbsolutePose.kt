@@ -107,6 +107,7 @@ data class LimelightMeasurement(
     var poseMeasurement: AbsolutePoseMeasurement? = null,
     var observedTags: IntArray = intArrayOf(),
     var shouldReject: Boolean = false,
+    var cornerCount: Int = 0,
 ) /* --- BEGIN KOTLIN COMPILER GENERATED CODE ---- */ {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -181,6 +182,7 @@ class LimelightPoseProvider(
         }
 
         cornerCount = cornerSub.get(doubleArrayOf()).size
+        measurement.cornerCount = cornerCount
         if (cornerCount < 8) {
             measurement.shouldReject = true
         }
