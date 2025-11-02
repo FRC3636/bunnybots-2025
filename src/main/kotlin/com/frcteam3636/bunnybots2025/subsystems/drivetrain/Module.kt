@@ -290,11 +290,11 @@ class SimSwerveModule(val sim: SwerveModuleSimulation) : SwerveModule {
     override var odometryPositions: Array<SwerveModulePosition> = emptyArray()
     override var temperatures: Array<Temperature> = emptyArray()
     private val driveMotor: SimulatedMotorController.GenericMotorController = sim.useGenericMotorControllerForDrive()
-//        .withCurrentLimit(DRIVING_CURRENT_LIMIT)
+        .withCurrentLimit(DRIVING_CURRENT_LIMIT)
 
     // reference to the simulated turn motor
     private val turnMotor: SimulatedMotorController.GenericMotorController = sim.useGenericControllerForSteer()
-//        .withCurrentLimit(TURNING_CURRENT_LIMIT)
+        .withCurrentLimit(TURNING_CURRENT_LIMIT)
 
     // TODO: figure out what the moment of inertia actually is and if it even matters
     private val drivingFeedforward = SimpleMotorFeedforward(DRIVING_FF_GAINS)
@@ -311,7 +311,7 @@ class SimSwerveModule(val sim: SwerveModuleSimulation) : SwerveModule {
         )
 
     override val positionRad: Angle
-        get() = TODO("Not yet implemented")
+        get() = sim.driveWheelFinalPosition * WHEEL_RADIUS.inInches()
 
     override var desiredState: SwerveModuleState = SwerveModuleState(0.0, Rotation2d())
         set(value) {
@@ -328,14 +328,12 @@ class SimSwerveModule(val sim: SwerveModuleSimulation) : SwerveModule {
     override fun periodic() {
         // Set the new input voltages
         turnMotor.requestVoltage(
-            Volts.of(turningFeedback.calculate(state.angle.radians, desiredState.angle.radians))
+            turningFeedback.calculate(state.angle.radians, desiredState.angle.radians).volts
         )
         driveMotor.requestVoltage(
-            Volts.of(
-                drivingFeedforward.calculate(desiredState.speedMetersPerSecond) + drivingFeedback.calculate(
+            drivingFeedforward.calculate(desiredState.speedMetersPerSecond).volts + drivingFeedback.calculate(
                     state.speedMetersPerSecond, desiredState.speedMetersPerSecond
-                )
-            )
+            ).volts
         )
     }
 
