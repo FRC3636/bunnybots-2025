@@ -311,7 +311,7 @@ class SimSwerveModule(val sim: SwerveModuleSimulation) : SwerveModule {
         )
 
     override val positionRad: Angle
-        get() = sim.driveWheelFinalPosition * WHEEL_RADIUS.inInches()
+        get() = sim.driveWheelFinalPosition * WHEEL_RADIUS.inMeters()
 
     override var desiredState: SwerveModuleState = SwerveModuleState(0.0, Rotation2d())
         set(value) {
