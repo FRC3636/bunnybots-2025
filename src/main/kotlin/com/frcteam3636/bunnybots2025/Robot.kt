@@ -18,6 +18,7 @@ import edu.wpi.first.hal.FRCNetComm.tResourceType
 import edu.wpi.first.hal.HAL
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.DriverStation
+import edu.wpi.first.wpilibj.Filesystem
 import edu.wpi.first.wpilibj.PowerDistribution
 import edu.wpi.first.wpilibj.Preferences
 import edu.wpi.first.wpilibj.util.WPILibVersion
@@ -27,7 +28,6 @@ import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
-import org.ironmaple.simulation.SimulatedArena
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.LoggedRobot
 import org.littletonrobotics.junction.Logger
@@ -289,16 +289,9 @@ object Robot : LoggedRobot() {
         }
     }
 
-    override fun disabledInit() {
-        if (model == Model.SIMULATION) {
-            SimulatedArena.getInstance().resetFieldForAuto()
-        }
-    }
+    override fun disabledInit() {}
 
-    override fun simulationPeriodic() {
-        SimulatedArena.getInstance().simulationPeriodic()
-
-    }
+    override fun simulationPeriodic() {}
 
     private fun reportDiagnostics() {
         Diagnostics.periodic()

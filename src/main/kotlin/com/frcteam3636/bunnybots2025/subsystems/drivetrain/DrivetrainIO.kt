@@ -14,6 +14,7 @@ import com.frcteam3636.bunnybots2025.utils.math.*
 import com.frcteam3636.bunnybots2025.utils.swerve.DrivetrainCorner
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
 import edu.wpi.first.apriltag.AprilTagFieldLayout
+import edu.wpi.first.apriltag.AprilTagFields
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.kinematics.SwerveModulePosition
@@ -141,58 +142,15 @@ class DrivetrainIOReal(override val modules: PerCorner<SwerveModule>) : Drivetra
 
 /** Drivetrain I/O layer that uses simulated swerve modules along with a simulated gyro with an angle based off their movement. */
 class DrivetrainIOSim : DrivetrainIO() {
-    // Create and configure a drivetrain simulation configuration
-    val driveTrainSimulationConfig: DriveTrainSimulationConfig =
-        DriveTrainSimulationConfig.Default() // Specify gyro type (for realistic gyro drifting and error simulation)
-            .withGyro(COTS.ofPigeon2()) // Specify swerve module (for realistic swerve dynamics)
-            .withSwerveModule(
-                // FIXME: Calculate values
-                SwerveModuleSimulationConfig(
-                    DCMotor.getKrakenX60Foc(1),  // Drive motor is a Kraken X60
-                    DCMotor.getKrakenX60(1),  // Steer motor is an X44 but this seemingly doesn't exist yet
-                    DRIVING_GEAR_RATIO,
-                    TURNING_GEAR_RATIO,
-                    0.1.volts,
-                    0.1.volts,
-                    WHEEL_RADIUS,
-                    0.02.kilogramSquareMeters,
-                    1.85
-                )
-            )
-            // Configures the track length and track width (spacing between swerve modules)
-            .withTrackLengthTrackWidth(
-                ROBOT_LENGTH,
-                ROBOT_WIDTH
-            ) // Configures the bumper size (dimensions of the robot bumper)
-            .withBumperSize(BUMPER_WIDTH, BUMPER_LENGTH)
-
-            .withCustomModuleTranslations(
-                MODULE_POSITIONS.map { it.position.translation }.toTypedArray()
-            )
-
-    // Create a swerve drive simulation
-    val swerveDriveSimulation = SwerveDriveSimulation(
-        // Specify Configuration
-        driveTrainSimulationConfig,
-        // Specify starting pose
-        Pose2d(3.0, 3.0, Rotation2d())
-    )
-
     val vision = VisionSystemSim("main").apply {
         addAprilTags(FIELD_LAYOUT)
     }
 
-    override val modules = PerCorner.generate { SimSwerveModule(swerveDriveSimulation.modules[it.ordinal]) }
-    override val gyro = GyroMapleSim(swerveDriveSimulation.gyroSimulation)
-
-    init {
-        SimulatedArena.getInstance().addDriveTrainSimulation(swerveDriveSimulation)
-    }
-
+    override val modules = PerCorner.generate { SimSwerveModule() }
+    override val gyro = GyroSim(modules.map { it })
     override fun updateInputs(inputs: DrivetrainInputs) {
         super.updateInputs(inputs)
-        vision.update(swerveDriveSimulation.simulatedDriveTrainPose)
-        Logger.recordOutput("FieldSimulation/RobotPosition", swerveDriveSimulation.simulatedDriveTrainPose)
+        vision.update(Drivetrain.poseEstimator.estimatedPosition)
 
         Diagnostics.report(gyro)
     }
@@ -207,5 +165,5 @@ class DrivetrainIOSim : DrivetrainIO() {
 }
 
 val FIELD_LAYOUT = AprilTagFieldLayout.loadFromResource(
-    Filesystem.getDeployDirectory().path + "/Bunnybots-2025-AprilTagMap.json"
+    AprilTagFields.k2025ReefscapeWelded.m_resourceFile
 )!!

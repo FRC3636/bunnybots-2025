@@ -125,45 +125,7 @@ class GyroPigeon(private val pigeon: Pigeon2) : Gyro {
 class GyroSim(private val modules: PerCorner<SwerveModule>) : Gyro {
     override var rotation = Rotation2d()
     override var velocity: AngularVelocity = 0.radiansPerSecond
-        private set
     override val connected = true
-    override var odometryYawPositions: DoubleArray
-        get() = TODO("Not yet implemented")
-        set(value) = TODO("Not yet implemented")
-    override var odometryYawTimestamps: DoubleArray
-        get() = TODO("Not yet implemented")
-        set(value) = TODO("Not yet implemented")
-
-    override fun periodic() {
-        // Calculate the average translation velocity of each module
-        val moduleVelocities = modules.map { it.state.translation2dPerSecond }
-        val translationVelocity = moduleVelocities.reduce(Translation2d::plus) / moduleVelocities.size.toDouble()
-
-        // Use the front left module's rotational velocity to calculate the yaw velocity
-        val rotationalVelocities = moduleVelocities.map { it - translationVelocity }
-        val yawVelocity =
-            sign(rotationalVelocities.frontLeft.y) * rotationalVelocities.frontLeft.norm /
-                    Drivetrain.Constants.MODULE_POSITIONS.frontLeft.position.translation.norm
-
-        velocity = yawVelocity.radiansPerSecond
-        rotation += Rotation2d(yawVelocity) * Robot.period
-    }
-}
-
-class GyroMapleSim(val gyroSimulation: GyroSimulation) : Gyro {
-    override var odometryYawPositions: DoubleArray
-        get() = TODO("Not yet implemented")
-        set(value) = TODO("Not yet implemented")
-    override var odometryYawTimestamps: DoubleArray
-        get() = TODO("Not yet implemented")
-        set(value) = TODO("Not yet implemented")
-    override var rotation: Rotation2d
-        get() = gyroSimulation.gyroReading
-        set(value) {
-            gyroSimulation.setRotation(value)
-        }
-    override val velocity: AngularVelocity
-        get() = gyroSimulation.measuredAngularVelocity
-    override val connected: Boolean
-        get() = true
+    override var odometryYawPositions: DoubleArray = doubleArrayOf()
+    override var odometryYawTimestamps: DoubleArray = doubleArrayOf()
 }

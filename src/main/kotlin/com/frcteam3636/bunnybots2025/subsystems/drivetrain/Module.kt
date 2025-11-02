@@ -16,11 +16,11 @@ import com.frcteam3636.bunnybots2025.utils.swerve.speed
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.kinematics.SwerveModulePosition
 import edu.wpi.first.math.kinematics.SwerveModuleState
+import edu.wpi.first.math.system.plant.DCMotor
+import edu.wpi.first.math.system.plant.LinearSystemId
 import edu.wpi.first.math.util.Units
-import edu.wpi.first.units.Units.Volts
 import edu.wpi.first.units.measure.*
-import org.ironmaple.simulation.drivesims.SwerveModuleSimulation
-import org.ironmaple.simulation.motorsims.SimulatedMotorController
+import edu.wpi.first.wpilibj.simulation.DCMotorSim
 import java.util.*
 
 interface SwerveModule {
@@ -283,20 +283,18 @@ class TurningTalon(id: CTREDeviceId, encoderId: CTREDeviceId, magnetOffset: Doub
     }
 }
 
-class SimSwerveModule(val sim: SwerveModuleSimulation) : SwerveModule {
+class SimSwerveModule() : SwerveModule {
 
     override var odometryDrivePositions: DoubleArray = doubleArrayOf()
     override var odometryTurnPositions: Array<Rotation2d> = emptyArray()
     override var odometryPositions: Array<SwerveModulePosition> = emptyArray()
     override var temperatures: Array<Temperature> = emptyArray()
-    private val driveMotor: SimulatedMotorController.GenericMotorController = sim.useGenericMotorControllerForDrive()
-        .withCurrentLimit(DRIVING_CURRENT_LIMIT)
+    private val driveMotorSystem = LinearSystemId.createDCMotorSystem(DRIVING_FF_GAINS.v, DRIVING_FF_GAINS.a)
+    private val driveMotor = DCMotorSim(driveMotorSystem, DCMotor.getKrakenX60Foc(1).withReduction(DRIVING_GEAR_RATIO))
 
-    // reference to the simulated turn motor
-    private val turnMotor: SimulatedMotorController.GenericMotorController = sim.useGenericControllerForSteer()
-        .withCurrentLimit(TURNING_CURRENT_LIMIT)
+    private val turnMotorSystem = LinearSystemId.createDCMotorSystem(TURNING_FF_GAINS.v, 0.1)
+    private val turnMotor = DCMotorSim(turnMotorSystem, DCMotor.getKrakenX60(1).withReduction(TURNING_GEAR_RATIO))
 
-    // TODO: figure out what the moment of inertia actually is and if it even matters
     private val drivingFeedforward = SimpleMotorFeedforward(DRIVING_FF_GAINS)
     private val drivingFeedback = PIDController(DRIVING_PID_GAINS)
 
@@ -306,12 +304,12 @@ class SimSwerveModule(val sim: SwerveModuleSimulation) : SwerveModule {
 
     override val state: SwerveModuleState
         get() = SwerveModuleState(
-            sim.driveWheelFinalSpeed.inRadiansPerSecond() * WHEEL_RADIUS.inMeters(),
-            sim.steerAbsoluteFacing
+            driveMotor.angularVelocity.toLinear(WHEEL_RADIUS),
+            Rotation2d.fromRadians(turnMotor.angularPositionRad)
         )
 
     override val positionRad: Angle
-        get() = sim.driveWheelFinalPosition * WHEEL_RADIUS.inMeters()
+        get() = driveMotor.angularPosition
 
     override var desiredState: SwerveModuleState = SwerveModuleState(0.0, Rotation2d())
         set(value) {
@@ -322,23 +320,23 @@ class SimSwerveModule(val sim: SwerveModuleSimulation) : SwerveModule {
 
     override val position: SwerveModulePosition
         get() = SwerveModulePosition(
-            sim.driveWheelFinalPosition.toLinear(WHEEL_RADIUS), sim.steerAbsoluteFacing
+            driveMotor.angularPosition.toLinear(WHEEL_RADIUS),
+            Rotation2d.fromRadians(turnMotor.angularPositionRad)
         )
 
     override fun periodic() {
         // Set the new input voltages
-        turnMotor.requestVoltage(
-            turningFeedback.calculate(state.angle.radians, desiredState.angle.radians).volts
-        )
-        driveMotor.requestVoltage(
-            drivingFeedforward.calculate(desiredState.speedMetersPerSecond).volts + drivingFeedback.calculate(
+        turnMotor.inputVoltage = turningFeedback.calculate(state.angle.radians, desiredState.angle.radians)
+
+        driveMotor.inputVoltage =
+            drivingFeedforward.calculate(desiredState.speedMetersPerSecond) + drivingFeedback.calculate(
                     state.speedMetersPerSecond, desiredState.speedMetersPerSecond
-            ).volts
-        )
+            )
+
     }
 
     override fun characterize(voltage: Voltage, turningAngle: Angle?) {
-        TODO("Not yet implemented")
+        return // we don't need this in sim
     }
 }
 

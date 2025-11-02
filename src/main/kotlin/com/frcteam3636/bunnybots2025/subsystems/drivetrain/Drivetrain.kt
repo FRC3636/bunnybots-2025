@@ -202,7 +202,7 @@ object Drivetrain : Subsystem {
                 PATH_FOLLOWING_TRANSLATION_GAINS.toPPLib(),
                 PATH_FOLLOWING_ROTATION_GAINS.toPPLib()
             ),
-            RobotConfig.fromGUISettings(),
+            pathPlannerConfig,
             // Mirror path when the robot is on the red alliance (the robot starts on the opposite side of the field)
             {
                 @Suppress("IDENTITY_SENSITIVE_OPERATIONS_WITH_VALUE_TYPE")
@@ -215,7 +215,6 @@ object Drivetrain : Subsystem {
             PathfindingCommand.warmupCommand().schedule()
         }
         if (io is DrivetrainIOSim) {
-            poseEstimator.resetPose(io.swerveDriveSimulation.simulatedDriveTrainPose)
             io.registerPoseProviders(absolutePoseIOs.values.map { it.first })
         }
 
