@@ -131,7 +131,7 @@ data class LimelightMeasurement(
 
 class LimelightPoseProvider(
     private val name: String,
-    private val megaTagV2: LimelightAlgorithm.MegaTag2,
+    private val afterEnableAlgo: LimelightAlgorithm.MegaTag2,
     private val isLL4: Boolean
 ) : AbsolutePoseProvider {
     // References:
@@ -176,7 +176,7 @@ class LimelightPoseProvider(
         val measurement = LimelightMeasurement()
 
         if ((!RobotState.beforeFirstEnable) && currentAlgorithm == LimelightAlgorithm.MegaTag) {
-            currentAlgorithm = megaTagV2
+            currentAlgorithm = afterEnableAlgo
             if (isLL4)
                 LimelightHelpers.SetIMUMode(name, 3)
         }
@@ -193,7 +193,7 @@ class LimelightPoseProvider(
                     if (!isLL4) {
                         LimelightHelpers.SetRobotOrientation(
                             name,
-                            megaTagV2.gyroPosition.degrees,
+                            afterEnableAlgo.gyroPosition.degrees,
                             // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
                             0.0, 0.0, 0.0, 0.0, 0.0
                         )
@@ -206,7 +206,7 @@ class LimelightPoseProvider(
                             LimelightHelpers.SetIMUMode(name, 1)
                             LimelightHelpers.SetRobotOrientation(
                                 name,
-                                megaTagV2.gyroPosition.degrees,
+                                afterEnableAlgo.gyroPosition.degrees,
                                 // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
                                 0.0, 0.0, 0.0, 0.0, 0.0
                             )
@@ -236,7 +236,7 @@ class LimelightPoseProvider(
                 if (!isLL4) {
                     LimelightHelpers.SetRobotOrientation(
                         name,
-                        megaTagV2.gyroPosition.degrees,
+                        afterEnableAlgo.gyroPosition.degrees,
                         // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
                         0.0, 0.0, 0.0, 0.0, 0.0
                     )
@@ -251,7 +251,7 @@ class LimelightPoseProvider(
 
                 LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name)?.let { estimate ->
                     measurement.observedTags = estimate.rawFiducials.mapNotNull { it?.id }.toIntArray()
-                    val highSpeed = megaTagV2.gyroVelocity.abs(DegreesPerSecond) > 360.0
+                    val highSpeed = afterEnableAlgo.gyroVelocity.abs(DegreesPerSecond) > 360.0
                     if (estimate.tagCount == 0 || highSpeed) measurement.shouldReject = true
 
                     measurement.poseMeasurement = AbsolutePoseMeasurement(
