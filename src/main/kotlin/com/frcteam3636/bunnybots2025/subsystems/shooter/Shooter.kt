@@ -48,13 +48,13 @@ object Shooter {
 
         val atDesiredVelocity =
             Trigger {
-                val velocityDifference = (inputs.topVelocity.minus(setpoint).baseUnitMagnitude().absoluteValue)
+                val velocityDifference = inputs.topVelocity - setpoint
                 Logger.recordOutput("Shooter/Flywheels/Velocity Difference", velocityDifference)
                 Logger.recordOutput(
                     "Shooter/Flywheels/At Desired Velocity",
-                    velocityDifference < FLYWHEEL_VELOCITY_TOLERANCE.baseUnitMagnitude()
+                    velocityDifference < FLYWHEEL_VELOCITY_TOLERANCE
                 )
-                velocityDifference < FLYWHEEL_VELOCITY_TOLERANCE.baseUnitMagnitude()
+                velocityDifference < FLYWHEEL_VELOCITY_TOLERANCE
             }
 
         val speedInterpolationTable = InterpolatingDoubleTreeMap()
