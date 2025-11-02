@@ -10,8 +10,10 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.JOYSTICK_DEADBAND
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.MODULE_POSITIONS
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.PATH_FOLLOWING_ROTATION_GAINS
+import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.PATH_FOLLOWING_TRANSLATION_GAINS
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.ROTATION_SENSITIVITY
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.TRANSLATION_SENSITIVITY
+import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.WHEEL_COF
 import com.frcteam3636.bunnybots2025.utils.fieldRelativeTranslation2d
 import com.frcteam3636.bunnybots2025.utils.math.*
 import com.frcteam3636.bunnybots2025.utils.swerve.Corner
@@ -19,7 +21,11 @@ import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
 import com.frcteam3636.bunnybots2025.utils.swerve.cornerStatesToChassisSpeeds
 import com.frcteam3636.bunnybots2025.utils.swerve.toCornerSwerveModuleStates
 import com.frcteam3636.bunnybots2025.utils.translation2d
+import com.pathplanner.lib.auto.AutoBuilder
 import com.pathplanner.lib.commands.PathfindingCommand
+import com.pathplanner.lib.config.ModuleConfig
+import com.pathplanner.lib.config.RobotConfig
+import com.pathplanner.lib.controllers.PPHolonomicDriveController
 import com.pathplanner.lib.pathfinding.Pathfinding
 import edu.wpi.first.math.VecBuilder
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator
@@ -32,6 +38,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics
 import edu.wpi.first.math.kinematics.SwerveModulePosition
 import edu.wpi.first.math.kinematics.SwerveModuleState
+import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.Joystick
 import edu.wpi.first.wpilibj2.command.Command
@@ -40,6 +47,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.littletonrobotics.junction.Logger
+import java.util.Optional
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.*
 
@@ -171,20 +179,37 @@ object Drivetrain : Subsystem {
             LocalADStarAK()
         )
 
-//        AutoBuilder.configure(
-//            this::estimatedPose,
-//            this::estimatedPose::set,
-//            this::measuredChassisSpeeds,
-//            this::desiredChassisSpeeds::set,
-//            PPHolonomicDriveController(
-//                PATH_FOLLOWING_TRANSLATION_GAINS,
-//                PATH_FOLLOWING_ROTATION_GAINS
-//            ),
-//            RobotConfig.fromGUISettings(),
-//            // Mirror path when the robot is on the red alliance (the robot starts on the opposite side of the field)
-//            { DriverStation.getAlliance() == Optional.of(DriverStation.Alliance.Red) },
-//            this
-//        )
+        val pathPlannerConfig = RobotConfig(
+            60.kilograms, // FIXME: weigh the robot
+            6.883.kilogramSquareMeters, // FIXME: calculate with SysID
+            ModuleConfig(
+                WHEEL_RADIUS,
+                FREE_SPEED,
+                WHEEL_COF,
+                DCMotor.getKrakenX60Foc(1).withReduction(DRIVING_GEAR_RATIO),
+                DRIVING_CURRENT_LIMIT,
+                1
+            ),
+            *MODULE_POSITIONS.map { it.position.translation }.toTypedArray()
+        )
+
+        AutoBuilder.configure(
+            this::estimatedPose,
+            this::estimatedPose::set,
+            this::measuredChassisSpeeds,
+            this::desiredChassisSpeeds::set,
+            PPHolonomicDriveController(
+                PATH_FOLLOWING_TRANSLATION_GAINS.toPPLib(),
+                PATH_FOLLOWING_ROTATION_GAINS.toPPLib()
+            ),
+            RobotConfig.fromGUISettings(),
+            // Mirror path when the robot is on the red alliance (the robot starts on the opposite side of the field)
+            {
+                @Suppress("IDENTITY_SENSITIVE_OPERATIONS_WITH_VALUE_TYPE")
+                DriverStation.getAlliance() == Optional.of(DriverStation.Alliance.Red)
+            },
+            this
+        )
 
         if (Robot.model != Robot.Model.SIMULATION) {
             PathfindingCommand.warmupCommand().schedule()
@@ -452,6 +477,7 @@ object Drivetrain : Subsystem {
         val ROBOT_LENGTH = 25.5.inches
         val ROBOT_WIDTH = 25.5.inches
         val TRACK_WIDTH = abs(TunerConstants.FrontRight!!.LocationY + TunerConstants.BackLeft!!.LocationY)
+        val WHEEL_COF = 1.8 // FIXME: figure this out man idk
 
         val BUMPER_WIDTH = 30.inches
         val BUMPER_LENGTH = 30.inches

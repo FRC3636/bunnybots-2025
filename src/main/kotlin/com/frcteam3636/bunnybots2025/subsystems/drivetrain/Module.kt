@@ -358,4 +358,4 @@ internal val TURNING_PID_GAINS: PIDGains = TunerConstants.steerGains!!.pidGains
 internal val TURNING_FF_GAINS: MotorFFGains = TunerConstants.steerGains!!.motorFFGains
 
 internal val TURNING_CURRENT_LIMIT = TunerConstants.kSteerCurrentLimit
-internal val DRIVING_CURRENT_LIMIT = TunerConstants.kSlipCurrent
+internal val DRIVING_CURRENT_LIMIT = TunerConstants.kSlipCurrent // FIXME: Calculate
