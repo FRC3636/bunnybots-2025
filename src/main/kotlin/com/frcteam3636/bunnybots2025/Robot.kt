@@ -331,14 +331,14 @@ object Robot : LoggedRobot() {
     }
 
     override fun autonomousInit() {
-        if (RobotState.beforeFirstEnable)
+        if (!RobotState.beforeFirstEnable)
             RobotState.beforeFirstEnable = true
 //        autoCommand = Dashboard.autoChooser.selected
         autoCommand?.schedule()
     }
 
     override fun teleopInit() {
-        if (RobotState.beforeFirstEnable)
+        if (!RobotState.beforeFirstEnable)
             RobotState.beforeFirstEnable = true
         autoCommand?.cancel()
     }
