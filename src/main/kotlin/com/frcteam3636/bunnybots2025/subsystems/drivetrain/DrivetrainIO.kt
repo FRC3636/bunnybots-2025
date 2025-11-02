@@ -148,10 +148,10 @@ class DrivetrainIOSim : DrivetrainIO() {
             .withSwerveModule(
                 // FIXME: Calculate values
                 SwerveModuleSimulationConfig(
-                    DCMotor.getKrakenX60(1),  // Drive motor is a Kraken X60
-                    DCMotor.getNeo550(1),  // Steer motor is a Neo 550
-                    (45.0 * 22.0) / (14.0 * 15.0),
-                    9424.0 / 203.0,
+                    DCMotor.getKrakenX60Foc(1),  // Drive motor is a Kraken X60
+                    DCMotor.getKrakenX60(1),  // Steer motor is an X44 but this seemingly doesn't exist yet
+                    DRIVING_GEAR_RATIO,
+                    TURNING_GEAR_RATIO,
                     0.1.volts,
                     0.1.volts,
                     WHEEL_RADIUS,
