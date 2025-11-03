@@ -15,8 +15,10 @@ import edu.wpi.first.math.numbers.N2
 import edu.wpi.first.math.system.LinearSystem
 import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.math.system.plant.LinearSystemId
+import edu.wpi.first.math.trajectory.TrapezoidProfile
 import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.Angle
+import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj.simulation.DCMotorSim
 import org.team9432.annotation.Logged
 
@@ -131,7 +133,7 @@ class IntakeIOReal : IntakeIO {
         intakePivotMotor.setControl(NeutralOut())
     }
 
-    internal companion object Constants {
+    companion object Constants {
         val PID_GAINS = PIDGains(6.0, 0.0, 0.0)
         val CRUISE_VELOCITY = 0.0.rotationsPerSecond
         val ACCELERATION = 0.0.rotationsPerSecondPerSecond
@@ -145,22 +147,33 @@ class IntakeIOSim : IntakeIO {
     val rollerMotorSystem: LinearSystem<N2?, N1?, N2?>? = LinearSystemId.createDCMotorSystem(DCMotor.getNeoVortex(1), 0.0001, 1.0)
     val rollerMotor = DCMotorSim(rollerMotorSystem, DCMotor.getNeoVortex(1))
 
-    val pivotMotorSystem = LinearSystemId.createSingleJointedArmSystem(DCMotor.getKrakenX60(1), 0.002, 0.11111111111)
-    val pivotMotor = DCMotorSim(pivotMotorSystem, DCMotor.getKrakenX60(1))
+    private val profile = TrapezoidProfile(
+        TrapezoidProfile.Constraints(
+            IntakeIOReal.CRUISE_VELOCITY.inRotationsPerSecond(),
+            IntakeIOReal.ACCELERATION.inRotationsPerSecondPerSecond(),
+        )
+    )
+
+    private val profileTimer = Timer().apply { start() }
+
+    private var start = TrapezoidProfile.State()
+    private var goal = TrapezoidProfile.State()
 
     override fun setRollerSpeed(percentage: Double) {
         rollerMotor.inputVoltage = percentage * 12.0
     }
 
     override fun updateInputs(inputs: IntakeInputs) {
-        inputs.pivotVelocity = pivotMotor.angularVelocity
-        inputs.pivotPosition = pivotMotor.angularPosition * 0.11111111111
-        inputs.pivotCurrent = pivotMotor.currentDrawAmps.amps
+        val state = profile.calculate(profileTimer.get(), start, goal)
+        inputs.pivotVelocity = state.velocity.rotationsPerSecond
+        inputs.pivotPosition = state.position.rotations
         inputs.rollerVelocity = rollerMotor.angularVelocity
         inputs.rollerCurrent = rollerMotor.currentDrawAmps.amps
     }
 
     override fun setPivotPosition(pivotPosition: Angle) {
-        pivotMotor.setAngle(pivotPosition.inRadians() * 0.11111111111)
+        start = profile.calculate(profileTimer.get(), start, goal)
+        goal = TrapezoidProfile.State(pivotPosition.inRotations(), 0.0)
+        profileTimer.reset()
     }
 }

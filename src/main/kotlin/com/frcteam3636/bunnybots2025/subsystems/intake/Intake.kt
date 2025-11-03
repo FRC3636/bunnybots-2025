@@ -64,7 +64,6 @@ object Intake : Subsystem {
         startEnd(
             {
                 io.setRollerSpeed(-0.5)
-                println("Deploying")
                 io.setPivotPosition(Position.Deployed.angle)
             },
             {
@@ -75,7 +74,7 @@ object Intake : Subsystem {
 
     enum class Position(val angle: Angle) {
         Stowed(0.rotations),
-        Deployed(5.rotations); // FIXME: Placeholder
+        Deployed(90.degrees); // FIXME: Placeholder
     }
 
     fun getStatusSignals(): MutableList<BaseStatusSignal> {
