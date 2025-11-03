@@ -11,6 +11,7 @@ import com.frcteam3636.bunnybots2025.utils.math.amps
 import com.frcteam3636.bunnybots2025.utils.math.celsius
 import com.frcteam3636.bunnybots2025.utils.math.rpm
 import com.revrobotics.spark.SparkLowLevel
+import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.units.Units.*
 import org.team9432.annotation.Logged
 
@@ -64,12 +65,14 @@ class IndexerIOReal : IndexerIO {
     }
 }
 
-class IndexerIOSim : IndexerIO {
-    override fun setIndexerSpeed(percentage: Double) {
-        TODO("Not yet implemented")
-    }
-
-    override fun updateInputs(inputs: IndexerInputs) {
-        TODO("Not yet implemented")
-    }
-}
+//class IndexerIOSim : IndexerIO {
+//    private val indexerMotor = DCMotor.getNeoVortex(1)
+//
+//    override fun setIndexerSpeed(percentage: Double) {
+//        indexerMotor.
+//    }
+//
+//    override fun updateInputs(inputs: IndexerInputs) {
+//        TODO("Not yet implemented")
+//    }
+//}

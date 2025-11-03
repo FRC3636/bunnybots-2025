@@ -404,7 +404,6 @@ class PhoenixOdometryThread : Thread("PhoenixOdometry") {
     }
 }
 
-@Suppress("unused")
 class CameraSimPoseProvider(name: String, val chassisToCamera: Transform3d) : AbsolutePoseProvider {
     private val camera = PhotonCamera(name)
     private val simProperties = SimCameraProperties().apply {

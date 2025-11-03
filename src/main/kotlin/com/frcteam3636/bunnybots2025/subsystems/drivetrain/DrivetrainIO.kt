@@ -152,6 +152,7 @@ class DrivetrainIOSim : DrivetrainIO() {
         super.updateInputs(inputs)
         vision.update(Drivetrain.poseEstimator.estimatedPosition)
 
+
         Diagnostics.report(gyro)
     }
 

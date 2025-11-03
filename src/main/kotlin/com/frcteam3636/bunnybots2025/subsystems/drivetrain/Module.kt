@@ -10,6 +10,7 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.NeutralModeValue
 import com.frcteam3636.bunnybots2025.CANcoder
 import com.frcteam3636.bunnybots2025.CTREDeviceId
+import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.TalonFX
 import com.frcteam3636.bunnybots2025.utils.math.*
 import com.frcteam3636.bunnybots2025.utils.swerve.speed
@@ -289,16 +290,22 @@ class SimSwerveModule() : SwerveModule {
     override var odometryTurnPositions: Array<Rotation2d> = emptyArray()
     override var odometryPositions: Array<SwerveModulePosition> = emptyArray()
     override var temperatures: Array<Temperature> = emptyArray()
-    private val driveMotorSystem = LinearSystemId.createDCMotorSystem(DRIVING_FF_GAINS.v, DRIVING_FF_GAINS.a)
+    private val driveMotorSystem = LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60Foc(1),
+        0.0001,
+        DRIVING_GEAR_RATIO
+    )
     private val driveMotor = DCMotorSim(driveMotorSystem, DCMotor.getKrakenX60Foc(1).withReduction(DRIVING_GEAR_RATIO))
 
-    private val turnMotorSystem = LinearSystemId.createDCMotorSystem(TURNING_FF_GAINS.v, 0.1)
+    private val turnMotorSystem = LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60(1),
+        0.0001,
+        TURNING_GEAR_RATIO
+    )
     private val turnMotor = DCMotorSim(turnMotorSystem, DCMotor.getKrakenX60(1).withReduction(TURNING_GEAR_RATIO))
 
-    private val drivingFeedforward = SimpleMotorFeedforward(DRIVING_FF_GAINS)
-    private val drivingFeedback = PIDController(DRIVING_PID_GAINS)
+    private val drivingFeedforward = SimpleMotorFeedforward(MotorFFGains(v = 3.3))
+    private val drivingFeedback = PIDController(PIDGains(1.0))
 
-    private val turningFeedback = PIDController(TURNING_PID_GAINS).apply { enableContinuousInput(0.0, TAU) }
+    private val turningFeedback = PIDController(PIDGains(8.0)).apply { enableContinuousInput(0.0, TAU) }
 
     override var odometryTimestamps: DoubleArray = doubleArrayOf()
 
@@ -325,14 +332,14 @@ class SimSwerveModule() : SwerveModule {
         )
 
     override fun periodic() {
+        turnMotor.update(Robot.period)
+        driveMotor.update(Robot.period)
         // Set the new input voltages
         turnMotor.inputVoltage = turningFeedback.calculate(state.angle.radians, desiredState.angle.radians)
-
         driveMotor.inputVoltage =
             drivingFeedforward.calculate(desiredState.speedMetersPerSecond) + drivingFeedback.calculate(
                     state.speedMetersPerSecond, desiredState.speedMetersPerSecond
             )
-
     }
 
     override fun characterize(voltage: Voltage, turningAngle: Angle?) {

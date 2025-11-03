@@ -3,18 +3,20 @@ package com.frcteam3636.bunnybots2025.subsystems.drivetrain
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.hardware.Pigeon2
 import com.frcteam3636.bunnybots2025.Robot
+import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.TRACK_WIDTH
+import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.WHEEL_BASE
 import com.frcteam3636.bunnybots2025.utils.math.degreesPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.radiansPerSecond
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
-import com.frcteam3636.bunnybots2025.utils.swerve.translation2dPerSecond
 import com.studica.frc.AHRS
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation2d
+import edu.wpi.first.math.kinematics.SwerveModuleState
 import edu.wpi.first.units.measure.AngularVelocity
-import org.ironmaple.simulation.drivesims.GyroSimulation
 import org.littletonrobotics.junction.Logger
 import java.util.*
 import kotlin.math.sign
+
 
 interface Gyro {
     /**
@@ -128,4 +130,32 @@ class GyroSim(private val modules: PerCorner<SwerveModule>) : Gyro {
     override val connected = true
     override var odometryYawPositions: DoubleArray = doubleArrayOf()
     override var odometryYawTimestamps: DoubleArray = doubleArrayOf()
+
+    override fun periodic() {
+        val moduleStates = modules.map { it.state }.toTypedArray()
+        val velocityMap = moduleStates
+            .map { Translation2d(it.speedMetersPerSecond, it.angle) }
+            .reduce(Translation2d::plus)
+            .div(moduleStates.size.toDouble())
+
+        val referenceModule = modules.frontLeft.state
+        val referenceModulePosition = Translation2d(
+            TunerConstants.FrontLeft!!.LocationX,
+            TunerConstants.FrontLeft.LocationY
+        )
+
+        val referenceModuleVelocity = Translation2d(referenceModule.speedMetersPerSecond, referenceModule.angle)
+        val referenceRotationalVelocityComponent = referenceModuleVelocity.minus(velocityMap)
+
+        val cross = referenceModulePosition.x * referenceRotationalVelocityComponent.y -
+                referenceModulePosition.y * referenceRotationalVelocityComponent.x
+
+        val turningDirection = cross.sign  // +1.0 for CCW, -1.0 for CW, 0.0 if no rotation
+
+        val turnRateMagnitude = referenceRotationalVelocityComponent.norm / referenceModulePosition.norm
+        val turnRate = Rotation2d.fromRadians(turnRateMagnitude * turningDirection)
+
+        velocity = turnRate.degrees.degreesPerSecond
+        rotation = rotation.plus(turnRate.times(Robot.period))
+    }
 }

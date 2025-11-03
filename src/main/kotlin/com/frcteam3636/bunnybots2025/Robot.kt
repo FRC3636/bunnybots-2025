@@ -305,10 +305,9 @@ object Robot : LoggedRobot() {
     override fun robotPeriodic() {
         reportDiagnostics()
 
-        if (isReal()) {
-            val refresh = BaseStatusSignal.refreshAll(*statusSignals)
-            didRefreshSucceed = refresh.isOK
-        }
+        val refresh = BaseStatusSignal.refreshAll(*statusSignals)
+        didRefreshSucceed = refresh.isOK
+
 
         CommandScheduler.getInstance().run()
 

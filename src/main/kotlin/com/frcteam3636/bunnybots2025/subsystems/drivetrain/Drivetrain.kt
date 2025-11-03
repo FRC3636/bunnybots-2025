@@ -129,6 +129,8 @@ object Drivetrain : Subsystem {
         inputs.gyroVelocity
     })
 
+    private var rawGyroRotation = Rotation2d.kZero
+
     // someone please give me a better way to do this
     val lastModulePositions = arrayOf(
         SwerveModulePosition(),
@@ -222,34 +224,49 @@ object Drivetrain : Subsystem {
     }
 
     override fun periodic() {
-        try {
-            Robot.odometryLock.lock()
+        if (Robot.model != Robot.Model.SIMULATION) {
+            try {
+                Robot.odometryLock.lock()
+                io.updateInputs(inputs)
+                Logger.processInputs("Drivetrain", inputs)
+                val odometryTimestamps = io.getOdometryTimestamps()
+                val odometryPositions = io.getOdometryPositions()
+                val odometryYawPositons = io.getOdometryYawPositions()
+                Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions[0].size)
+                for (i in 0..<odometryTimestamps.size) {
+                    val modulePositions = Array(4) { index ->
+                        odometryPositions[index][i]
+                    }
+                    val moduleDeltas = Array(4) { index ->
+                        SwerveModulePosition(
+                            modulePositions[index].distanceMeters - lastModulePositions[index].distanceMeters,
+                            modulePositions[index].angle - lastModulePositions[index].angle
+                        )
+                    }
+                    for (moduleIndex in 0..3) {
+                        lastModulePositions[moduleIndex] = modulePositions[moduleIndex]
+                    }
+
+                    rawGyroRotation = if (inputs.gyroConnected) {
+                        Rotation2d.fromDegrees(odometryYawPositons[i])
+                    } else {
+                        rawGyroRotation.plus(Rotation2d(kinematics.toTwist2d(*moduleDeltas).dtheta))
+                    }
+                    poseEstimator.updateWithTime(odometryTimestamps[i], rawGyroRotation, modulePositions)
+                }
+            } finally {
+                Robot.odometryLock.unlock()
+            }
+        } else {
             io.updateInputs(inputs)
             Logger.processInputs("Drivetrain", inputs)
-            val odometryTimestamps = io.getOdometryTimestamps()
-            val odometryPositions = io.getOdometryPositions()
-            val odometryYawPositons = io.getOdometryYawPositions()
-            Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions[0].size)
-            for (i in 0..<odometryTimestamps.size) {
-                val modulePositions = Array(4) { index ->
-                    odometryPositions[index][i]
-                }
-                Array(4) { index ->
-                    SwerveModulePosition(
-                        modulePositions[index].distanceMeters - lastModulePositions[index].distanceMeters,
-                        modulePositions[index].angle - lastModulePositions[index].angle
-                    )
-                }
-                for (moduleIndex in 0..3) {
-                    lastModulePositions[moduleIndex] = modulePositions[moduleIndex]
-                }
-
-                val odometryYawPosition = Rotation2d.fromDegrees(odometryYawPositons[i])
-                poseEstimator.updateWithTime(odometryTimestamps[i], odometryYawPosition, modulePositions)
-            }
-        } finally {
-            Robot.odometryLock.unlock()
+            rawGyroRotation = inputs.gyroRotation
+            poseEstimator.update(
+                rawGyroRotation,
+                inputs.measuredPositions.toTypedArray()
+            )
         }
+
 
         // Update absolute pose sensors and add their measurements to the pose estimator
         for ((name, ioPair) in absolutePoseIOs) {
@@ -259,12 +276,14 @@ object Drivetrain : Subsystem {
             Logger.processInputs("Drivetrain/Absolute Pose/$name", inputs)
 
             Logger.recordOutput("Drivetrain/Absolute Pose/$name/Measurement Rejected", inputs.measurementRejected)
-            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Measurement", inputs.measurement)
-            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Pose", inputs.measurement?.pose)
-            if (!inputs.measurementRejected) {
-                inputs.measurement?.let {
-                    poseEstimator.addAbsolutePoseMeasurement(it)
-                    Logger.recordOutput("Drivetrain/Last Added Pose", it.pose)
+            if (inputs.measurement != null) {
+                Logger.recordOutput("Drivetrain/Absolute Pose/$name/Measurement", inputs.measurement)
+                Logger.recordOutput("Drivetrain/Absolute Pose/$name/Pose", inputs.measurement?.pose)
+                if (!inputs.measurementRejected) {
+                    inputs.measurement?.let {
+                        poseEstimator.addAbsolutePoseMeasurement(it)
+                        Logger.recordOutput("Drivetrain/Last Added Pose", it.pose)
+                    }
                 }
             }
         }
@@ -465,7 +484,7 @@ object Drivetrain : Subsystem {
         io.runCharacterization(0.volts, shouldSpin = true)
     }.withTimeout(2.0).andThen(sysID.dynamic(direction))!!
 
-    internal object Constants {
+    object Constants {
         // Translation/rotation coefficient for teleoperated driver controls
         /** Unit: Percent of max robot speed */
         const val TRANSLATION_SENSITIVITY = 1.0 // FIXME: Increase
@@ -475,7 +494,8 @@ object Drivetrain : Subsystem {
 
         val ROBOT_LENGTH = 25.5.inches
         val ROBOT_WIDTH = 25.5.inches
-        val TRACK_WIDTH = abs(TunerConstants.FrontRight!!.LocationY + TunerConstants.BackLeft!!.LocationY)
+        val TRACK_WIDTH = abs(TunerConstants.FrontLeft!!.LocationY - TunerConstants.FrontRight!!.LocationY)
+        val WHEEL_BASE = abs(TunerConstants.FrontRight!!.LocationX - TunerConstants.BackRight!!.LocationX)
         val WHEEL_COF = 1.8 // FIXME: figure this out man idk
 
         val BUMPER_WIDTH = 30.inches
