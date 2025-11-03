@@ -10,7 +10,7 @@ import org.littletonrobotics.junction.Logger
 
 object Indexer : Subsystem {
     private var io: IndexerIO = when (Robot.model) {
-        Robot.Model.SIMULATION -> IndexerIOReal()
+        Robot.Model.SIMULATION -> IndexerIOSim()
         Robot.Model.COMPETITION -> IndexerIOReal()
     }
 

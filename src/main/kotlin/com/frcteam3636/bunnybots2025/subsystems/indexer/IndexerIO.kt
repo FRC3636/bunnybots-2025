@@ -12,7 +12,9 @@ import com.frcteam3636.bunnybots2025.utils.math.celsius
 import com.frcteam3636.bunnybots2025.utils.math.rpm
 import com.revrobotics.spark.SparkLowLevel
 import edu.wpi.first.math.system.plant.DCMotor
+import edu.wpi.first.math.system.plant.LinearSystemId
 import edu.wpi.first.units.Units.*
+import edu.wpi.first.wpilibj.simulation.DCMotorSim
 import org.team9432.annotation.Logged
 
 @Logged
@@ -65,14 +67,30 @@ class IndexerIOReal : IndexerIO {
     }
 }
 
-//class IndexerIOSim : IndexerIO {
-//    private val indexerMotor = DCMotor.getNeoVortex(1)
-//
-//    override fun setIndexerSpeed(percentage: Double) {
-//        indexerMotor.
-//    }
-//
-//    override fun updateInputs(inputs: IndexerInputs) {
-//        TODO("Not yet implemented")
-//    }
-//}
+class IndexerIOSim : IndexerIO {
+    private val indexerMotorSystem = LinearSystemId.createDCMotorSystem(DCMotor.getNeoVortex(1), 0.0001, 1.0)
+    private val indexerMotor = DCMotorSim(indexerMotorSystem, DCMotor.getNeoVortex(1))
+
+    private var canRange = CANrange(CTREDeviceId.CANRangeIndexer).apply {
+        configurator.apply(
+            CANrangeConfiguration().apply {
+                ProximityParams.ProximityThreshold = 0.35 // fix
+                ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz
+            }
+        )
+    }
+
+    init {
+        canRange.simState.setDistance(1.0)
+    }
+
+    override fun setIndexerSpeed(percentage: Double) {
+        indexerMotor.inputVoltage = 12.0 * percentage
+    }
+
+    override fun updateInputs(inputs: IndexerInputs) {
+        inputs.indexerVelocity = indexerMotor.angularVelocity
+        inputs.indexerCurrent = indexerMotor.currentDrawAmps.amps
+        inputs.isDetected = canRange.isDetected.value
+    }
+}
