@@ -226,7 +226,6 @@ object Robot : LoggedRobot() {
 
         joystickLeft.button(1).whileTrue(
             Commands.defer({ // TODO: check if this shit really needs to be deferred. it probably does lol.
-                Logger.recordOutput("Drivetrain/Polar Driving/Alliance", DriverStation.getAlliance().toString())
                 Drivetrain.driveWithJoystickPointingTowards(
                     joystickLeft.hid,
                     DriverStation.getAlliance()
