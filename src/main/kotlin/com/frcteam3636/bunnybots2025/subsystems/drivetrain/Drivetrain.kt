@@ -11,6 +11,7 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.MODULE_POSITIONS
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.PATH_FOLLOWING_ROTATION_GAINS
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.PATH_FOLLOWING_TRANSLATION_GAINS
+import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.POLAR_DRIVING_GAINS
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.ROTATION_SENSITIVITY
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.TRANSLATION_SENSITIVITY
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.WHEEL_COF
@@ -351,7 +352,7 @@ object Drivetrain : Subsystem {
             )
         }
 
-    val polarDrivingPIDController = PIDController(PATH_FOLLOWING_ROTATION_GAINS).apply {
+    val polarDrivingPIDController = PIDController(POLAR_DRIVING_GAINS).apply {
         enableContinuousInput(0.0, TAU)
     }
 
@@ -387,8 +388,9 @@ object Drivetrain : Subsystem {
 
     @Suppress("unused")
     fun driveWithJoystickPointingTowards(translationJoystick: Joystick, target: Translation2d): Command {
-        Logger.recordOutput("Drivetrain/Polar Driving/Target", target)
+        Logger.recordOutput("Drivetrain/Polar Driving/Target", Pose2d(target, Rotation2d.kZero))
         Logger.recordOutput("Drivetrain/Polar Driving/Active", true)
+        polarDrivingPIDController.setTolerance(0.5)
         polarDrivingPIDController.reset()
         return run {
             val translationInput = if (abs(translationJoystick.x) > JOYSTICK_DEADBAND
@@ -401,7 +403,7 @@ object Drivetrain : Subsystem {
             val magnitude = polarDrivingPIDController.calculate(
                 target.minus(estimatedPose.translation).angle.radians - PI,
                 estimatedPose.rotation.radians
-            ).unaryMinus()
+            )
 
             Logger.recordOutput("Drivetrain/Polar Driving/PID Output", magnitude)
 
@@ -547,6 +549,8 @@ object Drivetrain : Subsystem {
 
         val PATH_FOLLOWING_TRANSLATION_GAINS = PIDGains(5.0)
         val PATH_FOLLOWING_ROTATION_GAINS = PIDGains(5.0)
+
+        val POLAR_DRIVING_GAINS = PIDGains(0.15, 0.0, 0.05)
 
         // CAN IDs
         val MODULE_CAN_IDS =

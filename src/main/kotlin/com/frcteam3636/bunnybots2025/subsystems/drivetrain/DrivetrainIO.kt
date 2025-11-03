@@ -165,6 +165,4 @@ class DrivetrainIOSim : DrivetrainIO() {
     }
 }
 
-val FIELD_LAYOUT = AprilTagFieldLayout.loadFromResource(
-    AprilTagFields.k2025ReefscapeWelded.m_resourceFile
-)!!
+val FIELD_LAYOUT = AprilTagFieldLayout(Filesystem.getDeployDirectory().path + "/Bunnybots-2025-AprilTagMap.json")

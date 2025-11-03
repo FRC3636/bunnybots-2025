@@ -4,13 +4,16 @@ import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
+import com.frcteam3636.bunnybots2025.subsystems.drivetrain.FIELD_LAYOUT
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Flywheels.speedInterpolationTable
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Pivot.angleInterpolationTable
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Pivot.mechanism
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Pivot.pivotAngleLigament
 import com.frcteam3636.bunnybots2025.utils.math.*
+import com.pathplanner.lib.util.FlippingUtil
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
+import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap
 import edu.wpi.first.math.util.Units
@@ -202,7 +205,7 @@ fun distanceToZoo(): Distance {
         .orElse(DriverStation.Alliance.Blue)
         .zooTranslation
     val zooPose = Pose2d(
-        pettingZooTranslation.toTranslation2d(),
+        pettingZooTranslation,
         Rotation2d()
     )
     val distance = Drivetrain.estimatedPose.translation.getDistance(zooPose.translation).meters
@@ -243,18 +246,15 @@ enum class Target(val profile: PivotProfile) {
     )
 }
 
-val DriverStation.Alliance.zooTranslation: Translation3d
-    get() = when (this) { // got these values from field CAD
-        DriverStation.Alliance.Blue -> Translation3d(
-            Units.inchesToMeters(240.0),
-            Units.inchesToMeters(180.0),
-            Units.inchesToMeters(48.125)
+val DriverStation.Alliance.zooTranslation: Translation2d
+    get() = when (this) { // got these values from apriltag math
+        DriverStation.Alliance.Blue -> Translation2d(
+            12.9327783.meters,
+            4.0132127.meters,
         )
-
-        else -> Translation3d(
-            Units.inchesToMeters(600.0),
-            Units.inchesToMeters(180.0),
-            Units.inchesToMeters(48.125)
+        else -> Translation2d(
+            FIELD_LAYOUT.fieldLength.meters - 12.9327783.meters,
+            4.0132127.meters
         )
     }
 

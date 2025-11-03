@@ -8,17 +8,23 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.NeutralModeValue
 import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.TalonFX
+import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal
 import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal.Constants.ACCELERATION
 import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal.Constants.CRUISE_VELOCITY
 import com.frcteam3636.bunnybots2025.utils.math.PIDGains
 import com.frcteam3636.bunnybots2025.utils.math.degrees
 import com.frcteam3636.bunnybots2025.utils.math.degreesPerSecond
+import com.frcteam3636.bunnybots2025.utils.math.inRotations
 import com.frcteam3636.bunnybots2025.utils.math.inRotationsPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.inRotationsPerSecondPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.pidGains
+import com.frcteam3636.bunnybots2025.utils.math.rotations
+import com.frcteam3636.bunnybots2025.utils.math.rotationsPerSecond
+import edu.wpi.first.math.trajectory.TrapezoidProfile
 import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.Alert
+import edu.wpi.first.wpilibj.Timer
 import org.team9432.annotation.Logged
 
 @Logged
@@ -127,24 +133,39 @@ class PivotIOReal : PivotIO {
         shooterPivotMotor.setControl(NeutralOut())
     }
 
-    internal companion object Constants {
+    companion object Constants {
         private val PID_GAINS = PIDGains(6.0, 0.0, 0.0)
         private const val SENSOR_TO_MECHANISM_GEAR_RATIO = 0.0
         private const val ROTOR_TO_SENSOR_GEAR_RATIO = 0.0
-        private const val PROFILE_ACCELERATION = 50.0
-        private const val PROFILE_JERK = 0.0
-        private const val PROFILE_VELOCITY = 25.0
+        const val PROFILE_ACCELERATION = 50.0
+        const val PROFILE_JERK = 0.0
+        const val PROFILE_VELOCITY = 25.0
     }
 }
 
 class PivotIOSim : PivotIO {
+    private val profile = TrapezoidProfile(
+        TrapezoidProfile.Constraints(
+            PivotIOReal.PROFILE_VELOCITY,
+            PivotIOReal.PROFILE_ACCELERATION,
+        )
+    )
+
+    private val profileTimer = Timer().apply { start() }
+
+    private var start = TrapezoidProfile.State()
+    private var goal = TrapezoidProfile.State()
+
     override fun turnToAngle(angle: Angle) {
-        TODO("Not yet implemented")
+        start = profile.calculate(profileTimer.get(), start, goal)
+        goal = TrapezoidProfile.State(angle.inRotations(), 0.0)
+        profileTimer.reset()
     }
 
     override fun updateInputs(inputs: PivotInputs) {
-        TODO("Not yet implemented")
+        val state = profile.calculate(profileTimer.get(), start, goal)
+        inputs.pivotVelocity = state.velocity.rotationsPerSecond
+        inputs.pivotAngle = state.position.rotations
     }
-
 }
 

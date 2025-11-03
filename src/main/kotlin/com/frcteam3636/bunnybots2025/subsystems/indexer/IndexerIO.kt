@@ -71,19 +71,6 @@ class IndexerIOSim : IndexerIO {
     private val indexerMotorSystem = LinearSystemId.createDCMotorSystem(DCMotor.getNeoVortex(1), 0.0001, 1.0)
     private val indexerMotor = DCMotorSim(indexerMotorSystem, DCMotor.getNeoVortex(1))
 
-    private var canRange = CANrange(CTREDeviceId.CANRangeIndexer).apply {
-        configurator.apply(
-            CANrangeConfiguration().apply {
-                ProximityParams.ProximityThreshold = 0.35 // fix
-                ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz
-            }
-        )
-    }
-
-    init {
-        canRange.simState.setDistance(1.0)
-    }
-
     override fun setIndexerSpeed(percentage: Double) {
         indexerMotor.inputVoltage = 12.0 * percentage
     }
@@ -91,6 +78,5 @@ class IndexerIOSim : IndexerIO {
     override fun updateInputs(inputs: IndexerInputs) {
         inputs.indexerVelocity = indexerMotor.angularVelocity
         inputs.indexerCurrent = indexerMotor.currentDrawAmps.amps
-        inputs.isDetected = canRange.isDetected.value
     }
 }

@@ -426,7 +426,14 @@ class CameraSimPoseProvider(name: String, val chassisToCamera: Transform3d) : Ab
         inputs.measurement = null
         val unreadResults = camera.allUnreadResults
         val latestResult = unreadResults.lastOrNull()
-        if (latestResult != null) {
+        if (latestResult != null && latestResult.hasTargets()) {
+            if (latestResult.bestTarget.poseAmbiguity > 0.3 || latestResult.bestTarget.bestCameraToTarget.translation.norm > FIELD_LAYOUT.fieldLength / 2) {
+                inputs.measurementRejected = true
+                return
+            }
+            inputs.observedTags = latestResult.targets.map {
+                it.fiducialId
+            }.toIntArray()
             estimator.update(latestResult).ifPresent {
                 inputs.measurement = AbsolutePoseMeasurement(
                     it.estimatedPose.toPose2d(),
@@ -434,9 +441,6 @@ class CameraSimPoseProvider(name: String, val chassisToCamera: Transform3d) : Ab
                     VecBuilder.fill(0.7, 0.7, 9999999.0)
                 )
             }
-            inputs.observedTags = latestResult.targets.map {
-                it.fiducialId
-            }.toIntArray()
         }
     }
 }

@@ -13,6 +13,7 @@ import com.frcteam3636.version.DIRTY
 import com.frcteam3636.version.GIT_BRANCH
 import com.frcteam3636.version.GIT_SHA
 import com.pathplanner.lib.util.PathPlannerLogging
+import edu.wpi.first.hal.AllianceStationID
 import edu.wpi.first.hal.FRCNetComm.tInstances
 import edu.wpi.first.hal.FRCNetComm.tResourceType
 import edu.wpi.first.hal.HAL
@@ -21,6 +22,7 @@ import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.Filesystem
 import edu.wpi.first.wpilibj.PowerDistribution
 import edu.wpi.first.wpilibj.Preferences
+import edu.wpi.first.wpilibj.simulation.DriverStationSim
 import edu.wpi.first.wpilibj.util.WPILibVersion
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
@@ -37,6 +39,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.io.path.Path
 import kotlin.io.path.exists
+import kotlin.jvm.optionals.getOrDefault
 
 
 /**
@@ -223,11 +226,12 @@ object Robot : LoggedRobot() {
 
         joystickLeft.button(1).whileTrue(
             Commands.defer({ // TODO: check if this shit really needs to be deferred. it probably does lol.
+                Logger.recordOutput("Drivetrain/Polar Driving/Alliance", DriverStation.getAlliance().toString())
                 Drivetrain.driveWithJoystickPointingTowards(
                     joystickLeft.hid,
                     DriverStation.getAlliance()
-                        .orElse(DriverStation.Alliance.Blue)
-                        .zooTranslation.toTranslation2d()
+                        .getOrDefault(DriverStation.Alliance.Blue)
+                        .zooTranslation
                 )
             }, setOf(Drivetrain))
         )
@@ -291,7 +295,9 @@ object Robot : LoggedRobot() {
 
     override fun disabledInit() {}
 
-    override fun simulationPeriodic() {}
+    override fun simulationPeriodic() {
+        DriverStationSim.setAllianceStationId(AllianceStationID.Blue1)
+    }
 
     private fun reportDiagnostics() {
         Diagnostics.periodic()
