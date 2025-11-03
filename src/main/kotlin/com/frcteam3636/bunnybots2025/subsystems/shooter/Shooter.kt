@@ -39,7 +39,7 @@ object Shooter {
     object Flywheels : Subsystem {
         private var io = when (Robot.model) {
             Robot.Model.COMPETITION -> FlywheelIOReal()
-            Robot.Model.SIMULATION -> FlywheelIOReal()
+            Robot.Model.SIMULATION -> FlywheelIOSim()
         }
 
         private var setpoint = RadiansPerSecond.zero()!!
@@ -113,7 +113,7 @@ object Shooter {
     object Pivot : Subsystem {
         private var io = when (Robot.model) {
             Robot.Model.COMPETITION -> PivotIOReal()
-            Robot.Model.SIMULATION -> PivotIOReal()
+            Robot.Model.SIMULATION -> PivotIOSim()
         }
 
         private val inputs = LoggedPivotInputs()
@@ -173,7 +173,7 @@ object Shooter {
     object Feeder : Subsystem {
         private var io = when (Robot.model) {
             Robot.Model.COMPETITION -> FeederIOReal()
-            Robot.Model.SIMULATION -> FeederIOReal()
+            Robot.Model.SIMULATION -> FeederIOSim()
         }
 
         private val inputs = LoggedFeederInputs()
