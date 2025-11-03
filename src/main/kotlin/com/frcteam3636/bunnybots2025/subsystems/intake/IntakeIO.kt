@@ -10,8 +10,14 @@ import com.ctre.phoenix6.signals.NeutralModeValue
 import com.frcteam3636.bunnybots2025.*
 import com.frcteam3636.bunnybots2025.utils.math.*
 import com.revrobotics.spark.SparkLowLevel
+import edu.wpi.first.math.numbers.N1
+import edu.wpi.first.math.numbers.N2
+import edu.wpi.first.math.system.LinearSystem
+import edu.wpi.first.math.system.plant.DCMotor
+import edu.wpi.first.math.system.plant.LinearSystemId
 import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.Angle
+import edu.wpi.first.wpilibj.simulation.DCMotorSim
 import org.team9432.annotation.Logged
 
 @Logged
@@ -136,15 +142,25 @@ class IntakeIOReal : IntakeIO {
 }
 
 class IntakeIOSim : IntakeIO {
+    val rollerMotorSystem: LinearSystem<N2?, N1?, N2?>? = LinearSystemId.createDCMotorSystem(DCMotor.getNeoVortex(1), 0.0001, 1.0)
+    val rollerMotor = DCMotorSim(rollerMotorSystem, DCMotor.getNeoVortex(1))
+
+    val pivotMotorSystem = LinearSystemId.createSingleJointedArmSystem(DCMotor.getKrakenX60(1), 0.002, 0.11111111111)
+    val pivotMotor = DCMotorSim(pivotMotorSystem, DCMotor.getKrakenX60(1))
+
     override fun setRollerSpeed(percentage: Double) {
-        TODO("Not yet implemented")
+        rollerMotor.inputVoltage = percentage * 12.0
     }
 
     override fun updateInputs(inputs: IntakeInputs) {
-        TODO("Not yet implemented")
+        inputs.pivotVelocity = pivotMotor.angularVelocity
+        inputs.pivotPosition = pivotMotor.angularPosition * 0.11111111111
+        inputs.pivotCurrent = pivotMotor.currentDrawAmps.amps
+        inputs.rollerVelocity = rollerMotor.angularVelocity
+        inputs.rollerCurrent = rollerMotor.currentDrawAmps.amps
     }
 
     override fun setPivotPosition(pivotPosition: Angle) {
-        TODO("Not yet implemented")
+        pivotMotor.setAngle(pivotPosition.inRadians() * 0.11111111111)
     }
 }

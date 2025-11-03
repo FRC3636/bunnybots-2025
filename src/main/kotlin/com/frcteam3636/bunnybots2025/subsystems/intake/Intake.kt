@@ -17,14 +17,14 @@ import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d
 
 object Intake : Subsystem {
     private var io: IntakeIO = when (Robot.model) {
-        Robot.Model.SIMULATION -> IntakeIOReal()
+        Robot.Model.SIMULATION -> IntakeIOSim()
         Robot.Model.COMPETITION -> IntakeIOReal()
     }
 
     var inputs = LoggedIntakeInputs()
 
     var mechanism = LoggedMechanism2d(100.0, 200.0)
-    var intakeAngleLigament = LoggedMechanismLigament2d("Intake Ligament", 50.0, 90.0, 5.0, Color8Bit(Color.kGreen))
+    var intakeAngleLigament = LoggedMechanismLigament2d("Intake Ligament", 50.0, 0.0, 5.0, Color8Bit(Color.kGreen))
 
     init {
         mechanism.getRoot("Intake", 50.0, 150.0).apply {
@@ -38,7 +38,7 @@ object Intake : Subsystem {
     override fun periodic() {
         io.updateInputs(inputs)
         Logger.processInputs("Intake", inputs)
-        intakeAngleLigament.angle = inputs.pivotPosition.inDegrees()
+        intakeAngleLigament.angle = inputs.pivotPosition.inDegrees() + 90.0
         Logger.recordOutput("Intake/Pivot/Mechanism", mechanism)
 
         // FIXME: tune these
@@ -64,6 +64,7 @@ object Intake : Subsystem {
         startEnd(
             {
                 io.setRollerSpeed(-0.5)
+                println("Deploying")
                 io.setPivotPosition(Position.Deployed.angle)
             },
             {
