@@ -72,6 +72,10 @@ object Intake : Subsystem {
             }
         )
 
+    fun stow(): Command = runOnce {
+        io.setPivotPosition(Position.Stowed.angle)
+    }
+
     enum class Position(val angle: Angle) {
         Stowed((-45).degrees),
         Deployed(90.degrees); // FIXME: Placeholder
