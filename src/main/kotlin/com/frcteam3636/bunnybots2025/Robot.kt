@@ -272,6 +272,13 @@ object Robot : LoggedRobot() {
             controllerDev.povRight().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward))
             controllerDev.povLeft().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse))
 
+            controllerDev.rightTrigger()
+                .onTrue(Shooter.Pivot.setTarget(Target.TUNING))
+                .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
+            controllerDev.leftTrigger()
+                .onTrue(Shooter.Pivot.setTarget(Target.AIM))
+                .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
+
             joystickDev.button(1).whileTrue(Drivetrain.calculateWheelRadius())
 
             joystickDev.button(2).onTrue(

@@ -17,6 +17,7 @@ import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap
 import edu.wpi.first.math.util.Units
+import edu.wpi.first.networktables.NetworkTableInstance
 import edu.wpi.first.units.Units.Degrees
 import edu.wpi.first.units.Units.RadiansPerSecond
 import edu.wpi.first.units.measure.Angle
@@ -33,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber
 import kotlin.math.absoluteValue
 
 object Shooter {
@@ -212,6 +214,9 @@ fun distanceToZoo(): Distance {
     return distance
 }
 
+val pivotTunable = LoggedNetworkNumber("/Tuning/PivotTestAngle", 12.0)
+val flywheelTunable = LoggedNetworkNumber("/Tuning/FlywheelTestSpeed", 0.0)
+
 
 // should we move this inside the shooter object?
 enum class Target(val profile: PivotProfile) {
@@ -237,12 +242,22 @@ enum class Target(val profile: PivotProfile) {
     STOWED(
         PivotProfile(
             {
-                Degrees.zero()!!
+                12.degrees
             },
             {
                 1000.rpm // dude idek what to set this to lmao
             }
         )
+    ),
+    TUNING(
+        PivotProfile(
+            {
+                pivotTunable.get().degrees
+            },
+            {
+                flywheelTunable.get().rpm
+            }
+        ),
     )
 }
 
