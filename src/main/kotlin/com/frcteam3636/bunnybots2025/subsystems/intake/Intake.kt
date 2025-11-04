@@ -73,7 +73,7 @@ object Intake : Subsystem {
         )
 
     enum class Position(val angle: Angle) {
-        Stowed(0.rotations),
+        Stowed((-45).degrees),
         Deployed(90.degrees); // FIXME: Placeholder
     }
 
