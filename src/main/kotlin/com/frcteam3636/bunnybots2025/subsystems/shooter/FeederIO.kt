@@ -6,7 +6,10 @@ import com.frcteam3636.bunnybots2025.utils.math.amps
 import com.frcteam3636.bunnybots2025.utils.math.celsius
 import com.frcteam3636.bunnybots2025.utils.math.rpm
 import com.revrobotics.spark.SparkLowLevel
+import edu.wpi.first.math.system.plant.DCMotor
+import edu.wpi.first.math.system.plant.LinearSystemId
 import edu.wpi.first.units.Units.*
+import edu.wpi.first.wpilibj.simulation.DCMotorSim
 import org.team9432.annotation.Logged
 
 @Logged
@@ -22,27 +25,31 @@ interface FeederIO {
 }
 
 class FeederIOReal : FeederIO {
-    private val shooterFeederMotor =
+    private val feederMotor =
         SparkFlex(REVMotorControllerId.ShooterFeederMotor, SparkLowLevel.MotorType.kBrushless)
 
     override fun setSpeed(percent: Double) {
         assert(percent in -1.0..1.0)
-        shooterFeederMotor.set(percent)
+        feederMotor.set(percent)
     }
 
     override fun updateInputs(inputs: FeederInputs) {
-        inputs.feederVelocity = shooterFeederMotor.encoder.velocity.rpm
-        inputs.feederCurrent = shooterFeederMotor.outputCurrent.amps
-        inputs.feederTemperature = shooterFeederMotor.motorTemperature.celsius
+        inputs.feederVelocity = feederMotor.encoder.velocity.rpm
+        inputs.feederCurrent = feederMotor.outputCurrent.amps
+        inputs.feederTemperature = feederMotor.motorTemperature.celsius
     }
 }
 
 class FeederIOSim : FeederIO {
+    private val feederMotorSystem = LinearSystemId.createDCMotorSystem(DCMotor.getNeoVortex(1), 0.0001, 1.0)
+    private val feederMotor = DCMotorSim(feederMotorSystem, DCMotor.getNeoVortex(1))
+
     override fun setSpeed(percent: Double) {
-        TODO("Not yet implemented")
+        feederMotor.inputVoltage = percent * 12.0
     }
 
     override fun updateInputs(inputs: FeederInputs) {
-        TODO("Not yet implemented")
+        inputs.feederVelocity = feederMotor.angularVelocity
+        inputs.feederCurrent = feederMotor.currentDrawAmps.amps
     }
 }

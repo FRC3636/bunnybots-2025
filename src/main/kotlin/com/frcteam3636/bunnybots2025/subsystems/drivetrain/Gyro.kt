@@ -44,7 +44,7 @@ interface Gyro {
 
 class GyroNavX(private val ahrs: AHRS) : Gyro {
 
-    private var offset = Rotation2d()
+    private var offset = Rotation2d.kZero
 
     init {
         Logger.recordOutput("NavXGyro/Offset", offset)

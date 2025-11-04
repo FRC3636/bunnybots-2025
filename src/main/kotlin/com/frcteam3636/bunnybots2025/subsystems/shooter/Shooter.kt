@@ -208,7 +208,7 @@ fun distanceToZoo(): Distance {
         .zooTranslation
     val zooPose = Pose2d(
         pettingZooTranslation,
-        Rotation2d()
+        Rotation2d.kZero
     )
     val distance = Drivetrain.estimatedPose.translation.getDistance(zooPose.translation).meters
     return distance

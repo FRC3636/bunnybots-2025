@@ -13,6 +13,7 @@ import com.frcteam3636.bunnybots2025.utils.math.SimpleMotorFeedforward
 import com.frcteam3636.bunnybots2025.utils.math.amps
 import com.frcteam3636.bunnybots2025.utils.math.celsius
 import com.frcteam3636.bunnybots2025.utils.math.inRPM
+import com.frcteam3636.bunnybots2025.utils.math.inRadiansPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.inVolts
 import com.frcteam3636.bunnybots2025.utils.math.rpm
 import com.revrobotics.spark.ClosedLoopSlot
@@ -20,9 +21,13 @@ import com.revrobotics.spark.SparkBase
 import com.revrobotics.spark.SparkLowLevel
 import com.revrobotics.spark.config.SparkBaseConfig
 import com.revrobotics.spark.config.SparkFlexConfig
+import edu.wpi.first.math.system.plant.DCMotor
+import edu.wpi.first.math.system.plant.LinearSystemId
 import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Voltage
+import edu.wpi.first.wpilibj.simulation.DCMotorSim
+import edu.wpi.first.wpilibj.simulation.FlywheelSim
 import org.team9432.annotation.Logged
 
 @Logged
@@ -140,23 +145,35 @@ class FlywheelIOReal : FlywheelIO {
 }
 
 class FlywheelIOSim : FlywheelIO {
+
+    private val flywheelSim = LinearSystemId.createDCMotorSystem(DCMotor.getNeoVortex(1), 0.0001, 1.0)
+    private val upperFlywheelMotor = DCMotorSim(flywheelSim, DCMotor.getNeoVortex(1))
+    private val lowerFlywheelMotor = DCMotorSim(flywheelSim, DCMotor.getNeoVortex(1))
+
     override fun setSpeed(upperPercent: Double, lowerPercent: Double) {
-        TODO("Not yet implemented")
+        upperFlywheelMotor.inputVoltage = upperPercent * 12.0
+        lowerFlywheelMotor.inputVoltage = lowerPercent * 12.0
     }
 
     override fun updateInputs(inputs: FlywheelInputs) {
-        TODO("Not yet implemented")
+        inputs.topVelocity = upperFlywheelMotor.angularVelocity
+        inputs.bottomVelocity = lowerFlywheelMotor.angularVelocity
+        inputs.topCurrent = upperFlywheelMotor.currentDrawAmps.amps
+        inputs.bottomCurrent = lowerFlywheelMotor.currentDrawAmps.amps
     }
 
     override fun setVoltage(upperVoltage: Voltage, lowerVoltage: Voltage) {
-        TODO("Not yet implemented")
+        upperFlywheelMotor.inputVoltage = upperVoltage.inVolts()
+        lowerFlywheelMotor.inputVoltage = lowerVoltage.inVolts()
     }
 
     override fun setVoltage(voltage: Voltage) {
-        TODO("Not yet implemented")
+        upperFlywheelMotor.inputVoltage = voltage.inVolts()
+        lowerFlywheelMotor.inputVoltage = voltage.inVolts()
     }
 
     override fun setVelocity(velocity: AngularVelocity) {
-        TODO("Not yet implemented")
+        upperFlywheelMotor.setAngularVelocity(velocity.inRadiansPerSecond())
+        lowerFlywheelMotor.setAngularVelocity(velocity.inRadiansPerSecond())
     }
 }
