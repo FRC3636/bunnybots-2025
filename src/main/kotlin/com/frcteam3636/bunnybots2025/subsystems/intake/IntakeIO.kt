@@ -52,6 +52,9 @@ class IntakeIOReal : IntakeIO {
     private var intakeMotor = SparkFlex(REVMotorControllerId.IntakeMotor, SparkLowLevel.MotorType.kBrushless)
     private var intakePivotMotor = TalonFX(CTREDeviceId.IntakePivotMotor).apply {
         configurator.apply(TalonFXConfiguration().apply {
+            MotorOutput.apply {
+                NeutralMode = NeutralModeValue.Brake
+            }
             Slot0.apply {
                 pidGains = PID_GAINS
                 MotionMagic.apply {

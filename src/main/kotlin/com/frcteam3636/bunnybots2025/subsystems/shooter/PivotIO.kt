@@ -53,6 +53,9 @@ class PivotIOReal : PivotIO {
 
     private val shooterPivotMotor = TalonFX(CTREDeviceId.ShooterPivotMotor).apply {
         configurator.apply(TalonFXConfiguration().apply {
+            MotorOutput.apply {
+                NeutralMode = NeutralModeValue.Brake
+            }
             Slot0.apply {
                 pidGains = PID_GAINS
                 MotionMagic.apply {
