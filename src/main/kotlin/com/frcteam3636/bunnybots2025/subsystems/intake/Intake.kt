@@ -41,8 +41,8 @@ object Intake : Subsystem {
         intakeAngleLigament.angle = inputs.pivotPosition.inDegrees() + 90.0
         Logger.recordOutput("Intake/Pivot/Mechanism", mechanism)
 
-        // FIXME: tune these
-        if ((inputs.pivotPosition > 100.degrees || inputs.pivotPosition < (-1).degrees) && !inputs.pivotDisabled) {
+        // the extra 5 degrees is to account for encoder noise
+        if ((inputs.pivotPosition > 95.degrees || inputs.pivotPosition < (-50).degrees) && !inputs.pivotDisabled) {
             io.disablePivot()
             pivotDisabledAlert.set(true)
         }
