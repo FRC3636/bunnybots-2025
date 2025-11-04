@@ -32,6 +32,7 @@ open class IntakeInputs {
     var pivotVelocity = RotationsPerSecond.zero()!!
     var pivotTemperature = Celsius.zero()!!
     var pivotDisabled = false
+    var pivotReference = Rotations.zero()!!
 }
 
 interface IntakeIO {
@@ -85,6 +86,7 @@ class IntakeIOReal : IntakeIO {
     private val currentSignal = intakePivotMotor.supplyCurrent
     private val velocitySignal = intakePivotMotor.velocity
     private val temperatureSignal = intakePivotMotor.deviceTemp
+    private val positionReferenceSignal = intakePivotMotor.closedLoopReference
 
     private val positionControl = MotionMagicVoltage(0.0.rotations)
 
@@ -118,10 +120,11 @@ class IntakeIOReal : IntakeIO {
         inputs.pivotTemperature = temperatureSignal.value
         inputs.rollerTemperature = intakeMotor.motorTemperature.celsius
         inputs.pivotDisabled = pivotDisabled
+        inputs.pivotReference = positionReferenceSignal.value.rotations
     }
 
     override fun getSignals(): MutableList<BaseStatusSignal> {
-        return mutableListOf(positionSignal, currentSignal, temperatureSignal)
+        return mutableListOf(positionSignal, currentSignal, temperatureSignal, positionReferenceSignal)
     }
 
     override fun disablePivot() {

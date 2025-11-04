@@ -4,7 +4,6 @@ import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.utils.math.degrees
 import com.frcteam3636.bunnybots2025.utils.math.inDegrees
-import com.frcteam3636.bunnybots2025.utils.math.rotations
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.util.Color
@@ -48,15 +47,20 @@ object Intake : Subsystem {
         }
     }
 
+    private fun setPivotPosition(position: Position) {
+        Logger.recordOutput("Intake/Pivot/Active Setpoint", position.angle)
+        io.setPivotPosition(position.angle)
+    }
+
     fun intake(): Command =
         startEnd(
             {
                 io.setRollerSpeed(0.7)
-                io.setPivotPosition(Position.Deployed.angle)
+                setPivotPosition(Position.Deployed)
             },
             {
                 io.setRollerSpeed(0.0)
-                io.setPivotPosition(Position.Stowed.angle)
+                setPivotPosition(Position.Stowed)
             }
         )
 
@@ -64,11 +68,11 @@ object Intake : Subsystem {
         startEnd(
             {
                 io.setRollerSpeed(-0.5)
-                io.setPivotPosition(Position.Deployed.angle)
+                setPivotPosition(Position.Deployed)
             },
             {
                 io.setRollerSpeed(0.0)
-                io.setPivotPosition(Position.Stowed.angle)
+                setPivotPosition(Position.Stowed)
             }
         )
 
@@ -76,17 +80,17 @@ object Intake : Subsystem {
         startEnd(
             {
                 io.setRollerSpeed(-0.1)
-                io.setPivotPosition(Position.Deployed.angle)
+                setPivotPosition(Position.Deployed)
             },
             {
                 io.setRollerSpeed(0.0)
-                io.setPivotPosition(Position.Stowed.angle)
+                setPivotPosition(Position.Stowed)
             }
         )
 
     enum class Position(val angle: Angle) {
         Stowed((-45).degrees),
-        Deployed(90.degrees); // FIXME: Placeholder
+        Deployed(90.degrees);
     }
 
     fun getStatusSignals(): MutableList<BaseStatusSignal> {

@@ -154,6 +154,7 @@ object Shooter {
 
             pivotAngleLigament.angle = inputs.pivotAngle.inDegrees()
             Logger.recordOutput("Shooter/Pivot/Mechanism", mechanism)
+            Logger.recordOutput("Shooter/Pivot/Active Profile", target)
         }
 
         fun getStatusSignals(): MutableList<BaseStatusSignal> {
