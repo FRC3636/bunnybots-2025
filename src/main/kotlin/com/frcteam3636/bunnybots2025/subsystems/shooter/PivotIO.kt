@@ -1,11 +1,13 @@
 package com.frcteam3636.bunnybots2025.subsystems.shooter
 
 import com.ctre.phoenix6.BaseStatusSignal
+import com.ctre.phoenix6.configs.CANcoderConfiguration
 import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.NeutralModeValue
+import com.frcteam3636.bunnybots2025.CANcoder
 import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.TalonFX
 import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal
@@ -91,6 +93,11 @@ class PivotIOReal : PivotIO {
             temperatureSignal
         )
         shooterPivotMotor.optimizeBusUtilization()
+        CANcoder(CTREDeviceId.ShooterPivotEncoder).apply {
+            configurator.apply(CANcoderConfiguration().apply {
+                MagnetSensor.MagnetOffset = MAGNET_OFFSET - HARDSTOP_OFFSET
+            })
+        }
     }
 
     val positionControl = MotionMagicVoltage(0.0)
@@ -140,6 +147,8 @@ class PivotIOReal : PivotIO {
         private val PID_GAINS = PIDGains(6.0, 0.0, 0.0)
         private const val SENSOR_TO_MECHANISM_GEAR_RATIO = 0.0
         private const val ROTOR_TO_SENSOR_GEAR_RATIO = 0.0
+        private const val MAGNET_OFFSET = 0.0
+        private val HARDSTOP_OFFSET = 12.degrees.inRotations()
         const val PROFILE_ACCELERATION = 50.0
         const val PROFILE_JERK = 0.0
         const val PROFILE_VELOCITY = 25.0
