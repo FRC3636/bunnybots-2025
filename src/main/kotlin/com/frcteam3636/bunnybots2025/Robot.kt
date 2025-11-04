@@ -3,11 +3,13 @@ package com.frcteam3636.bunnybots2025
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
+import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.runOnce
 import com.frcteam3636.bunnybots2025.subsystems.indexer.Indexer
 import com.frcteam3636.bunnybots2025.subsystems.intake.Intake
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Target
 import com.frcteam3636.bunnybots2025.subsystems.shooter.zooTranslation
+import com.frcteam3636.bunnybots2025.utils.LimelightHelpers
 import com.frcteam3636.version.BUILD_DATE
 import com.frcteam3636.version.DIRTY
 import com.frcteam3636.version.GIT_BRANCH
@@ -175,6 +177,19 @@ object Robot : LoggedRobot() {
 //        )
     }
 
+
+    private fun blinkLimelight(): Command {
+        return Commands.sequence(
+            Commands.runOnce({
+                LimelightHelpers.setLEDMode_ForceBlink("limelight-left")
+            }),
+            Commands.waitSeconds(0.2),
+            Commands.runOnce({
+                LimelightHelpers.setLEDMode_ForceOff("limelight-left")
+            })
+        )
+    }
+
     private fun doIntakeSequence(): Command {
         return Commands.parallel(
             Intake.intake(),
@@ -253,6 +268,8 @@ object Robot : LoggedRobot() {
                 Indexer.outtake()
             )
         )
+
+        controller.leftTrigger().whileTrue(Intake.bulldoze())
 
         controller.a().onTrue(Shooter.Pivot.setTarget(Target.STOWED))
         controller.b().onTrue(Shooter.Pivot.setTarget(Target.PETTINGZOO))
