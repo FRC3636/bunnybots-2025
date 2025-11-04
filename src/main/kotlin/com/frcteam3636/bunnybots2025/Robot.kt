@@ -215,6 +215,7 @@ object Robot : LoggedRobot() {
                 Commands.parallel(
                     Shooter.Feeder.feed(Command.InterruptionBehavior.kCancelIncoming),
                     Indexer.index(),
+                    blinkLimelight()
                 ).alongWith(
                     Commands.sequence(
                         Commands.waitUntil(Shooter.Flywheels.isDetected),
