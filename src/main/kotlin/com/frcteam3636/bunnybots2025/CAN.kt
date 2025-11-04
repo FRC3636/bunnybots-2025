@@ -7,7 +7,6 @@ import com.ctre.phoenix6.hardware.Pigeon2
 import com.ctre.phoenix6.hardware.TalonFX
 import com.revrobotics.spark.SparkFlex
 import com.revrobotics.spark.SparkLowLevel
-import com.revrobotics.spark.SparkMax
 
 val canivoreBus = CANBus("*")
 val rioCANBus = CANBus("rio")
@@ -49,10 +48,6 @@ enum class REVMotorControllerId(val num: Int) {
     IntakeMotor(4),
     ShooterFeederMotor(5),
 }
-
-
-fun SparkMax(id: REVMotorControllerId, type: SparkLowLevel.MotorType) =
-    SparkMax(id.num, type)
 
 fun SparkFlex(id: REVMotorControllerId, type: SparkLowLevel.MotorType) =
     SparkFlex(id.num, type)
