@@ -1,5 +1,6 @@
 package com.frcteam3636.bunnybots2025
 
+import choreo.auto.AutoFactory
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
@@ -78,6 +79,14 @@ object Robot : LoggedRobot() {
     // We should look into waiting to initialize PhoenixOdometryThread
     // until the first call to PhoenixOdometryThread.getInstance()
     val odometryLock = ReentrantLock()
+
+    val autoFactory = AutoFactory(
+        Drivetrain::estimatedPose,
+        Drivetrain.poseEstimator::resetPose,
+        Drivetrain::followTrajectory,
+        true,
+        Drivetrain
+    )
 
     override fun robotInit() {
         // Report the use of the Kotlin Language for "FRC Usage Report" statistics

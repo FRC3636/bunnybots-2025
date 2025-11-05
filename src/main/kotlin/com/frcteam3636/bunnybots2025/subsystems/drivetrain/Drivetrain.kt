@@ -1,5 +1,6 @@
 package com.frcteam3636.bunnybots2025.subsystems.drivetrain
 
+import choreo.trajectory.SwerveSample
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.CTREDeviceId
@@ -73,6 +74,19 @@ object Drivetrain : Subsystem {
     private var wheelRadiusModuleStates = DoubleArray(4)
     private var wheelRadiusLastAngle = Rotation2d()
     private var wheelRadiusGyroDelta = 0.0
+
+    private val xController = PIDController(PATH_FOLLOWING_TRANSLATION_GAINS);
+    private val yController = PIDController(PATH_FOLLOWING_TRANSLATION_GAINS);
+    private val headingController = PIDController(PATH_FOLLOWING_ROTATION_GAINS);
+
+    fun followTrajectory(sample: SwerveSample) {
+        desiredChassisSpeeds = ChassisSpeeds(
+            sample.vx + xController.calculate(estimatedPose.x, sample.x),
+            sample.vy + yController.calculate(estimatedPose.y, sample.y),
+            sample.omega + headingController.calculate(estimatedPose.rotation.radians, sample.omega)
+        )
+    }
+
     fun calculateWheelRadius(): Command = Commands.parallel(
         Commands.sequence(
             Commands.runOnce({
@@ -196,23 +210,23 @@ object Drivetrain : Subsystem {
             *MODULE_POSITIONS.map { it.position.translation }.toTypedArray()
         )
 
-        AutoBuilder.configure(
-            this::estimatedPose,
-            this::estimatedPose::set,
-            this::measuredChassisSpeeds,
-            this::desiredChassisSpeeds::set,
-            PPHolonomicDriveController(
-                PATH_FOLLOWING_TRANSLATION_GAINS.toPPLib(),
-                PATH_FOLLOWING_ROTATION_GAINS.toPPLib()
-            ),
-            pathPlannerConfig,
-            // Mirror path when the robot is on the red alliance (the robot starts on the opposite side of the field)
-            {
-                @Suppress("IDENTITY_SENSITIVE_OPERATIONS_WITH_VALUE_TYPE")
-                DriverStation.getAlliance() == Optional.of(DriverStation.Alliance.Red)
-            },
-            this
-        )
+//        AutoBuilder.configure(
+//            this::estimatedPose,
+//            this::estimatedPose::set,
+//            this::measuredChassisSpeeds,
+//            this::desiredChassisSpeeds::set,
+//            PPHolonomicDriveController(
+//                PATH_FOLLOWING_TRANSLATION_GAINS.toPPLib(),
+//                PATH_FOLLOWING_ROTATION_GAINS.toPPLib()
+//            ),
+//            pathPlannerConfig,
+//            // Mirror path when the robot is on the red alliance (the robot starts on the opposite side of the field)
+//            {
+//                @Suppress("IDENTITY_SENSITIVE_OPERATIONS_WITH_VALUE_TYPE")
+//                DriverStation.getAlliance() == Optional.of(DriverStation.Alliance.Red)
+//            },
+//            this
+//        )
 
         if (Robot.model != Robot.Model.SIMULATION) {
             PathfindingCommand.warmupCommand().schedule()
@@ -222,6 +236,8 @@ object Drivetrain : Subsystem {
         }
 
         PhoenixOdometryThread.getInstance().start()
+
+        headingController.enableContinuousInput(-PI, PI)
     }
 
     override fun periodic() {
@@ -312,13 +328,11 @@ object Drivetrain : Subsystem {
     private var desiredModuleStates
         get() = io.desiredStates
         set(value) {
-            synchronized(this) {
-                val stateArr = value.toTypedArray()
-                SwerveDriveKinematics.desaturateWheelSpeeds(stateArr, FREE_SPEED)
+            val stateArr = value.toTypedArray()
+            SwerveDriveKinematics.desaturateWheelSpeeds(stateArr, FREE_SPEED)
 
-                io.desiredStates = PerCorner.fromConventionalArray(stateArr)
-                Logger.recordOutput("Drivetrain/Desired States", *stateArr)
-            }
+            io.desiredStates = PerCorner.fromConventionalArray(stateArr)
+            Logger.recordOutput("Drivetrain/Desired States", *stateArr)
         }
 
     /**
@@ -547,8 +561,8 @@ object Drivetrain : Subsystem {
         // Chassis Control
         val FREE_SPEED = TunerConstants.kSpeedAt12Volts
 
-        val PATH_FOLLOWING_TRANSLATION_GAINS = PIDGains(5.0)
-        val PATH_FOLLOWING_ROTATION_GAINS = PIDGains(5.0)
+        val PATH_FOLLOWING_TRANSLATION_GAINS = PIDGains(10.0)
+        val PATH_FOLLOWING_ROTATION_GAINS = PIDGains(7.5)
 
         val POLAR_DRIVING_GAINS = PIDGains(0.15, 0.0, 0.05)
 
