@@ -104,22 +104,14 @@ abstract class DrivetrainIO {
 
     }
 
-    fun getOdometryPositions(): PerCorner<Array<SwerveModulePosition>> {
-        return modules.map { it.odometryPositions }
-    }
+    val odometryPositions: PerCorner<Array<SwerveModulePosition>>
+        get() = modules.map { it.odometryPositions }
 
-    fun getOdometryTimestamps(): DoubleArray {
-        return modules[DrivetrainCorner.FRONT_LEFT].odometryTimestamps
-    }
+    val odometryTimestamps: DoubleArray
+        get() = modules[DrivetrainCorner.FRONT_LEFT].odometryTimestamps
 
-    @Suppress("unused")
-    fun getOdometryYawTimestamps(): DoubleArray {
-        return gyro.odometryYawTimestamps
-    }
-
-    fun getOdometryYawPositions(): DoubleArray {
-        return gyro.odometryYawPositions
-    }
+    val odometryYawPositions: DoubleArray
+        get() = gyro.odometryYawPositions
 
     fun getStatusSignals(): MutableList<BaseStatusSignal> {
         val signals = mutableListOf<BaseStatusSignal>()

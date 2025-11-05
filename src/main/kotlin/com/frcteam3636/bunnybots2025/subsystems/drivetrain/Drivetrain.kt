@@ -230,9 +230,9 @@ object Drivetrain : Subsystem {
                 Robot.odometryLock.lock()
                 io.updateInputs(inputs)
                 Logger.processInputs("Drivetrain", inputs)
-                val odometryTimestamps = io.getOdometryTimestamps()
-                val odometryPositions = io.getOdometryPositions()
-                val odometryYawPositons = io.getOdometryYawPositions()
+                val odometryTimestamps = io.odometryTimestamps
+                val odometryPositions = io.odometryPositions
+                val odometryYawPositons = io.odometryYawPositions
                 Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions[0].size)
                 for (i in 0..<odometryTimestamps.size) {
                     val modulePositions = Array(4) { index ->
