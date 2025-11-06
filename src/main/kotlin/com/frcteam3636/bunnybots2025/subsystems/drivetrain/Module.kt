@@ -297,7 +297,7 @@ class SimSwerveModule() : SwerveModule {
     private val driveMotor = DCMotorSim(driveMotorSystem, DCMotor.getKrakenX60Foc(1).withReduction(DRIVING_GEAR_RATIO))
 
     private val turnMotorSystem = LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60(1),
-        0.0001,
+        0.01,
         TURNING_GEAR_RATIO
     )
     private val turnMotor = DCMotorSim(turnMotorSystem, DCMotor.getKrakenX60(1).withReduction(TURNING_GEAR_RATIO))
@@ -305,7 +305,7 @@ class SimSwerveModule() : SwerveModule {
     private val drivingFeedforward = SimpleMotorFeedforward(MotorFFGains(v = 3.3))
     private val drivingFeedback = PIDController(PIDGains(1.0))
 
-    private val turningFeedback = PIDController(PIDGains(8.0)).apply { enableContinuousInput(0.0, TAU) }
+    private val turningFeedback = PIDController(PIDGains(15.0)).apply { enableContinuousInput(0.0, TAU) }
 
     override var odometryTimestamps: DoubleArray = doubleArrayOf()
 
