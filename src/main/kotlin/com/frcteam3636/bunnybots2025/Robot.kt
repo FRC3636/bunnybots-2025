@@ -1,5 +1,6 @@
 package com.frcteam3636.bunnybots2025
 
+import choreo.auto.AutoChooser
 import choreo.auto.AutoFactory
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.SignalLogger
@@ -26,12 +27,14 @@ import edu.wpi.first.wpilibj.Filesystem
 import edu.wpi.first.wpilibj.PowerDistribution
 import edu.wpi.first.wpilibj.Preferences
 import edu.wpi.first.wpilibj.simulation.DriverStationSim
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj.util.WPILibVersion
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
 import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.littletonrobotics.junction.LogFileUtil
 import org.littletonrobotics.junction.LoggedRobot
@@ -73,6 +76,26 @@ object Robot : LoggedRobot() {
 
     private var statusSignals: Array<BaseStatusSignal> = arrayOf()
 
+    val autoChooser = AutoChooser().apply {
+        addRoutine("Score Preload", Autos::scorePreload)
+        addRoutine("Score Preload and One Patch", Autos::scorePreloadAndOnePatch)
+    }
+
+    /** A model of robot, depending on where we're deployed to. */
+    enum class Model {
+        SIMULATION, COMPETITION
+    }
+
+    /** The model of this robot. */
+    val model: Model = if (isSimulation()) {
+        Model.SIMULATION
+    } else {
+        when (val key = Preferences.getString("Model", "competition")) {
+            "competition" -> Model.COMPETITION
+            else -> throw AssertionError("Invalid model found in preferences: $key")
+        }
+    }
+
     // This is here because if we put it in drivetrain a NullPointException is thrown
     // from PhoenixOdometryThread.
     // I'm guessing this is some sort of race condition.
@@ -101,9 +124,8 @@ object Robot : LoggedRobot() {
 
         configureAdvantageKit()
         configureSubsystems()
-        configureAutos()
         configureBindings()
-        configureDashboard()
+        configureAutos()
 
 //        Diagnostics.reportLimelightsInBackground(arrayOf("limelight-left", "limelight-right"))
 
@@ -111,6 +133,8 @@ object Robot : LoggedRobot() {
         statusSignals += Intake.getStatusSignals()
         statusSignals += Shooter.Pivot.getStatusSignals()
         statusSignals += Indexer.getStatusSignals()
+
+        SmartDashboard.putData("Auto Chooser", autoChooser)
     }
 
     /** Start logging or pull replay logs from a file */
@@ -175,15 +199,9 @@ object Robot : LoggedRobot() {
         Shooter.Feeder.register()
     }
 
-    /** Expose commands for autonomous routines to use and display an auto picker in Shuffleboard. */
+    /** Expose commands for autonomous routines. */
     private fun configureAutos() {
-//        NamedCommands.registerCommand(
-//            "revAim",
-//            Commands.parallel(
-//                Shooter.Pivot.followMotionProfile(Shooter.Pivot.Target.AIM),
-//                Shooter.Flywheels.rev(580.0, 0.0)
-//            )
-//        )
+        RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler())
     }
 
 
@@ -199,7 +217,7 @@ object Robot : LoggedRobot() {
         )
     }
 
-    private fun doIntakeSequence(): Command {
+    fun doIntakeSequence(): Command {
         return Commands.parallel(
             Intake.intake(),
             Commands.sequence(
@@ -216,7 +234,7 @@ object Robot : LoggedRobot() {
         )
     }
 
-    private fun doShootSequence(): Command {
+    fun doShootSequence(): Command {
         return Commands.parallel(
             Shooter.Flywheels.shoot(),
             Commands.sequence(
@@ -316,16 +334,6 @@ object Robot : LoggedRobot() {
         }
     }
 
-    /** Add data to the driver station dashboard. */
-    private fun configureDashboard() {
-        PathPlannerLogging.setLogTargetPoseCallback {
-            Logger.recordOutput("Drivetrain/Target Pose", it)
-        }
-        PathPlannerLogging.setLogActivePathCallback {
-            Logger.recordOutput("Drivetrain/Desired Path", *it.toTypedArray())
-        }
-    }
-
     override fun disabledInit() {}
 
     override fun simulationPeriodic() {
@@ -344,8 +352,10 @@ object Robot : LoggedRobot() {
     override fun robotPeriodic() {
         reportDiagnostics()
 
-        val refresh = BaseStatusSignal.refreshAll(*statusSignals)
-        didRefreshSucceed = refresh.isOK
+        if (!isSimulation()) {
+            val refresh = BaseStatusSignal.refreshAll(*statusSignals)
+            didRefreshSucceed = refresh.isOK
+        }
 
 
         CommandScheduler.getInstance().run()
@@ -365,7 +375,7 @@ object Robot : LoggedRobot() {
         if (!RobotState.beforeFirstEnable)
             RobotState.beforeFirstEnable = true
 //        autoCommand = Dashboard.autoChooser.selected
-        autoCommand?.schedule()
+//        autoCommand?.schedule()
     }
 
     override fun teleopInit() {
@@ -378,20 +388,5 @@ object Robot : LoggedRobot() {
     }
 
     override fun testExit() {
-    }
-
-    /** A model of robot, depending on where we're deployed to. */
-    enum class Model {
-        SIMULATION, COMPETITION
-    }
-
-    /** The model of this robot. */
-    val model: Model = if (isSimulation()) {
-        Model.SIMULATION
-    } else {
-        when (val key = Preferences.getString("Model", "competition")) {
-            "competition" -> Model.COMPETITION
-            else -> throw AssertionError("Invalid model found in preferences: $key")
-        }
     }
 }

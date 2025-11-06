@@ -147,7 +147,7 @@ object Shooter {
             Logger.processInputs("Shooter/Pivot", inputs)
 
             // the extra degree is to account for encoder noise
-            if ((inputs.pivotAngle < 4.degrees || inputs.pivotAngle > 91.degrees) && !inputs.pivotDisabled) {
+            if ((inputs.pivotAngle < 4.degrees || inputs.pivotAngle > 91.degrees) && !inputs.pivotDisabled && Robot.model != Robot.Model.SIMULATION) {
                 io.disablePivot()
                 pivotDisabledAlert.set(true)
             }
