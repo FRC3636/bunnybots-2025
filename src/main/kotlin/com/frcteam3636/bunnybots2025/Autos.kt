@@ -17,7 +17,7 @@ object Autos {
         )
     }
 
-    fun scorePreload(): AutoRoutine {
+    fun scorePreloadLeft(): AutoRoutine {
         val routine = Robot.autoFactory.newRoutine("preload")
 
         val driveToZoo = routine.trajectory("LeftOne")
@@ -41,7 +41,7 @@ object Autos {
         return routine
     }
 
-    fun scorePreloadAndOnePatch(): AutoRoutine {
+    fun scorePreloadAndOnePatchLeft(): AutoRoutine {
         val routine = Robot.autoFactory.newRoutine("preloadAndOnePatch")
 
         val driveToZoo = routine.trajectory("LeftOne")
@@ -77,6 +77,63 @@ object Autos {
 
         driveToZooFromFirstPatch.active().onTrue(
             Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT)
+        )
+
+        return routine
+    }
+
+    fun cantStopWontStopLeft(): AutoRoutine {
+        val routine = Robot.autoFactory.newRoutine("cantStopWontStop")
+
+        val driveToZoo = routine.trajectory("LeftOne")
+        val driveToPatchFromFirstScore = routine.trajectory("LeftPatchOne")
+        val driveToZooFromFirstPatch = routine.trajectory("LeftScoreOne")
+        val driveToPatchFromSecondScore = routine.trajectory("LeftPatchTwo")
+        val driveToZooFromSecondPatch = routine.trajectory("LeftScoreTwo")
+
+        if (Robot.model == Robot.Model.SIMULATION) {
+            routine.active().onTrue(driveToZoo.resetOdometry())
+        }
+
+        routine.active().onTrue(
+            driveToZoo.cmd()
+        )
+
+        driveToZoo.active().onTrue(
+            Shooter.Pivot.setTarget(Target.AIM)
+        )
+
+        driveToZoo.done().onTrue(
+            Commands.sequence(
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
+                driveToPatchFromFirstScore.cmd()
+            )
+        )
+
+        driveToPatchFromFirstScore.active().whileTrue(
+            intakeThenBulldoze()
+        )
+
+        driveToPatchFromFirstScore.done().onTrue(
+            driveToZooFromFirstPatch.cmd()
+        )
+
+        driveToZooFromFirstPatch.done().onTrue(
+            Commands.sequence(
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
+                driveToPatchFromSecondScore.cmd()
+            )
+        )
+
+        driveToPatchFromSecondScore.active().whileTrue(
+            intakeThenBulldoze()
+        )
+
+        driveToZooFromSecondPatch.done().onTrue(
+            Commands.sequence(
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
+                driveToPatchFromSecondScore.cmd()
+            )
         )
 
         return routine

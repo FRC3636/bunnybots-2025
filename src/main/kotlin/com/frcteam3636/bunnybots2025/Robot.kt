@@ -5,7 +5,6 @@ import choreo.auto.AutoFactory
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
-import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.runOnce
 import com.frcteam3636.bunnybots2025.subsystems.indexer.Indexer
 import com.frcteam3636.bunnybots2025.subsystems.intake.Intake
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
@@ -16,14 +15,12 @@ import com.frcteam3636.version.BUILD_DATE
 import com.frcteam3636.version.DIRTY
 import com.frcteam3636.version.GIT_BRANCH
 import com.frcteam3636.version.GIT_SHA
-import com.pathplanner.lib.util.PathPlannerLogging
 import edu.wpi.first.hal.AllianceStationID
 import edu.wpi.first.hal.FRCNetComm.tInstances
 import edu.wpi.first.hal.FRCNetComm.tResourceType
 import edu.wpi.first.hal.HAL
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.DriverStation
-import edu.wpi.first.wpilibj.Filesystem
 import edu.wpi.first.wpilibj.PowerDistribution
 import edu.wpi.first.wpilibj.Preferences
 import edu.wpi.first.wpilibj.simulation.DriverStationSim
@@ -77,8 +74,9 @@ object Robot : LoggedRobot() {
     private var statusSignals: Array<BaseStatusSignal> = arrayOf()
 
     val autoChooser = AutoChooser().apply {
-        addRoutine("Score Preload", Autos::scorePreload)
-        addRoutine("Score Preload and One Patch", Autos::scorePreloadAndOnePatch)
+        addRoutine("Left Score Preload", Autos::scorePreloadLeft)
+        addRoutine("Left Score Preload and One Patch", Autos::scorePreloadAndOnePatchLeft)
+        addRoutine("Left Can't Stop Won't Stop", Autos::cantStopWontStopLeft)
     }
 
     /** A model of robot, depending on where we're deployed to. */
