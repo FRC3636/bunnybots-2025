@@ -36,7 +36,9 @@ object Autos {
         )
 
         driveToZoo.done().onTrue(
-            Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT)
+            Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
+                RobotState.heldPieces == 0
+            }
         )
 
         return routine
@@ -64,7 +66,9 @@ object Autos {
 
         driveToZoo.done().onTrue(
             Commands.sequence(
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
+                    RobotState.heldPieces == 0
+                },
                 driveToPatchFromFirstScore.cmd()
             )
         )
@@ -79,7 +83,9 @@ object Autos {
 
         driveToZooFromFirstPatch.active().onTrue(
             Commands.sequence(
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
+                    RobotState.heldPieces == 0
+                },
                 driveToPatchFromSecondScore.cmd()
             )
         )
@@ -114,7 +120,9 @@ object Autos {
 
         driveToZoo.done().onTrue(
             Commands.sequence(
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
+                    RobotState.heldPieces == 0
+                },
                 driveToPatchFromFirstScore.cmd()
             )
         )
@@ -129,7 +137,9 @@ object Autos {
 
         driveToZooFromFirstPatch.done().onTrue(
             Commands.sequence(
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
+                    RobotState.heldPieces == 0
+                },
                 driveToPatchFromSecondScore.cmd()
             )
         )
@@ -146,7 +156,9 @@ object Autos {
 
         driveToZooFromSecondPatch.done().onTrue(
             Commands.sequence(
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
+                    RobotState.heldPieces == 0
+                },
                 driveToPatchFromSecondScore.cmd()
             )
         )
