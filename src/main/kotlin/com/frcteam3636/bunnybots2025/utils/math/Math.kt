@@ -1,3 +1,4 @@
+@file:Suppress("unused", "UnusedReceiverParameter")
 package com.frcteam3636.bunnybots2025.utils.math
 
 import edu.wpi.first.math.geometry.Translation2d
@@ -5,7 +6,6 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Distance
-import edu.wpi.first.units.measure.LinearVelocity
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin

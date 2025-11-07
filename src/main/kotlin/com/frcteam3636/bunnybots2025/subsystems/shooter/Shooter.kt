@@ -7,18 +7,11 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.FIELD_LAYOUT
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Flywheels.speedInterpolationTable
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Pivot.angleInterpolationTable
-import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Pivot.mechanism
-import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Pivot.pivotAngleLigament
 import com.frcteam3636.bunnybots2025.utils.math.*
-import com.pathplanner.lib.util.FlippingUtil
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation2d
-import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap
-import edu.wpi.first.math.util.Units
-import edu.wpi.first.networktables.NetworkTableInstance
-import edu.wpi.first.units.Units.Degrees
 import edu.wpi.first.units.Units.RadiansPerSecond
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
@@ -35,7 +28,6 @@ import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber
-import kotlin.math.absoluteValue
 
 object Shooter {
     object Flywheels : Subsystem {
@@ -127,8 +119,10 @@ object Shooter {
 
         val angleInterpolationTable = InterpolatingDoubleTreeMap()
 
-        private val pivotDisabledAlert = Alert("The shooter pivot has been disabled due to an error. To re-enable please restart robot code :3",
-            Alert.AlertType.kError)
+        private val pivotDisabledAlert = Alert(
+            "The shooter pivot has been disabled due to an error. To re-enable please restart robot code :3",
+            Alert.AlertType.kError
+        )
 
         init {
             //FIXME plot points to create regression
@@ -268,6 +262,7 @@ val DriverStation.Alliance.zooTranslation: Translation2d
             12.9327783.meters,
             4.0132127.meters,
         )
+
         else -> Translation2d(
             FIELD_LAYOUT.fieldLength.meters - 12.9327783.meters,
             4.0132127.meters

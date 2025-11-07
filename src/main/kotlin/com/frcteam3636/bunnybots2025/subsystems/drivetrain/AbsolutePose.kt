@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package com.frcteam3636.bunnybots2025.subsystems.drivetrain
 
 //import org.photonvision.PhotonCamera
@@ -146,7 +147,8 @@ class LimelightPoseProvider(
 
     private var lastSeenHb: Double = 0.0
     private var hbSub = NetworkTableInstance.getDefault().getTable(name).getDoubleTopic("hb").subscribe(0.0)
-    private var cornerSub = NetworkTableInstance.getDefault().getTable(name).getDoubleArrayTopic("tcornxy").subscribe(doubleArrayOf())
+    private var cornerSub =
+        NetworkTableInstance.getDefault().getTable(name).getDoubleArrayTopic("tcornxy").subscribe(doubleArrayOf())
     private var loopsSinceLastSeen: Int = 0
 
     private var currentAlgorithm: LimelightAlgorithm = LimelightAlgorithm.MegaTag

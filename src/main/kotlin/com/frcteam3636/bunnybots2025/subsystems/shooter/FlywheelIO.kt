@@ -7,15 +7,7 @@ import com.frcteam3636.bunnybots2025.CANrange
 import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.REVDeviceId
 import com.frcteam3636.bunnybots2025.SparkFlex
-import com.frcteam3636.bunnybots2025.utils.math.MotorFFGains
-import com.frcteam3636.bunnybots2025.utils.math.PIDGains
-import com.frcteam3636.bunnybots2025.utils.math.SimpleMotorFeedforward
-import com.frcteam3636.bunnybots2025.utils.math.amps
-import com.frcteam3636.bunnybots2025.utils.math.celsius
-import com.frcteam3636.bunnybots2025.utils.math.inRPM
-import com.frcteam3636.bunnybots2025.utils.math.inRadiansPerSecond
-import com.frcteam3636.bunnybots2025.utils.math.inVolts
-import com.frcteam3636.bunnybots2025.utils.math.rpm
+import com.frcteam3636.bunnybots2025.utils.math.*
 import com.revrobotics.spark.ClosedLoopSlot
 import com.revrobotics.spark.SparkBase
 import com.revrobotics.spark.SparkLowLevel
@@ -115,10 +107,14 @@ class FlywheelIOReal : FlywheelIO {
     }
 
     override fun setVelocity(velocity: AngularVelocity) {
-        upperShooterMotor.closedLoopController.setReference(velocity.inRPM(), SparkBase.ControlType.kVelocity,
-            ClosedLoopSlot.kSlot0, upperFFController.calculate(velocity.inRPM()))
-        lowerShooterMotor.closedLoopController.setReference(velocity.inRPM(), SparkBase.ControlType.kVelocity,
-            ClosedLoopSlot.kSlot0, lowerFFController.calculate(velocity.inRPM()))
+        upperShooterMotor.closedLoopController.setReference(
+            velocity.inRPM(), SparkBase.ControlType.kVelocity,
+            ClosedLoopSlot.kSlot0, upperFFController.calculate(velocity.inRPM())
+        )
+        lowerShooterMotor.closedLoopController.setReference(
+            velocity.inRPM(), SparkBase.ControlType.kVelocity,
+            ClosedLoopSlot.kSlot0, lowerFFController.calculate(velocity.inRPM())
+        )
     }
 
     override fun updateInputs(inputs: FlywheelInputs) {

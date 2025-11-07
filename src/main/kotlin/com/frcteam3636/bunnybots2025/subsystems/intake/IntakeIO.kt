@@ -147,7 +147,8 @@ class IntakeIOReal : IntakeIO {
 }
 
 class IntakeIOSim : IntakeIO {
-    val rollerMotorSystem: LinearSystem<N2?, N1?, N2?>? = LinearSystemId.createDCMotorSystem(DCMotor.getNeoVortex(1), 0.0001, 1.0)
+    val rollerMotorSystem: LinearSystem<N2?, N1?, N2?>? =
+        LinearSystemId.createDCMotorSystem(DCMotor.getNeoVortex(1), 0.0001, 1.0)
     val rollerMotor = DCMotorSim(rollerMotorSystem, DCMotor.getNeoVortex(1))
 
     private val profile = TrapezoidProfile(

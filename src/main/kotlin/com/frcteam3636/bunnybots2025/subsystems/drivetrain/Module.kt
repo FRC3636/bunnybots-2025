@@ -290,13 +290,15 @@ class SimSwerveModule() : SwerveModule {
     override var odometryTurnPositions: Array<Rotation2d> = emptyArray()
     override var odometryPositions: Array<SwerveModulePosition> = emptyArray()
     override var temperatures: Array<Temperature> = emptyArray()
-    private val driveMotorSystem = LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60Foc(1),
+    private val driveMotorSystem = LinearSystemId.createDCMotorSystem(
+        DCMotor.getKrakenX60Foc(1),
         0.0001,
         DRIVING_GEAR_RATIO
     )
     private val driveMotor = DCMotorSim(driveMotorSystem, DCMotor.getKrakenX60Foc(1).withReduction(DRIVING_GEAR_RATIO))
 
-    private val turnMotorSystem = LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60(1),
+    private val turnMotorSystem = LinearSystemId.createDCMotorSystem(
+        DCMotor.getKrakenX60(1),
         0.01,
         TURNING_GEAR_RATIO
     )
@@ -338,7 +340,7 @@ class SimSwerveModule() : SwerveModule {
         turnMotor.inputVoltage = turningFeedback.calculate(state.angle.radians, desiredState.angle.radians)
         driveMotor.inputVoltage =
             drivingFeedforward.calculate(desiredState.speedMetersPerSecond) + drivingFeedback.calculate(
-                    state.speedMetersPerSecond, desiredState.speedMetersPerSecond
+                state.speedMetersPerSecond, desiredState.speedMetersPerSecond
             )
     }
 

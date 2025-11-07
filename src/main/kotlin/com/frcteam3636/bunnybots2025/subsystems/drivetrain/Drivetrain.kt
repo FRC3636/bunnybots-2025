@@ -15,7 +15,6 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.POLAR_DRIVING_GAINS
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.ROTATION_SENSITIVITY
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.TRANSLATION_SENSITIVITY
-import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.WHEEL_COF
 import com.frcteam3636.bunnybots2025.utils.fieldRelativeTranslation2d
 import com.frcteam3636.bunnybots2025.utils.math.*
 import com.frcteam3636.bunnybots2025.utils.swerve.Corner
@@ -23,12 +22,6 @@ import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
 import com.frcteam3636.bunnybots2025.utils.swerve.cornerStatesToChassisSpeeds
 import com.frcteam3636.bunnybots2025.utils.swerve.toCornerSwerveModuleStates
 import com.frcteam3636.bunnybots2025.utils.translation2d
-import com.pathplanner.lib.auto.AutoBuilder
-import com.pathplanner.lib.commands.PathfindingCommand
-import com.pathplanner.lib.config.ModuleConfig
-import com.pathplanner.lib.config.RobotConfig
-import com.pathplanner.lib.controllers.PPHolonomicDriveController
-import com.pathplanner.lib.pathfinding.Pathfinding
 import edu.wpi.first.math.VecBuilder
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator
 import edu.wpi.first.math.filter.SlewRateLimiter
@@ -40,7 +33,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics
 import edu.wpi.first.math.kinematics.SwerveModulePosition
 import edu.wpi.first.math.kinematics.SwerveModuleState
-import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.Joystick
 import edu.wpi.first.wpilibj2.command.Command
@@ -49,7 +41,6 @@ import edu.wpi.first.wpilibj2.command.Subsystem
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.littletonrobotics.junction.Logger
-import java.util.Optional
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.*
 
@@ -75,9 +66,9 @@ object Drivetrain : Subsystem {
     private var wheelRadiusLastAngle = Rotation2d()
     private var wheelRadiusGyroDelta = 0.0
 
-    private val xController = PIDController(PATH_FOLLOWING_TRANSLATION_GAINS);
-    private val yController = PIDController(PATH_FOLLOWING_TRANSLATION_GAINS);
-    private val headingController = PIDController(PATH_FOLLOWING_ROTATION_GAINS);
+    private val xController = PIDController(PATH_FOLLOWING_TRANSLATION_GAINS)
+    private val yController = PIDController(PATH_FOLLOWING_TRANSLATION_GAINS)
+    private val headingController = PIDController(PATH_FOLLOWING_ROTATION_GAINS)
 
     fun followTrajectory(sample: SwerveSample) {
         desiredChassisSpeeds = ChassisSpeeds(
@@ -138,6 +129,7 @@ object Drivetrain : Subsystem {
         )
     )
 
+    @Suppress("unused")
     private val mt2Algo = LimelightAlgorithm.MegaTag2({
         poseEstimator.estimatedPosition.rotation
     }, {
@@ -496,6 +488,7 @@ object Drivetrain : Subsystem {
         io.runCharacterization(0.volts, shouldSpin = true)
     }.withTimeout(2.0).andThen(sysID.dynamic(direction))!!
 
+    @Suppress("unused")
     object Constants {
         // Translation/rotation coefficient for teleoperated driver controls
         /** Unit: Percent of max robot speed */

@@ -1,7 +1,6 @@
 package com.frcteam3636.bunnybots2025.utils
 
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
-import com.frcteam3636.bunnybots2025.utils.swerve.forEachCornerIndexed
 import edu.wpi.first.util.struct.StructSerializable
 import org.littletonrobotics.junction.LogTable
 

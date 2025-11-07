@@ -3,15 +3,12 @@ package com.frcteam3636.bunnybots2025.subsystems.drivetrain
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.hardware.Pigeon2
 import com.frcteam3636.bunnybots2025.Robot
-import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.TRACK_WIDTH
-import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.WHEEL_BASE
 import com.frcteam3636.bunnybots2025.utils.math.degreesPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.radiansPerSecond
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
 import com.studica.frc.AHRS
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation2d
-import edu.wpi.first.math.kinematics.SwerveModuleState
 import edu.wpi.first.units.measure.AngularVelocity
 import org.littletonrobotics.junction.Logger
 import java.util.*
