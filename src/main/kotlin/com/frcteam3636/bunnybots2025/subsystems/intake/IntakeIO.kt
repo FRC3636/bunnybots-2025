@@ -50,7 +50,7 @@ class IntakeIOReal : IntakeIO {
     private var pivotDisabled = false
     private var brakeModeEnabled = true
 
-    private var intakeMotor = SparkFlex(REVMotorControllerId.IntakeMotor, SparkLowLevel.MotorType.kBrushless)
+    private var intakeMotor = SparkFlex(REVDeviceId.IntakeMotor, SparkLowLevel.MotorType.kBrushless)
     private var intakePivotMotor = TalonFX(CTREDeviceId.IntakePivotMotor).apply {
         configurator.apply(TalonFXConfiguration().apply {
             Slot0.apply {

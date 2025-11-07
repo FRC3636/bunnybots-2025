@@ -1,6 +1,6 @@
 package com.frcteam3636.bunnybots2025.subsystems.shooter
 
-import com.frcteam3636.bunnybots2025.REVMotorControllerId
+import com.frcteam3636.bunnybots2025.REVDeviceId
 import com.frcteam3636.bunnybots2025.SparkFlex
 import com.frcteam3636.bunnybots2025.utils.math.amps
 import com.frcteam3636.bunnybots2025.utils.math.celsius
@@ -26,7 +26,7 @@ interface FeederIO {
 
 class FeederIOReal : FeederIO {
     private val feederMotor =
-        SparkFlex(REVMotorControllerId.ShooterFeederMotor, SparkLowLevel.MotorType.kBrushless)
+        SparkFlex(REVDeviceId.ShooterFeederMotor, SparkLowLevel.MotorType.kBrushless)
 
     override fun setSpeed(percent: Double) {
         assert(percent in -1.0..1.0)

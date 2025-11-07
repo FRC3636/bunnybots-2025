@@ -154,9 +154,7 @@ object Robot : LoggedRobot() {
             Logger.addDataReceiver(NT4Publisher()) // Publish data to NetworkTables
             // Enables power distribution logging
             if (model == Model.COMPETITION) {
-                PowerDistribution(
-                    1, PowerDistribution.ModuleType.kRev
-                )
+                PowerDistribution(REVDeviceId.PowerDistributionHub)
             } else {
                 PowerDistribution(
                     1, PowerDistribution.ModuleType.kCTRE

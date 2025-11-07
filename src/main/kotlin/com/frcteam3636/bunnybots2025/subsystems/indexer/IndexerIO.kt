@@ -5,7 +5,7 @@ import com.ctre.phoenix6.configs.CANrangeConfiguration
 import com.ctre.phoenix6.signals.UpdateModeValue
 import com.frcteam3636.bunnybots2025.CANrange
 import com.frcteam3636.bunnybots2025.CTREDeviceId
-import com.frcteam3636.bunnybots2025.REVMotorControllerId
+import com.frcteam3636.bunnybots2025.REVDeviceId
 import com.frcteam3636.bunnybots2025.SparkFlex
 import com.frcteam3636.bunnybots2025.utils.math.amps
 import com.frcteam3636.bunnybots2025.utils.math.celsius
@@ -34,7 +34,7 @@ interface IndexerIO {
 }
 
 class IndexerIOReal : IndexerIO {
-    private var indexerMotor = SparkFlex(REVMotorControllerId.IndexerMotor, SparkLowLevel.MotorType.kBrushless)
+    private var indexerMotor = SparkFlex(REVDeviceId.IndexerMotor, SparkLowLevel.MotorType.kBrushless)
     private var canRange = CANrange(CTREDeviceId.CANRangeIndexer).apply {
         configurator.apply(
             CANrangeConfiguration().apply {

@@ -7,6 +7,7 @@ import com.ctre.phoenix6.hardware.Pigeon2
 import com.ctre.phoenix6.hardware.TalonFX
 import com.revrobotics.spark.SparkFlex
 import com.revrobotics.spark.SparkLowLevel
+import edu.wpi.first.wpilibj.PowerDistribution
 
 val canivoreBus = CANBus("*")
 val rioCANBus = CANBus("rio")
@@ -41,13 +42,17 @@ fun TalonFX(id: CTREDeviceId) = TalonFX(id.num, id.bus)
 fun Pigeon2(id: CTREDeviceId) = Pigeon2(id.num, id.bus)
 fun CANrange(id: CTREDeviceId) = CANrange(id.num, id.bus)
 
-enum class REVMotorControllerId(val num: Int) {
-    UpperShooterMotor(1),
-    LowerShooterMotor(2),
-    IndexerMotor(3),
-    IntakeMotor(4),
-    ShooterFeederMotor(5),
+enum class REVDeviceId(val num: Int) {
+    PowerDistributionHub(1),
+    UpperShooterMotor(2),
+    LowerShooterMotor(3),
+    IndexerMotor(4),
+    IntakeMotor(5),
+    ShooterFeederMotor(6),
 }
 
-fun SparkFlex(id: REVMotorControllerId, type: SparkLowLevel.MotorType) =
+fun SparkFlex(id: REVDeviceId, type: SparkLowLevel.MotorType) =
     SparkFlex(id.num, type)
+
+fun PowerDistribution(id: REVDeviceId): PowerDistribution =
+    PowerDistribution(id.num, PowerDistribution.ModuleType.kRev)

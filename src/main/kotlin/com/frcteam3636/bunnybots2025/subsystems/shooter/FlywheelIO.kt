@@ -5,7 +5,7 @@ import com.ctre.phoenix6.configs.CANrangeConfiguration
 import com.ctre.phoenix6.signals.UpdateModeValue
 import com.frcteam3636.bunnybots2025.CANrange
 import com.frcteam3636.bunnybots2025.CTREDeviceId
-import com.frcteam3636.bunnybots2025.REVMotorControllerId
+import com.frcteam3636.bunnybots2025.REVDeviceId
 import com.frcteam3636.bunnybots2025.SparkFlex
 import com.frcteam3636.bunnybots2025.utils.math.MotorFFGains
 import com.frcteam3636.bunnybots2025.utils.math.PIDGains
@@ -27,7 +27,6 @@ import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.wpilibj.simulation.DCMotorSim
-import edu.wpi.first.wpilibj.simulation.FlywheelSim
 import org.team9432.annotation.Logged
 
 @Logged
@@ -55,7 +54,7 @@ interface FlywheelIO {
 class FlywheelIOReal : FlywheelIO {
 
     private val upperShooterMotor =
-        SparkFlex(REVMotorControllerId.UpperShooterMotor, SparkLowLevel.MotorType.kBrushless).apply {
+        SparkFlex(REVDeviceId.UpperShooterMotor, SparkLowLevel.MotorType.kBrushless).apply {
             configure(SparkFlexConfig().apply {
                 idleMode(SparkBaseConfig.IdleMode.kCoast)
 
@@ -65,7 +64,7 @@ class FlywheelIOReal : FlywheelIO {
             }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
         }
     private val lowerShooterMotor =
-        SparkFlex(REVMotorControllerId.LowerShooterMotor, SparkLowLevel.MotorType.kBrushless).apply {
+        SparkFlex(REVDeviceId.LowerShooterMotor, SparkLowLevel.MotorType.kBrushless).apply {
             configure(SparkFlexConfig().apply {
                 idleMode(SparkBaseConfig.IdleMode.kCoast)
 
