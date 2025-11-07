@@ -192,23 +192,19 @@ object Drivetrain : Subsystem {
         get() = absolutePoseIOs.values.all { it.second.connected }
 
     init {
-        Pathfinding.setPathfinder(
-            LocalADStarAK()
-        )
-
-        val pathPlannerConfig = RobotConfig(
-            60.kilograms, // FIXME: weigh the robot
-            6.883.kilogramSquareMeters, // FIXME: calculate with SysID
-            ModuleConfig(
-                WHEEL_RADIUS,
-                FREE_SPEED,
-                WHEEL_COF,
-                DCMotor.getKrakenX60Foc(1).withReduction(DRIVING_GEAR_RATIO),
-                DRIVING_CURRENT_LIMIT,
-                1
-            ),
-            *MODULE_POSITIONS.map { it.position.translation }.toTypedArray()
-        )
+//        val pathPlannerConfig = RobotConfig(
+//            60.kilograms, // FIXME: weigh the robot
+//            6.883.kilogramSquareMeters, // FIXME: calculate with SysID
+//            ModuleConfig(
+//                WHEEL_RADIUS,
+//                FREE_SPEED,
+//                WHEEL_COF,
+//                DCMotor.getKrakenX60Foc(1).withReduction(DRIVING_GEAR_RATIO),
+//                DRIVING_CURRENT_LIMIT,
+//                1
+//            ),
+//            *MODULE_POSITIONS.map { it.position.translation }.toTypedArray()
+//        )
 
 //        AutoBuilder.configure(
 //            this::estimatedPose,
@@ -228,9 +224,9 @@ object Drivetrain : Subsystem {
 //            this
 //        )
 
-        if (Robot.model != Robot.Model.SIMULATION) {
-            PathfindingCommand.warmupCommand().schedule()
-        }
+//        if (Robot.model != Robot.Model.SIMULATION) {
+//            PathfindingCommand.warmupCommand().schedule()
+//        }
         if (io is DrivetrainIOSim) {
             io.registerPoseProviders(absolutePoseIOs.values.map { it.first })
         }
