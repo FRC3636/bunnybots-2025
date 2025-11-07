@@ -199,7 +199,7 @@ object Robot : LoggedRobot() {
     }
 
 
-    private fun blinkLimelight(): Command {
+    fun blinkLimelight(): Command {
         return Commands.sequence(
             Commands.runOnce({
                 LimelightHelpers.setLEDMode_ForceBlink("limelight-left")

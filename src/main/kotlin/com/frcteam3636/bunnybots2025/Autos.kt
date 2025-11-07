@@ -15,7 +15,7 @@ object Autos {
             Robot.doIntakeSequence().until {
                 RobotState.heldPieces == 4
             },
-            Intake.bulldoze()
+            Intake.bulldoze().alongWith(Robot.blinkLimelight())
         )
     }
 
