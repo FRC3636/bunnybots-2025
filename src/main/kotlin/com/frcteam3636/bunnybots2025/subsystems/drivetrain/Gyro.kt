@@ -39,6 +39,7 @@ interface Gyro {
     }
 }
 
+@Suppress("unused") // and hopefully it stays that way
 class GyroNavX(private val ahrs: AHRS) : Gyro {
 
     private var offset = Rotation2d.kZero
