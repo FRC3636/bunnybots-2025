@@ -31,7 +31,7 @@ import org.team9432.annotation.Logged
 
 @Logged
 open class PivotInputs {
-    var pivotAngle = Rotations.zero()!!
+    var pivotAngle = 10.degrees // we don't initialize to 0 to avoid accidentally disabling the pivot on startup
     var pivotCurrent = Amps.zero()!!
     var pivotVelocity = RotationsPerSecond.zero()!!
     var pivotMotorTemperature = Celsius.zero()!!

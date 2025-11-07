@@ -127,7 +127,7 @@ object Shooter {
 
         val angleInterpolationTable = InterpolatingDoubleTreeMap()
 
-        private val pivotDisabledAlert = Alert("The shooter pivot has been disabled due to an error. To re-enable please restart robot code",
+        private val pivotDisabledAlert = Alert("The shooter pivot has been disabled due to an error. To re-enable please restart robot code :3",
             Alert.AlertType.kError)
 
         init {

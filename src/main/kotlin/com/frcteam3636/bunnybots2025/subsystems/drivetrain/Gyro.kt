@@ -81,7 +81,7 @@ class GyroPigeon(private val pigeon: Pigeon2) : Gyro {
             yawSignal
         )
         BaseStatusSignal.setUpdateFrequencyForAll(
-            50.0,
+            100.0,
             pitchSignal,
             rollSignal,
             angularVelocitySignal
