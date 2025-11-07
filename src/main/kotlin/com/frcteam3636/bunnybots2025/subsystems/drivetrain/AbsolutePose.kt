@@ -200,10 +200,6 @@ class LimelightPoseProvider(
                             0.0, 0.0, 0.0, 0.0, 0.0
                         )
                     } else {
-                        if (Robot.isDisabled && !isThrottled) {
-                            LimelightHelpers.SetThrottle(name, 100)
-                            isThrottled = true
-                        }
                         if (RobotState.beforeFirstEnable) {
                             LimelightHelpers.SetIMUMode(name, 1)
                             LimelightHelpers.SetRobotOrientation(
