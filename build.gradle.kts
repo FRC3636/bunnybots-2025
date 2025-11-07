@@ -111,6 +111,18 @@ deploy {
 //                jvmArgs.add("-Dcom.sun.management.jmxremote.ssl=false")
 //                jvmArgs.add("-Dcom.sun.management.jmxremote.authenticate=false")
 //                jvmArgs.add("-Djava.rmi.server.hostname=10.36.36.2")
+                jvmArgs.add("-XX:+UnlockExperimentalVMOptions")
+                jvmArgs.add("-XX:GCTimeRatio=5")
+                jvmArgs.add("-XX:+UseSerialGC")
+                jvmArgs.add("-XX:MaxGCPauseMillis=50")
+
+                // Comment lines below if running on a Rio 1
+                val maxJavaHeapSize = 100
+                jvmArgs.add("-Xmx${maxJavaHeapSize}M")
+                jvmArgs.add("-Xms${maxJavaHeapSize}M")
+                jvmArgs.add("-XX:+AlwaysPreTouch")
+
+                // Enable asserts
                 jvmArgs.add("-ea")
                 setJarTask(tasks.jar)
             }
