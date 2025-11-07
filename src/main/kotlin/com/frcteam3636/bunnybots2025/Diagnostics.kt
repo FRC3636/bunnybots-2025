@@ -7,8 +7,6 @@ import com.frcteam3636.bunnybots2025.utils.cachedStatus
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.Alert.AlertType
 import edu.wpi.first.wpilibj.GenericHID
-import java.net.InetAddress
-import kotlin.concurrent.thread
 
 /**
  * Reports diagnostics and sends notifications to the driver station.
@@ -42,7 +40,10 @@ object Diagnostics {
                 AlertType.kWarning
             )
 
-        object CANRefreshFailed : RobotAlert("A CAN refresh failed, outdated data is being received.", AlertType.kError)
+        object CANivoreRefreshFailed : RobotAlert(
+            "A CANivore refresh failed, outdated data is being received from CANivore devices..",
+            AlertType.kError
+        )
 
         class CAN private constructor(bus: CANBus) {
             private class BusFailure(bus: CANBus) : RobotAlert("The \"${bus.humanReadableName}\" CAN bus has FAILED!")
@@ -112,42 +113,21 @@ object Diagnostics {
         }
     }
 
-    private val limelightsSync = Any()
-    private var limelightsConnected = false
-    fun reportLimelightsInBackground(names: Array<String>) {
-        thread {
-            while (true) {
-                val allReachable = names.asIterable().all { name ->
-                    try {
-                        InetAddress.getByName("$name.local").isReachable(1000)
-                    } catch (_: Exception) {
-                        false
-                    }
-                }
-
-                synchronized(limelightsSync) {
-                    limelightsConnected = allReachable
-                }
-
-                Thread.sleep(5_000)
-            }
-        }
-    }
-
     fun periodic() {
         reset()
-
-//        val selectedAuto = Dashboard.autoChooser.selected
-//        if (selectedAuto is InstantCommand) {
-//            reportAlert(RobotAlert.DubiousAutoChoice)
-//        }
 
         if (!Drivetrain.allPoseProvidersConnected) {
             reportAlert(RobotAlert.LimelightDisconnected)
         }
 
         if (!Robot.didRefreshSucceed) {
-            reportAlert(RobotAlert.CANRefreshFailed)
+            reportAlert(RobotAlert.CANivoreRefreshFailed)
+        }
+
+        // Only run these while disabled to save loop times
+        if (!Robot.isDisabled) {
+            if (Robot.autoChooser.selected == "Nothing")
+                reportAlert(RobotAlert.DubiousAutoChoice)
         }
     }
 

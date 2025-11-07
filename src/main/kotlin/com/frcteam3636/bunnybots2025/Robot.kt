@@ -67,8 +67,6 @@ object Robot : LoggedRobot() {
     @Suppress("unused")
     private val controllerDev = CommandXboxController(4)
 
-    private var autoCommand: Command? = null
-
     var didRefreshSucceed = true
 
     private var statusSignals: Array<BaseStatusSignal> = arrayOf()
@@ -372,14 +370,12 @@ object Robot : LoggedRobot() {
     override fun autonomousInit() {
         if (!RobotState.beforeFirstEnable)
             RobotState.beforeFirstEnable = true
-//        autoCommand = Dashboard.autoChooser.selected
-//        autoCommand?.schedule()
+
     }
 
     override fun teleopInit() {
         if (!RobotState.beforeFirstEnable)
             RobotState.beforeFirstEnable = true
-        autoCommand?.cancel()
     }
 
     override fun testInit() {

@@ -46,7 +46,8 @@ public class AutoChooser implements Sendable {
   private final HashMap<String, Supplier<Command>> autoRoutines =
       new HashMap<>(Map.of(NONE_NAME, Commands::none));
 
-  private String selected = NONE_NAME;
+  // FRC3636 EDIT: Made selected public for our diagnostics :)
+  public String selected = NONE_NAME;
   private String[] options = new String[] {NONE_NAME};
 
   private Optional<Alliance> allianceAtGeneration = Optional.empty();
