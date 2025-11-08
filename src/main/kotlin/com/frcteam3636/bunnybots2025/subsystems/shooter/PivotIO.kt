@@ -112,7 +112,7 @@ class PivotIOReal : PivotIO {
     }
 
     override fun getStatusSignals(): MutableList<BaseStatusSignal> {
-        return mutableListOf(positionSignal, currentSignal, velocitySignal)
+        return mutableListOf(positionSignal, currentSignal, velocitySignal, temperatureSignal)
     }
 
     override fun updateInputs(inputs: PivotInputs) {
