@@ -469,7 +469,7 @@ class AbsolutePoseMeasurementStruct : Struct<AbsolutePoseMeasurement> {
     override fun getTypeClass(): Class<AbsolutePoseMeasurement> = AbsolutePoseMeasurement::class.java
     override fun getTypeName(): String = "struct:AbsolutePoseMeasurement"
     override fun getTypeString(): String = "struct:AbsolutePoseMeasurement"
-    override fun getSize(): Int = Pose3d.struct.size + Struct.kSizeDouble + 3 * Struct.kSizeDouble + 1
+    override fun getSize(): Int = Pose2d.struct.size + Struct.kSizeDouble + 3 * Struct.kSizeDouble + 1 + 4
     override fun getSchema(): String =
         "Pose2d pose; double timestamp; double stdDeviation[3]; boolean shouldReject; int observedTags;"
 
@@ -489,7 +489,7 @@ class AbsolutePoseMeasurementStruct : Struct<AbsolutePoseMeasurement> {
         bb.putDouble(value.stdDeviation[1, 0])
         bb.putDouble(value.stdDeviation[2, 0])
         bb.put(if (value.shouldReject) 1 else 0) // write boolean as byte
-        bb.put(value.observedTags.toByte())
+        bb.putInt(value.observedTags)
     }
 }
 
