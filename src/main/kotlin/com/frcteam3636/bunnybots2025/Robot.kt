@@ -118,6 +118,8 @@ object Robot : LoggedRobot() {
         // We use our own warnings, also ignore warning from developer HID devices.
         DriverStation.silenceJoystickConnectionWarning(true)
 
+        Preferences.initBoolean("DeveloperMode", false)
+
         configureAdvantageKit()
         configureSubsystems()
         configureBindings()
