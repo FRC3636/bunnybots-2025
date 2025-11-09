@@ -382,8 +382,8 @@ object Drivetrain : Subsystem {
             desiredModuleStates = BRAKE_POSITION
         } else {
             desiredChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                calculateInputCurve(translationInput.x) * FREE_SPEED.baseUnitMagnitude() * TRANSLATION_SENSITIVITY,
-                calculateInputCurve(translationInput.y) * FREE_SPEED.baseUnitMagnitude() * TRANSLATION_SENSITIVITY,
+                calculateInputCurve(translationInput.x) * FREE_SPEED.inMetersPerSecond() * TRANSLATION_SENSITIVITY,
+                calculateInputCurve(translationInput.y) * FREE_SPEED.inMetersPerSecond() * TRANSLATION_SENSITIVITY,
                 rotationInput.y * TAU * ROTATION_SENSITIVITY,
                 estimatedPose.rotation
             )
@@ -392,8 +392,8 @@ object Drivetrain : Subsystem {
 
     private fun driveWithoutDeadband(translationInput: Translation2d, rotationInput: Translation2d) {
         desiredChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            calculateInputCurve(translationInput.x) * FREE_SPEED.baseUnitMagnitude() * TRANSLATION_SENSITIVITY,
-            calculateInputCurve(translationInput.y) * FREE_SPEED.baseUnitMagnitude() * TRANSLATION_SENSITIVITY,
+            calculateInputCurve(translationInput.x) * FREE_SPEED.inMetersPerSecond() * TRANSLATION_SENSITIVITY,
+            calculateInputCurve(translationInput.y) * FREE_SPEED.inMetersPerSecond() * TRANSLATION_SENSITIVITY,
             rotationInput.y * TAU * ROTATION_SENSITIVITY,
             estimatedPose.rotation
         )
@@ -446,8 +446,8 @@ object Drivetrain : Subsystem {
             Logger.recordOutput("Drivetrain/Polar Driving/PID Output", magnitude)
 
             desiredChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-                translationInput.x * FREE_SPEED.baseUnitMagnitude() * TRANSLATION_SENSITIVITY,
-                translationInput.y * FREE_SPEED.baseUnitMagnitude() * TRANSLATION_SENSITIVITY,
+                calculateInputCurve(translationInput.x) * FREE_SPEED.inMetersPerSecond() * TRANSLATION_SENSITIVITY,
+                calculateInputCurve(translationInput.y) * FREE_SPEED.inMetersPerSecond() * TRANSLATION_SENSITIVITY,
                 magnitude,
                 poseEstimator.estimatedPosition.rotation
             )
