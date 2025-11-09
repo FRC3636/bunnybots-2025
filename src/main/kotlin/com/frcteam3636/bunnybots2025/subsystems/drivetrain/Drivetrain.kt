@@ -33,7 +33,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics
 import edu.wpi.first.math.kinematics.SwerveModulePosition
 import edu.wpi.first.math.kinematics.SwerveModuleState
-import edu.wpi.first.units.measure.Time
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.Joystick
 import edu.wpi.first.wpilibj2.command.Command
@@ -511,7 +510,7 @@ object Drivetrain : Subsystem {
         val ROBOT_WIDTH = 25.5.inches
         val TRACK_WIDTH = abs(TunerConstants.FrontLeft!!.LocationY - TunerConstants.FrontRight!!.LocationY)
         val WHEEL_BASE = abs(TunerConstants.FrontRight!!.LocationX - TunerConstants.BackRight!!.LocationX)
-        val WHEEL_COF = 1.8 // FIXME: figure this out man idk
+        const val WHEEL_COF = 1.8 // FIXME: figure this out man idk
 
         val BUMPER_WIDTH = 30.inches
         val BUMPER_LENGTH = 30.inches
