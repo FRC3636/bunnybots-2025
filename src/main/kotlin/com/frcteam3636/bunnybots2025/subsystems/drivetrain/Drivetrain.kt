@@ -15,6 +15,7 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.POLAR_DRIVING_GAINS
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.ROTATION_SENSITIVITY
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.TRANSLATION_SENSITIVITY
+import com.frcteam3636.bunnybots2025.subsystems.shooter.zooTranslation
 import com.frcteam3636.bunnybots2025.utils.fieldRelativeTranslation2d
 import com.frcteam3636.bunnybots2025.utils.math.*
 import com.frcteam3636.bunnybots2025.utils.swerve.Corner
@@ -41,6 +42,7 @@ import edu.wpi.first.wpilibj2.command.Subsystem
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.littletonrobotics.junction.Logger
+import kotlin.jvm.optionals.getOrDefault
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.*
 
@@ -397,6 +399,31 @@ object Drivetrain : Subsystem {
         )
     }
 
+    fun alignToZoo(): Command {
+        Logger.recordOutput("Drivetrain/Align To Zoo/Active", true)
+        polarDrivingPIDController.setTolerance(0.5)
+        polarDrivingPIDController.reset()
+        return run {
+            val magnitude = polarDrivingPIDController.calculate(
+                estimatedPose.rotation.radians,
+                DriverStation.getAlliance().getOrDefault(DriverStation.Alliance.Blue).zooTranslation.minus(
+                    estimatedPose.translation
+                ).angle.radians - TAU
+            )
+
+            Logger.recordOutput("Drivetrain/Align To Zoo/PID Output", magnitude)
+
+            desiredChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+                0.0,
+                0.0,
+                magnitude,
+                poseEstimator.estimatedPosition.rotation
+            )
+        }.until {
+            polarDrivingPIDController.atSetpoint()
+        }
+    }
+
     @Suppress("unused")
     fun driveWithJoystickPointingTowards(translationJoystick: Joystick, target: Translation2d): Command {
         Logger.recordOutput("Drivetrain/Polar Driving/Target", Pose2d(target, Rotation2d.kZero))
@@ -412,8 +439,8 @@ object Drivetrain : Subsystem {
                 Translation2d()
             }
             val magnitude = polarDrivingPIDController.calculate(
-                target.minus(estimatedPose.translation).angle.radians - PI,
-                estimatedPose.rotation.radians
+                estimatedPose.rotation.radians,
+                target.minus(estimatedPose.translation).angle.radians - TAU
             )
 
             Logger.recordOutput("Drivetrain/Polar Driving/PID Output", magnitude)
@@ -422,7 +449,7 @@ object Drivetrain : Subsystem {
                 translationInput.x * FREE_SPEED.baseUnitMagnitude() * TRANSLATION_SENSITIVITY,
                 translationInput.y * FREE_SPEED.baseUnitMagnitude() * TRANSLATION_SENSITIVITY,
                 magnitude,
-                inputs.gyroRotation
+                poseEstimator.estimatedPosition.rotation
             )
         }.finallyDo { ->
             Logger.recordOutput("Drivetrain/Polar Driving/Active", false)

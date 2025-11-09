@@ -1,6 +1,7 @@
 package com.frcteam3636.bunnybots2025
 
 import choreo.auto.AutoRoutine
+import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
 import com.frcteam3636.bunnybots2025.subsystems.intake.Intake
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Target
@@ -36,9 +37,12 @@ object Autos {
         )
 
         driveToZoo.done().onTrue(
-            Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
-                RobotState.heldPieces == 0
-            }
+            Commands.sequence(
+                Drivetrain.alignToZoo(),
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
+                    RobotState.heldPieces == 0
+                }
+            )
         )
 
         return routine
@@ -66,6 +70,7 @@ object Autos {
 
         driveToZoo.done().onTrue(
             Commands.sequence(
+                Drivetrain.alignToZoo(),
                 Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
                     RobotState.heldPieces == 0
                 },
@@ -83,6 +88,7 @@ object Autos {
 
         driveToZooFromFirstPatch.active().onTrue(
             Commands.sequence(
+                Drivetrain.alignToZoo(),
                 Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
                     RobotState.heldPieces == 0
                 },
@@ -120,6 +126,7 @@ object Autos {
 
         driveToZoo.done().onTrue(
             Commands.sequence(
+                Drivetrain.alignToZoo(),
                 Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
                     RobotState.heldPieces == 0
                 },
@@ -137,6 +144,7 @@ object Autos {
 
         driveToZooFromFirstPatch.done().onTrue(
             Commands.sequence(
+                Drivetrain.alignToZoo(),
                 Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
                     RobotState.heldPieces == 0
                 },
@@ -156,6 +164,7 @@ object Autos {
 
         driveToZooFromSecondPatch.done().onTrue(
             Commands.sequence(
+                Drivetrain.alignToZoo(),
                 Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
                     RobotState.heldPieces == 0
                 },
