@@ -28,6 +28,8 @@ import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.Time
 import edu.wpi.first.util.struct.Struct
+import edu.wpi.first.util.struct.Struct.kSizeBool
+import edu.wpi.first.util.struct.Struct.kSizeInt32
 import edu.wpi.first.util.struct.StructSerializable
 import edu.wpi.first.wpilibj.RobotController
 import org.littletonrobotics.junction.LogTable
@@ -468,9 +470,9 @@ class AbsolutePoseMeasurementStruct : Struct<AbsolutePoseMeasurement> {
     override fun getTypeClass(): Class<AbsolutePoseMeasurement> = AbsolutePoseMeasurement::class.java
     override fun getTypeName(): String = "struct:AbsolutePoseMeasurement"
     override fun getTypeString(): String = "struct:AbsolutePoseMeasurement"
-    override fun getSize(): Int = Pose2d.struct.size + Struct.kSizeDouble + 3 * Struct.kSizeDouble + 1 + 4
+    override fun getSize(): Int = Pose2d.struct.size + Struct.kSizeDouble + 3 * Struct.kSizeDouble + kSizeBool + kSizeInt32
     override fun getSchema(): String =
-        "Pose2d pose; double timestamp; double stdDeviation[3]; boolean shouldReject; int observedTags;"
+        "Pose2d pose; double timestamp; double xStdDev; double yStdDev; double thetaStdDev; bool shouldReject; int32 observedTags;"
 
     override fun unpack(bb: ByteBuffer): AbsolutePoseMeasurement =
         AbsolutePoseMeasurement(
@@ -491,6 +493,7 @@ class AbsolutePoseMeasurementStruct : Struct<AbsolutePoseMeasurement> {
         bb.putInt(value.observedTags)
     }
 }
+
 
 internal val APRIL_TAG_STD_DEV = { distance: Double, count: Int ->
     val stdDevFactor = distance.pow(2) / count.toDouble()
