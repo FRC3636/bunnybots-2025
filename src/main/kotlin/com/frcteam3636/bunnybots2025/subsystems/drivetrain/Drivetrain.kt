@@ -276,21 +276,30 @@ object Drivetrain : Subsystem {
         // Update absolute pose sensors and add their measurements to the pose estimator
         for ((name, ioPair) in absolutePoseIOs) {
             val (sensorIO, inputs) = ioPair
+            val acceptedPoses: MutableList<Pose2d> = mutableListOf()
+            val rejectedPoses: MutableList<Pose2d> = mutableListOf()
 
             sensorIO.updateInputs(inputs)
             Logger.processInputs("Drivetrain/Absolute Pose/$name", inputs)
 
-            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Measurement Rejected", inputs.measurementRejected)
-            if (inputs.measurement != null) {
-                Logger.recordOutput("Drivetrain/Absolute Pose/$name/Measurement", inputs.measurement)
-                Logger.recordOutput("Drivetrain/Absolute Pose/$name/Pose", inputs.measurement?.pose)
-                if (!inputs.measurementRejected) {
-                    inputs.measurement?.let {
-                        poseEstimator.addAbsolutePoseMeasurement(it)
-                        Logger.recordOutput("Drivetrain/Last Added Pose", it.pose)
+            for (measurement in inputs.measurements) {
+                if (!measurement.shouldReject) {
+                    if (measurement.pose.x < 0.0 || measurement.pose.y < 0.0) {
+                        rejectedPoses.add(measurement.pose)
+                        continue
+                    } else if (measurement.pose.x > FIELD_LAYOUT.fieldLength || measurement.pose.y > FIELD_LAYOUT.fieldWidth) {
+                        rejectedPoses.add(measurement.pose)
+                        continue
                     }
+                    acceptedPoses.add(measurement.pose)
+                    poseEstimator.addAbsolutePoseMeasurement(measurement)
+                } else {
+                    rejectedPoses.add(measurement.pose)
                 }
             }
+
+            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Accepted Poses", *acceptedPoses.toTypedArray())
+            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Rejected Poses", *rejectedPoses.toTypedArray())
         }
 
 //        // Use the new measurements to update the pose estimator
