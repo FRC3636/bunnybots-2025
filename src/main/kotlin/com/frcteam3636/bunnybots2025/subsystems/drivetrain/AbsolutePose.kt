@@ -408,6 +408,7 @@ class CameraSimPoseProvider(name: String, val chassisToCamera: Transform3d) : Ab
     override fun updateInputs(inputs: AbsolutePoseProviderInputs) {
         inputs.connected = true
         inputs.measurements = arrayOf()
+        inputs.observedTags = intArrayOf()
         val unreadResults = camera.allUnreadResults
         for (result in unreadResults) {
             if (result.hasTargets()) {
