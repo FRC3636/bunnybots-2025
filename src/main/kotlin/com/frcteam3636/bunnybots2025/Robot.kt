@@ -21,7 +21,6 @@ import edu.wpi.first.hal.FRCNetComm.tResourceType
 import edu.wpi.first.hal.HAL
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.DriverStation
-import edu.wpi.first.wpilibj.PowerDistribution
 import edu.wpi.first.wpilibj.Preferences
 import edu.wpi.first.wpilibj.simulation.DriverStationSim
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
