@@ -472,7 +472,7 @@ class AbsolutePoseMeasurementStruct : Struct<AbsolutePoseMeasurement> {
     override fun getTypeString(): String = "struct:AbsolutePoseMeasurement"
     override fun getSize(): Int = Pose2d.struct.size + Struct.kSizeDouble + 3 * Struct.kSizeDouble + kSizeBool + kSizeInt32
     override fun getSchema(): String =
-        "Pose2d pose; double timestamp; double xStdDev; double yStdDev; double thetaStdDev; bool shouldReject; int32 observedTags;"
+        "Pose2d pose; double timestamp; double stdDeviation[3]; bool shouldReject; int32 observedTags;"
 
     override fun unpack(bb: ByteBuffer): AbsolutePoseMeasurement =
         AbsolutePoseMeasurement(
