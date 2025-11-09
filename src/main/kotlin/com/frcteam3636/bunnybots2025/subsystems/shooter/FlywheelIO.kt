@@ -29,12 +29,15 @@ open class FlywheelInputs {
     var bottomCurrent = Amps.zero()!!
     var topTemperature = Celsius.zero()!!
     var bottomTemperature = Celsius.zero()!!
+    var topVoltage = Volts.zero()!!
+    var bottomVoltage = Volts.zero()!!
+    var topPosition = Rotations.zero()!!
+    var bottomPosition = Rotations.zero()!!
     var isDetected = false
 }
 
 interface FlywheelIO {
     fun setSpeed(upperPercent: Double, lowerPercent: Double)
-    fun setVoltage(upperVoltage: Voltage, lowerVoltage: Voltage)
     fun setVoltage(voltage: Voltage)
     fun setVelocity(velocity: AngularVelocity)
     fun updateInputs(inputs: FlywheelInputs)
@@ -51,7 +54,7 @@ class FlywheelIOReal : FlywheelIO {
                 idleMode(SparkBaseConfig.IdleMode.kCoast)
 
                 closedLoop.apply {
-                    pid(LOWER_PID_GAINS.p, LOWER_PID_GAINS.i, LOWER_PID_GAINS.d)
+                    pid(PID_GAINS.p, PID_GAINS.i, PID_GAINS.d)
                 }
             }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
         }
@@ -61,13 +64,13 @@ class FlywheelIOReal : FlywheelIO {
                 idleMode(SparkBaseConfig.IdleMode.kCoast)
 
                 closedLoop.apply {
-                    pid(UPPER_PID_GAINS.p, UPPER_PID_GAINS.i, UPPER_PID_GAINS.d)
+                    pid(PID_GAINS.p, PID_GAINS.i, PID_GAINS.d)
                 }
             }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
         }
 
-    private var upperFFController = SimpleMotorFeedforward(UPPER_FF_GAINS)
-    private var lowerFFController = SimpleMotorFeedforward(LOWER_FF_GAINS)
+    private var upperFFController = SimpleMotorFeedforward(FF_GAINS)
+    private var lowerFFController = SimpleMotorFeedforward(FF_GAINS)
 
 
     private var canRange = CANrange(CTREDeviceId.CANRangeShooter).apply {
@@ -91,13 +94,6 @@ class FlywheelIOReal : FlywheelIO {
         assert(lowerPercent in -1.0..1.0)
         upperShooterMotor.set(upperPercent)
         lowerShooterMotor.set(lowerPercent)
-    }
-
-    override fun setVoltage(upperVoltage: Voltage, lowerVoltage: Voltage) {
-        assert(upperVoltage.inVolts() in -13.0..13.0)
-        assert(lowerVoltage.inVolts() in -13.0..13.0)
-        upperShooterMotor.setVoltage(upperVoltage)
-        lowerShooterMotor.setVoltage(lowerVoltage)
     }
 
     override fun setVoltage(voltage: Voltage) {
@@ -125,6 +121,11 @@ class FlywheelIOReal : FlywheelIO {
         inputs.isDetected = detectedSignal.value
         inputs.topTemperature = upperShooterMotor.motorTemperature.celsius
         inputs.bottomTemperature = lowerShooterMotor.motorTemperature.celsius
+        inputs.topPosition = upperShooterMotor.encoder.position.rotations
+        inputs.bottomPosition = lowerShooterMotor.encoder.position.rotations
+        // https://www.chiefdelphi.com/t/sysid-routine-not-properly-recording-motor-speed/455172
+        inputs.topVoltage = (upperShooterMotor.appliedOutput * upperShooterMotor.busVoltage).volts
+        inputs.bottomVoltage = (lowerShooterMotor.appliedOutput * lowerShooterMotor.busVoltage).volts
     }
 
     override fun getStatusSignals(): MutableList<BaseStatusSignal> {
@@ -132,10 +133,8 @@ class FlywheelIOReal : FlywheelIO {
     }
 
     companion object Constants {
-        val UPPER_PID_GAINS = PIDGains()
-        val LOWER_PID_GAINS = PIDGains()
-        val UPPER_FF_GAINS = MotorFFGains()
-        val LOWER_FF_GAINS = MotorFFGains()
+        val PID_GAINS = PIDGains()
+        val FF_GAINS = MotorFFGains()
     }
 }
 
@@ -155,11 +154,6 @@ class FlywheelIOSim : FlywheelIO {
         inputs.bottomVelocity = lowerFlywheelMotor.angularVelocity
         inputs.topCurrent = upperFlywheelMotor.currentDrawAmps.amps
         inputs.bottomCurrent = lowerFlywheelMotor.currentDrawAmps.amps
-    }
-
-    override fun setVoltage(upperVoltage: Voltage, lowerVoltage: Voltage) {
-        upperFlywheelMotor.inputVoltage = upperVoltage.inVolts()
-        lowerFlywheelMotor.inputVoltage = lowerVoltage.inVolts()
     }
 
     override fun setVoltage(voltage: Voltage) {

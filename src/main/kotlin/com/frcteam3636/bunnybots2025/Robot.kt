@@ -39,6 +39,7 @@ import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
+import org.littletonrobotics.urcl.URCL
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.io.path.Path
 import kotlin.io.path.exists
@@ -154,14 +155,10 @@ object Robot : LoggedRobot() {
                     .set(true)
             }
             Logger.addDataReceiver(NT4Publisher()) // Publish data to NetworkTables
+            if (Preferences.getBoolean("DeveloperMode", false))
+                Logger.registerURCL(URCL.startExternal())
             // Enables power distribution logging
-            if (model == Model.COMPETITION) {
-                PowerDistribution(REVDeviceId.PowerDistributionHub)
-            } else {
-                PowerDistribution(
-                    1, PowerDistribution.ModuleType.kCTRE
-                )
-            }
+            PowerDistribution(REVDeviceId.PowerDistributionHub)
         } else {
             val logPath = try {
                 // Pull the replay log from AdvantageScope (or prompt the user)
