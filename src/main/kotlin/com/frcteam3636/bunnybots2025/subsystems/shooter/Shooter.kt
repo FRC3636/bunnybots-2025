@@ -76,14 +76,14 @@ object Shooter {
         )
 
         @Suppress("unused")
-        fun sysIDQuasistatic(direction: SysIdRoutine.Direction): Command {
+        fun sysIdQuasistatic(direction: SysIdRoutine.Direction): Command {
             return run {
                 sysID.quasistatic(direction)
             }
         }
 
         @Suppress("unused")
-        fun sysIDDynamic(direction: SysIdRoutine.Direction): Command {
+        fun sysIdDynamic(direction: SysIdRoutine.Direction): Command {
             return run {
                 sysID.dynamic(direction)
             }
