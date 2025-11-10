@@ -10,8 +10,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue
 import com.frcteam3636.bunnybots2025.CANcoder
 import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.TalonFX
-import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal.Constants.ACCELERATION
-import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal.Constants.CRUISE_VELOCITY
+import com.frcteam3636.bunnybots2025.subsystems.intake.IntakeIOReal.Constants.PROFILE_CRUISE_VELOCITY
 import com.frcteam3636.bunnybots2025.utils.math.*
 import edu.wpi.first.math.trajectory.TrapezoidProfile
 import edu.wpi.first.units.Units.*
@@ -50,14 +49,10 @@ class PivotIOReal : PivotIO {
             }
             Slot0.apply {
                 pidGains = PID_GAINS
-                MotionMagic.apply {
-                    MotionMagicCruiseVelocity = CRUISE_VELOCITY.inRotationsPerSecond()
-                    MotionMagicAcceleration = ACCELERATION.inRotationsPerSecondPerSecond()
-                }
             }
             MotionMagic.apply {
-                MotionMagicCruiseVelocity = PROFILE_VELOCITY
-                MotionMagicAcceleration = PROFILE_ACCELERATION
+                MotionMagicCruiseVelocity = PROFILE_CRUISE_VELOCITY.inRotationsPerSecond()
+                MotionMagicAcceleration = PROFILE_ACCELERATION.inRotationsPerSecondPerSecond()
                 MotionMagicJerk = PROFILE_JERK
             }
             Feedback.apply {
@@ -138,17 +133,17 @@ class PivotIOReal : PivotIO {
         private const val ROTOR_TO_SENSOR_GEAR_RATIO = 0.0
         private const val MAGNET_OFFSET = 0.0
         private val HARDSTOP_OFFSET = 12.degrees.inRotations()
-        const val PROFILE_ACCELERATION = 50.0
+        val PROFILE_ACCELERATION = 5.0.degreesPerSecondPerSecond
         const val PROFILE_JERK = 0.0
-        const val PROFILE_VELOCITY = 25.0
+        val PROFILE_VELOCITY = 5.0.degreesPerSecond
     }
 }
 
 class PivotIOSim : PivotIO {
     private val profile = TrapezoidProfile(
         TrapezoidProfile.Constraints(
-            PivotIOReal.PROFILE_VELOCITY,
-            PivotIOReal.PROFILE_ACCELERATION,
+            PivotIOReal.PROFILE_VELOCITY.inRotationsPerSecond(),
+            PivotIOReal.PROFILE_ACCELERATION.inRotationsPerSecondPerSecond(),
         )
     )
 

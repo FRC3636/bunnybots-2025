@@ -55,10 +55,11 @@ class IntakeIOReal : IntakeIO {
         configurator.apply(TalonFXConfiguration().apply {
             Slot0.apply {
                 pidGains = PID_GAINS
-                MotionMagic.apply {
-                    MotionMagicCruiseVelocity = CRUISE_VELOCITY.inRotationsPerSecond()
-                    MotionMagicAcceleration = ACCELERATION.inRotationsPerSecondPerSecond()
-                }
+            }
+            MotionMagic.apply {
+                MotionMagicCruiseVelocity = PROFILE_CRUISE_VELOCITY.inRotationsPerSecond()
+                MotionMagicAcceleration = PROFILE_ACCELERATION.inRotationsPerSecondPerSecond()
+                MotionMagicJerk = PROFILE_JERK
             }
             Feedback.apply {
                 FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder
@@ -137,8 +138,9 @@ class IntakeIOReal : IntakeIO {
 
     companion object Constants {
         val PID_GAINS = PIDGains(6.0, 0.0, 0.0)
-        val CRUISE_VELOCITY = 0.0.rotationsPerSecond
-        val ACCELERATION = 0.0.rotationsPerSecondPerSecond
+        val PROFILE_CRUISE_VELOCITY = 0.0.degreesPerSecond
+        val PROFILE_ACCELERATION = 0.0.degreesPerSecondPerSecond
+        const val PROFILE_JERK = 0.0
         const val ENCODER_MAGNET_OFFSET = 0.0
         const val ENCODER_TO_PIVOT_GEAR_RATIO = 0.0
         const val MOTOR_TO_ENCODER_GEAR_RATIO = 0.0
@@ -152,8 +154,8 @@ class IntakeIOSim : IntakeIO {
 
     private val profile = TrapezoidProfile(
         TrapezoidProfile.Constraints(
-            IntakeIOReal.CRUISE_VELOCITY.inRotationsPerSecond(),
-            IntakeIOReal.ACCELERATION.inRotationsPerSecondPerSecond(),
+            IntakeIOReal.PROFILE_CRUISE_VELOCITY.inRotationsPerSecond(),
+            IntakeIOReal.PROFILE_ACCELERATION.inRotationsPerSecondPerSecond(),
         )
     )
 
