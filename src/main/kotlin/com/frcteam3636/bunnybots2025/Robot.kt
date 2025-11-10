@@ -367,7 +367,10 @@ object Robot : LoggedRobot() {
 
         // clamp held pieces just in case stuff starts to break
         if (RobotState.heldPieces < 0) {
+            Logger.recordOutput("RobotState/Held Pieces/Clamped", true)
             RobotState.heldPieces = 0
+        } else {
+            Logger.recordOutput("RobotState/Held Pieces/Clamped", false)
         }
 
         Logger.recordOutput("RobotState/Held Pieces", RobotState.heldPieces)
