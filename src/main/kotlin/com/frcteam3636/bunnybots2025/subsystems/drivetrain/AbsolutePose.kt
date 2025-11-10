@@ -291,6 +291,73 @@ class LimelightPoseProvider(
     }
 }
 
+class PhotonVisionPoseProvider(name: String, val chassisToCamera: Transform3d) : AbsolutePoseProvider {
+    private val camera = PhotonCamera(name)
+
+    override fun updateInputs(inputs: AbsolutePoseProviderInputs) {
+        inputs.connected = camera.isConnected
+        inputs.measurements = emptyArray()
+        inputs.observedTags = intArrayOf()
+
+        for (result in camera.allUnreadResults) {
+            if (result.hasTargets()) {
+                if (result.multitagResult.isPresent) {
+                    val multitagResult = result.multitagResult.get()
+
+                    val fieldToCamera = multitagResult.estimatedPose.best
+                    val fieldToRobot = fieldToCamera.plus(chassisToCamera.inverse())
+                    val robotPose =
+                        Pose2d(fieldToRobot.translation.toTranslation2d(), fieldToRobot.rotation.toRotation2d())
+                    var totalTagDistance = 0.0
+                    for (target in result.targets) {
+                        totalTagDistance += target.bestCameraToTarget.translation.norm
+                    }
+
+                    for (tag in multitagResult.fiducialIDsUsed) {
+                        inputs.observedTags += tag.toInt()
+                    }
+
+                    inputs.measurements += AbsolutePoseMeasurement(
+                        robotPose,
+                        result.timestampSeconds.seconds,
+                        APRIL_TAG_STD_DEV(
+                            totalTagDistance / result.targets.size,
+                            multitagResult.fiducialIDsUsed.size
+                        ),
+                        false,
+                        multitagResult.fiducialIDsUsed.size
+                    )
+                } else {
+                    val target = result.targets.first()
+                    var shouldReject = false
+                    val tagPose = FIELD_LAYOUT.getTagPose(target.fiducialId)
+                    if (tagPose.isPresent) {
+                        val cameraToTarget = target.bestCameraToTarget
+                        val fieldToTarget = Transform3d(tagPose.get().translation, tagPose.get().rotation)
+                        val fieldToCamera = fieldToTarget.plus(cameraToTarget.inverse())
+                        val fieldToRobot = fieldToCamera.plus(chassisToCamera.inverse())
+                        val robotPose =
+                            Pose2d(fieldToRobot.translation.toTranslation2d(), fieldToRobot.rotation.toRotation2d())
+
+                        if (result.bestTarget.poseAmbiguity > 0.3 || result.bestTarget.bestCameraToTarget.translation.norm > FIELD_LAYOUT.fieldLength / 2) {
+                            shouldReject = true
+                        }
+
+                        inputs.observedTags += target.fiducialId
+                        inputs.measurements += AbsolutePoseMeasurement(
+                            robotPose,
+                            result.timestampSeconds.seconds,
+                            APRIL_TAG_STD_DEV(cameraToTarget.translation.norm, result.targets.size),
+                            shouldReject,
+                            result.targets.size
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 class CameraSimPoseProvider(name: String, val chassisToCamera: Transform3d) : AbsolutePoseProvider {
     private val camera = PhotonCamera(name)
     private val simProperties = SimCameraProperties().apply {
@@ -303,7 +370,7 @@ class CameraSimPoseProvider(name: String, val chassisToCamera: Transform3d) : Ab
 
 
     override fun updateInputs(inputs: AbsolutePoseProviderInputs) {
-        inputs.connected = true
+        inputs.connected = camera.isConnected
         inputs.measurements = arrayOf()
         inputs.observedTags = intArrayOf()
         val unreadResults = camera.allUnreadResults
@@ -368,7 +435,9 @@ class AbsolutePoseMeasurementStruct : Struct<AbsolutePoseMeasurement> {
     override fun getTypeClass(): Class<AbsolutePoseMeasurement> = AbsolutePoseMeasurement::class.java
     override fun getTypeName(): String = "struct:AbsolutePoseMeasurement"
     override fun getTypeString(): String = "struct:AbsolutePoseMeasurement"
-    override fun getSize(): Int = Pose2d.struct.size + Struct.kSizeDouble + 3 * Struct.kSizeDouble + kSizeBool + kSizeInt32
+    override fun getSize(): Int =
+        Pose2d.struct.size + Struct.kSizeDouble + 3 * Struct.kSizeDouble + kSizeBool + kSizeInt32
+
     override fun getSchema(): String =
         "Pose2d pose; double timestamp; double stdDeviation[3]; bool shouldReject; int32 observedTags;"
 
