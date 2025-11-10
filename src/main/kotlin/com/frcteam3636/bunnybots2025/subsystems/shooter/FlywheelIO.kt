@@ -29,10 +29,6 @@ open class FlywheelInputs {
     var bottomCurrent = Amps.zero()!!
     var topTemperature = Celsius.zero()!!
     var bottomTemperature = Celsius.zero()!!
-    var topVoltage = Volts.zero()!!
-    var bottomVoltage = Volts.zero()!!
-    var topPosition = Rotations.zero()!!
-    var bottomPosition = Rotations.zero()!!
     var isDetected = false
 }
 
@@ -122,11 +118,6 @@ class FlywheelIOReal : FlywheelIO {
         inputs.isDetected = detectedSignal.value
         inputs.topTemperature = upperShooterMotor.motorTemperature.celsius
         inputs.bottomTemperature = lowerShooterMotor.motorTemperature.celsius
-        inputs.topPosition = upperShooterMotor.encoder.position.rotations
-        inputs.bottomPosition = lowerShooterMotor.encoder.position.rotations
-        // https://www.chiefdelphi.com/t/sysid-routine-not-properly-recording-motor-speed/455172
-        inputs.topVoltage = (upperShooterMotor.appliedOutput * upperShooterMotor.busVoltage).volts
-        inputs.bottomVoltage = (lowerShooterMotor.appliedOutput * lowerShooterMotor.busVoltage).volts
     }
 
     override val signals: Array<BaseStatusSignal>
