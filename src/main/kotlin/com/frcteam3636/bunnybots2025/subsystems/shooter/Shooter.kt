@@ -67,7 +67,14 @@ object Shooter {
 
         @Suppress("Unused")
         var sysID = SysIdRoutine(
-            SysIdRoutine.Config(),
+            SysIdRoutine.Config(
+                null,
+                null,
+                null,
+                { state ->
+                    Logger.recordOutput("SysIdTestState", state.toString())
+                }
+            ),
             SysIdRoutine.Mechanism(
                 io::setVoltage,
                 null, // recorded by URCL
