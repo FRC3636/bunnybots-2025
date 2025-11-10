@@ -135,10 +135,10 @@ class SwerveModuleTemperatureStruct : Struct<SwerveModuleTemperature> {
     override fun getTypeName(): String = "struct:SwerveModuleTemperature"
     override fun getTypeString(): String = "struct:SwerveModuleTemperature"
     override fun getSize(): Int =
-        Struct.kSizeInt32 * 2
+        Struct.kSizeDouble * 2
 
     override fun getSchema(): String =
-        "int32 drivingMotorTemperatureCelsius; int32 turningMotorTemperatureCelsius;"
+        "double drivingMotorTemperatureCelsius; double turningMotorTemperatureCelsius;"
 
     override fun unpack(bb: ByteBuffer): SwerveModuleTemperature =
         SwerveModuleTemperature(
