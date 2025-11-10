@@ -113,6 +113,12 @@ class LimelightPoseProvider(
 
     private var cornerCount = 0
 
+    val gyroVelocity: AngularVelocity
+        get() = velocityGetter()
+
+    val gyroAngle: Rotation2d
+        get() = yawGetter()
+
     init {
         thread(isDaemon = true) {
             while (true) {
@@ -137,7 +143,7 @@ class LimelightPoseProvider(
         if (!isLL4) {
             LimelightHelpers.SetRobotOrientation(
                 name,
-                yawGetter().degrees,
+                gyroAngle.degrees,
                 // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
                 0.0, 0.0, 0.0, 0.0, 0.0
             )
@@ -146,7 +152,7 @@ class LimelightPoseProvider(
                 LimelightHelpers.SetIMUMode(name, 1)
                 LimelightHelpers.SetRobotOrientation(
                     name,
-                    yawGetter().degrees,
+                    gyroAngle.degrees,
                     // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
                     0.0, 0.0, 0.0, 0.0, 0.0
                 )
@@ -198,7 +204,7 @@ class LimelightPoseProvider(
             val measurement = LimelightMeasurement()
             val estimate = convertToLLPoseEstimate(rawSample.value, true)
             measurement.observedTags = estimate.rawFiducials.mapNotNull { it?.id }.toIntArray()
-            val highSpeed = velocityGetter().abs(DegreesPerSecond) > 360.0
+            val highSpeed = gyroVelocity.abs(DegreesPerSecond) > 360.0
             if (estimate.tagCount == 0 || highSpeed) measurement.shouldReject = true
 
             measurement.poseMeasurement = AbsolutePoseMeasurement(
