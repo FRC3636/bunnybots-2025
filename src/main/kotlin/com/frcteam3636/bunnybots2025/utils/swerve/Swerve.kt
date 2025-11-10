@@ -1,5 +1,8 @@
+@file:Suppress("unused")
 package com.frcteam3636.bunnybots2025.utils.swerve
 
+import com.frcteam3636.bunnybots2025.utils.math.celsius
+import com.frcteam3636.bunnybots2025.utils.math.inCelsius
 import com.frcteam3636.bunnybots2025.utils.math.inMetersPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.metersPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.radiansPerSecond
@@ -10,6 +13,10 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics
 import edu.wpi.first.math.kinematics.SwerveModuleState
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.LinearVelocity
+import edu.wpi.first.units.measure.Temperature
+import edu.wpi.first.util.struct.Struct
+import edu.wpi.first.util.struct.StructSerializable
+import java.nio.ByteBuffer
 
 enum class DrivetrainCorner {
     FRONT_LEFT,
@@ -113,3 +120,34 @@ val ChassisSpeeds.angularVelocity: AngularVelocity
     get() = omegaRadiansPerSecond.radiansPerSecond
 
 data class Corner(val position: Pose2d, val magnetOffset: Double)
+
+data class SwerveModuleTemperature(
+    val drivingMotorTemperature: Temperature,
+    val turningMotorTemperature: Temperature
+) : StructSerializable {
+    @JvmField
+    @Suppress("unused")
+    val struct = SwerveModuleTemperatureStruct()
+}
+
+class SwerveModuleTemperatureStruct : Struct<SwerveModuleTemperature> {
+    override fun getTypeClass(): Class<SwerveModuleTemperature> = SwerveModuleTemperature::class.java
+    override fun getTypeName(): String = "struct:SwerveModuleTemperature"
+    override fun getTypeString(): String = "struct:SwerveModuleTemperature"
+    override fun getSize(): Int =
+        Struct.kSizeInt32 * 2
+
+    override fun getSchema(): String =
+        "int32 drivingMotorTemperatureCelsius; int32 turningMotorTemperatureCelsius;"
+
+    override fun unpack(bb: ByteBuffer): SwerveModuleTemperature =
+        SwerveModuleTemperature(
+            bb.double.celsius,
+            bb.double.celsius
+        )
+
+    override fun pack(bb: ByteBuffer, value: SwerveModuleTemperature) {
+        bb.putDouble(value.drivingMotorTemperature.inCelsius())
+        bb.putDouble(value.turningMotorTemperature.inCelsius())
+    }
+}

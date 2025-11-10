@@ -9,6 +9,7 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.
 import com.frcteam3636.bunnybots2025.utils.math.*
 import com.frcteam3636.bunnybots2025.utils.swerve.DrivetrainCorner
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
+import com.frcteam3636.bunnybots2025.utils.swerve.SwerveModuleTemperature
 import edu.wpi.first.apriltag.AprilTagFieldLayout
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.kinematics.SwerveModulePosition
@@ -26,10 +27,9 @@ open class DrivetrainInputs {
     var gyroConnected = true
     var measuredStates = PerCorner.generate { SwerveModuleState() }
     var measuredPositions = PerCorner.generate { SwerveModulePosition() }
-    var frontRightTemperatures = doubleArrayOf()
-    var frontLeftTemperatures = doubleArrayOf()
-    var backLeftTemperatures = doubleArrayOf()
-    var backRightTemperatures = doubleArrayOf()
+    var moduleTemperatures = PerCorner.generate {
+        SwerveModuleTemperature(0.0.celsius, 0.0.celsius)
+    }
 }
 
 abstract class DrivetrainIO {
@@ -46,10 +46,7 @@ abstract class DrivetrainIO {
         inputs.gyroConnected = gyro.connected
         inputs.measuredStates = modules.map { it.state }
         inputs.measuredPositions = modules.map { it.position }
-        inputs.frontRightTemperatures = modules.frontRight.temperatures.map { it.inCelsius() }.toDoubleArray()
-        inputs.backRightTemperatures = modules.backRight.temperatures.map { it.inCelsius() }.toDoubleArray()
-        inputs.frontLeftTemperatures = modules.frontLeft.temperatures.map { it.inCelsius() }.toDoubleArray()
-        inputs.backLeftTemperatures = modules.backLeft.temperatures.map { it.inCelsius() }.toDoubleArray()
+        inputs.moduleTemperatures = modules.map { it.temperatures }
     }
 
     var desiredStates: PerCorner<SwerveModuleState>

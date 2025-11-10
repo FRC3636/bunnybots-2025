@@ -13,6 +13,7 @@ import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.TalonFX
 import com.frcteam3636.bunnybots2025.utils.math.*
+import com.frcteam3636.bunnybots2025.utils.swerve.SwerveModuleTemperature
 import com.frcteam3636.bunnybots2025.utils.swerve.speed
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.kinematics.SwerveModulePosition
@@ -46,7 +47,7 @@ interface SwerveModule {
     var odometryTurnPositions: Array<Rotation2d>
     var odometryDrivePositions: DoubleArray
     var odometryPositions: Array<SwerveModulePosition>
-    var temperatures: Array<Temperature>
+    var temperatures: SwerveModuleTemperature
     val signals: Array<BaseStatusSignal>
         get() = emptyArray()
 
@@ -63,7 +64,7 @@ class Mk5nSwerveModule(
     override var odometryDrivePositions = doubleArrayOf()
     override var odometryTurnPositions: Array<Rotation2d> = emptyArray()
     override var odometryPositions: Array<SwerveModulePosition> = emptyArray()
-    override var temperatures: Array<Temperature> = emptyArray()
+    override var temperatures: SwerveModuleTemperature = SwerveModuleTemperature(0.0.celsius, 0.0.celsius)
 
     override val state: SwerveModuleState
         get() = SwerveModuleState(
@@ -118,7 +119,7 @@ class Mk5nSwerveModule(
             )
         }
         timestampQueue.clear()
-        temperatures = arrayOf(drivingMotor.temperature, turningMotor.temperature)
+        temperatures = SwerveModuleTemperature(drivingMotor.temperature, turningMotor.temperature)
     }
 }
 
@@ -276,7 +277,7 @@ class SimSwerveModule() : SwerveModule {
     override var odometryDrivePositions: DoubleArray = doubleArrayOf()
     override var odometryTurnPositions: Array<Rotation2d> = emptyArray()
     override var odometryPositions: Array<SwerveModulePosition> = emptyArray()
-    override var temperatures: Array<Temperature> = emptyArray()
+    override var temperatures: SwerveModuleTemperature = SwerveModuleTemperature(0.0.celsius, 0.0.celsius)
     private val driveMotorSystem = LinearSystemId.createDCMotorSystem(
         DCMotor.getKrakenX60Foc(1),
         0.0001,
