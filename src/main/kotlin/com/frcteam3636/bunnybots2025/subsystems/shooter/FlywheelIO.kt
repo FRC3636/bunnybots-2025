@@ -94,7 +94,7 @@ class FlywheelIOReal : FlywheelIO {
     }
 
     override fun setVoltage(voltage: Voltage) {
-        assert(voltage.inVolts() in -13.0..13.0)
+        assert(voltage.inVolts() in -12.0..12.0)
         upperShooterMotor.setVoltage(voltage)
         lowerShooterMotor.setVoltage(voltage)
     }
