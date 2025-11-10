@@ -63,7 +63,7 @@ object Drivetrain : Subsystem {
 
     private val limiter = SlewRateLimiter(0.05)
     private var wheelRadiusModuleStates = DoubleArray(4)
-    private var wheelRadiusLastAngle = Rotation2d()
+    private var wheelRadiusLastAngle = Rotation2d.kZero
     private var wheelRadiusGyroDelta = 0.0
 
     private val xController = PIDController(PATH_FOLLOWING_TRANSLATION_GAINS)

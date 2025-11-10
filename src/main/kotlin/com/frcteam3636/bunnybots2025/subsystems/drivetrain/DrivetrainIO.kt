@@ -22,7 +22,7 @@ import kotlin.math.atan2
 
 @Logged
 open class DrivetrainInputs {
-    var gyroRotation = Rotation2d()
+    var gyroRotation = Rotation2d.kZero
     var gyroVelocity = 0.degreesPerSecond
     var gyroConnected = true
     var measuredStates = PerCorner.generate { SwerveModuleState() }
