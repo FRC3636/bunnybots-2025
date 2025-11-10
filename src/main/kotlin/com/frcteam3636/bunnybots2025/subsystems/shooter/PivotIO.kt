@@ -32,9 +32,9 @@ interface PivotIO {
     fun turnToAngle(angle: Angle)
     fun setBrakeMode(enabled: Boolean) {}
     fun disablePivot() {}
-    fun getStatusSignals(): MutableList<BaseStatusSignal> {
-        return mutableListOf()
-    }
+
+    val signals: Array<BaseStatusSignal>
+        get() = emptyArray()
 
     fun updateInputs(inputs: PivotInputs)
 }
@@ -111,9 +111,8 @@ class PivotIOReal : PivotIO {
         )
     }
 
-    override fun getStatusSignals(): MutableList<BaseStatusSignal> {
-        return mutableListOf(positionSignal, currentSignal, velocitySignal, temperatureSignal)
-    }
+    override val signals: Array<BaseStatusSignal>
+        get() = arrayOf(positionSignal, currentSignal, velocitySignal, temperatureSignal)
 
     override fun updateInputs(inputs: PivotInputs) {
         inputs.pivotAngle = positionSignal.value

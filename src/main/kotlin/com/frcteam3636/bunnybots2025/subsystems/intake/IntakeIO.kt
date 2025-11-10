@@ -41,9 +41,9 @@ interface IntakeIO {
     fun updateInputs(inputs: IntakeInputs)
     fun disablePivot() {}
     fun setBrakeMode(enabled: Boolean) {}
-    fun getSignals(): MutableList<BaseStatusSignal> {
-        return mutableListOf()
-    }
+
+    val signals: Array<BaseStatusSignal>
+        get() = emptyArray()
 }
 
 class IntakeIOReal : IntakeIO {
@@ -123,9 +123,8 @@ class IntakeIOReal : IntakeIO {
         inputs.pivotReference = positionReferenceSignal.value.rotations
     }
 
-    override fun getSignals(): MutableList<BaseStatusSignal> {
-        return mutableListOf(positionSignal, currentSignal, temperatureSignal, positionReferenceSignal)
-    }
+    override val signals: Array<BaseStatusSignal>
+        get() = arrayOf(positionSignal, currentSignal, velocitySignal, temperatureSignal, positionReferenceSignal)
 
     override fun disablePivot() {
         pivotDisabled = true

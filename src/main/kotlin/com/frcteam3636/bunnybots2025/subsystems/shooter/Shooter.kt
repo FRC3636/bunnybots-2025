@@ -112,6 +112,9 @@ object Shooter {
             run {
                 setpoint = Pivot.target.profile.getVelocity()
             }
+
+        val signals: Array<BaseStatusSignal>
+            get() = io.signals
     }
 
     object Pivot : Subsystem {
@@ -161,9 +164,8 @@ object Shooter {
             Logger.recordOutput("Shooter/Pivot/Active Profile", target)
         }
 
-        fun getStatusSignals(): MutableList<BaseStatusSignal> {
-            return io.getStatusSignals()
-        }
+        val signals: Array<BaseStatusSignal>
+            get() = io.signals
 
         fun setTarget(target: Target): Command =
             runOnce {

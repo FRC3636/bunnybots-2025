@@ -41,9 +41,9 @@ interface FlywheelIO {
     fun setVoltage(voltage: Voltage)
     fun setVelocity(velocity: AngularVelocity)
     fun updateInputs(inputs: FlywheelInputs)
-    fun getStatusSignals(): MutableList<BaseStatusSignal> {
-        return mutableListOf()
-    }
+
+    val signals: Array<BaseStatusSignal>
+        get() = emptyArray()
 }
 
 class FlywheelIOReal : FlywheelIO {
@@ -73,6 +73,7 @@ class FlywheelIOReal : FlywheelIO {
     private var lowerFFController = SimpleMotorFeedforward(FF_GAINS)
 
 
+    // TODO: Move this into the feeder subsystem. Doesn't really matter but it makes more sense from an organization level.
     private var canRange = CANrange(CTREDeviceId.CANRangeShooter).apply {
         configurator.apply(
             CANrangeConfiguration().apply {
@@ -128,9 +129,8 @@ class FlywheelIOReal : FlywheelIO {
         inputs.bottomVoltage = (lowerShooterMotor.appliedOutput * lowerShooterMotor.busVoltage).volts
     }
 
-    override fun getStatusSignals(): MutableList<BaseStatusSignal> {
-        return mutableListOf(detectedSignal)
-    }
+    override val signals: Array<BaseStatusSignal>
+        get() = arrayOf(detectedSignal)
 
     companion object Constants {
         val PID_GAINS = PIDGains()

@@ -95,7 +95,6 @@ object Intake : Subsystem {
         Deployed(90.degrees);
     }
 
-    fun getStatusSignals(): MutableList<BaseStatusSignal> {
-        return io.getSignals()
-    }
+    val signals: Array<BaseStatusSignal>
+        get() = io.signals
 }

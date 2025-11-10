@@ -65,7 +65,6 @@ object Indexer : Subsystem {
             wasDetected = false
         }
 
-    fun getStatusSignals(): MutableList<BaseStatusSignal> {
-        return io.getSignals()
-    }
+    val signals: Array<BaseStatusSignal>
+        get() = io.signals
 }

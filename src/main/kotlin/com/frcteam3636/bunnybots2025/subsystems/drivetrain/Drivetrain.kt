@@ -369,9 +369,8 @@ object Drivetrain : Subsystem {
         enableContinuousInput(0.0, TAU)
     }
 
-    fun getStatusSignals(): MutableList<BaseStatusSignal> {
-        return io.getStatusSignals()
-    }
+    val signals: Array<BaseStatusSignal>
+        get() = io.signals
 
     private fun isInDeadband(translation: Translation2d) =
         abs(translation.x) < JOYSTICK_DEADBAND && abs(translation.y) < JOYSTICK_DEADBAND

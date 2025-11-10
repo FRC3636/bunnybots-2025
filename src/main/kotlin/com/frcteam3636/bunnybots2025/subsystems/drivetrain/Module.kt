@@ -48,10 +48,8 @@ interface SwerveModule {
     var odometryDrivePositions: DoubleArray
     var odometryPositions: Array<SwerveModulePosition>
     var temperatures: Array<Temperature>
-
-    fun getSignals(): Array<BaseStatusSignal> {
-        return arrayOf()
-    }
+    val signals: Array<BaseStatusSignal>
+        get() = emptyArray()
 
     fun periodic() {}
     fun characterize(voltage: Voltage, turningAngle: Angle?)
@@ -105,9 +103,8 @@ class Mk5nSwerveModule(
             field = corrected
         }
 
-    override fun getSignals(): Array<BaseStatusSignal> {
-        return turningMotor.getSignals() + drivingMotor.getSignals()
-    }
+    override val signals: Array<BaseStatusSignal>
+        get() = turningMotor.signals + drivingMotor.signals
 
     override fun periodic() {
         odometryTimestamps = timestampQueue.map { it.toDouble() }.toTypedArray().toDoubleArray()
@@ -130,9 +127,7 @@ interface SwerveTurningMotor {
     var position: Angle
     var odometryTurnPositions: Array<Rotation2d>
     val temperature: Temperature
-    fun getSignals(): Array<BaseStatusSignal> {
-        return arrayOf()
-    }
+    val signals: Array<BaseStatusSignal>
 
     fun periodic() {}
 }
@@ -143,11 +138,8 @@ interface SwerveDrivingMotor {
     var velocity: LinearVelocity
     var odometryDrivePositions: DoubleArray
     val temperature: Temperature
+    val signals: Array<BaseStatusSignal>
     fun setVoltage(voltage: Voltage)
-    fun getSignals(): Array<BaseStatusSignal> {
-        return arrayOf()
-    }
-
     fun periodic() {}
 }
 
@@ -211,9 +203,7 @@ class DrivingTalon(id: CTREDeviceId) : SwerveDrivingMotor {
         inner.setControl(voltageControl.withOutput(voltage.inVolts()))
     }
 
-    override fun getSignals(): Array<BaseStatusSignal> {
-        return arrayOf(positionSignal, velocitySignal, temperatureSignal)
-    }
+    override val signals: Array<BaseStatusSignal> = arrayOf(positionSignal, velocitySignal, temperatureSignal)
 
     override fun periodic() {
         odometryDrivePositions = positionQueue.map { Units.rotationsToRadians(it) }.toDoubleArray()
@@ -274,9 +264,7 @@ class TurningTalon(id: CTREDeviceId, encoderId: CTREDeviceId, magnetOffset: Doub
         }
         get() = positionSignal.value
 
-    override fun getSignals(): Array<BaseStatusSignal> {
-        return arrayOf(positionSignal, temperatureSignal)
-    }
+    override val signals: Array<BaseStatusSignal> = arrayOf(positionSignal, temperatureSignal)
 
     override fun periodic() {
         odometryTurnPositions = positionQueue.map { Rotation2d.fromRotations(it) }.toTypedArray()

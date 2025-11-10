@@ -100,15 +100,17 @@ abstract class DrivetrainIO {
     val odometryYawPositions: DoubleArray
         get() = gyro.odometryYawPositions
 
-    fun getStatusSignals(): MutableList<BaseStatusSignal> {
-        val signals = mutableListOf<BaseStatusSignal>()
+    val signals: Array<BaseStatusSignal>
+        get() {
+            var signals = arrayOf<BaseStatusSignal>()
 
-        modules.forEach { module ->
-            signals += module.getSignals()
+            modules.forEach { module ->
+                signals += module.signals
+            }
+
+            signals += gyro.signals
+            return signals
         }
-        signals += gyro.getStatusSignals()
-        return signals
-    }
 }
 
 /** Drivetrain I/O layer that uses real swerve modules along with a NavX gyro. */

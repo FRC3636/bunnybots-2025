@@ -33,10 +33,10 @@ interface Gyro {
     var odometryYawPositions: DoubleArray
     var odometryYawTimestamps: DoubleArray
 
+    val signals: Array<BaseStatusSignal>
+        get() = emptyArray()
+
     fun periodic() {}
-    fun getStatusSignals(): Array<BaseStatusSignal> {
-        return arrayOf()
-    }
 }
 
 @Suppress("unused") // and hopefully it stays that way
@@ -105,14 +105,13 @@ class GyroPigeon(private val pigeon: Pigeon2) : Gyro {
     override val connected
         get() = yawSignal.status.isOK
 
-    override fun getStatusSignals(): Array<BaseStatusSignal> {
-        return arrayOf(
+    override val signals: Array<BaseStatusSignal>
+        get() = arrayOf(
             yawSignal,
             pitchSignal,
             rollSignal,
             angularVelocitySignal
         )
-    }
 
     override fun periodic() {
         odometryYawTimestamps = yawTimestampQueue.toDoubleArray()

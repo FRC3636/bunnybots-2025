@@ -28,9 +28,9 @@ open class IndexerInputs {
 interface IndexerIO {
     fun setIndexerSpeed(percentage: Double)
     fun updateInputs(inputs: IndexerInputs)
-    fun getSignals(): MutableList<BaseStatusSignal> {
-        return mutableListOf()
-    }
+
+    val signals: Array<BaseStatusSignal>
+        get() = emptyArray()
 }
 
 class IndexerIOReal : IndexerIO {
@@ -57,9 +57,8 @@ class IndexerIOReal : IndexerIO {
         inputs.indexerTemperature = indexerMotor.motorTemperature.celsius
     }
 
-    override fun getSignals(): MutableList<BaseStatusSignal> {
-        return mutableListOf(detectedSignal)
-    }
+    override val signals: Array<BaseStatusSignal>
+        get() = arrayOf(detectedSignal)
 
     override fun setIndexerSpeed(percentage: Double) {
         assert(percentage in -1.0..1.0)

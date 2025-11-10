@@ -130,10 +130,11 @@ object Robot : LoggedRobot() {
 
 //        Diagnostics.reportLimelightsInBackground(arrayOf("limelight-left", "limelight-right"))
 
-        statusSignals += Drivetrain.getStatusSignals()
-        statusSignals += Intake.getStatusSignals()
-        statusSignals += Shooter.Pivot.getStatusSignals()
-        statusSignals += Indexer.getStatusSignals()
+        statusSignals += Drivetrain.signals
+        statusSignals += Intake.signals
+        statusSignals += Shooter.Pivot.signals
+        statusSignals += Indexer.signals
+        statusSignals += Shooter.Flywheels.signals
 
         SmartDashboard.putData("Auto Chooser", autoChooser)
     }
