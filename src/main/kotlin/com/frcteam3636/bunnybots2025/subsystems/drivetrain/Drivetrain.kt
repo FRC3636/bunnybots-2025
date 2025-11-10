@@ -22,6 +22,7 @@ import com.frcteam3636.bunnybots2025.utils.swerve.Corner
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
 import com.frcteam3636.bunnybots2025.utils.swerve.cornerStatesToChassisSpeeds
 import com.frcteam3636.bunnybots2025.utils.swerve.toCornerSwerveModuleStates
+import com.frcteam3636.bunnybots2025.utils.swerve.translation2dPerSecond
 import com.frcteam3636.bunnybots2025.utils.translation2d
 import edu.wpi.first.math.VecBuilder
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator
@@ -313,6 +314,8 @@ object Drivetrain : Subsystem {
         Logger.recordOutput("Drivetrain/Pose Estimator/Estimated Pose", poseEstimator.estimatedPosition)
         Logger.recordOutput("Drivetrain/Chassis Speeds", measuredChassisSpeeds)
         Logger.recordOutput("Drivetrain/Desired Chassis Speeds", desiredChassisSpeeds)
+        Logger.recordOutput("Drivetrain/Measured Velocity", measuredChassisSpeeds.translation2dPerSecond.norm.metersPerSecond)
+        Logger.recordOutput("Drivetrain/Desired Velocity", desiredChassisSpeeds.translation2dPerSecond.norm.metersPerSecond)
 
         Logger.recordOutput(
             "Drivetrain/TagPoses", *FIELD_LAYOUT.tags
