@@ -1,4 +1,5 @@
 @file:Suppress("unused", "UnusedReceiverParameter")
+
 package com.frcteam3636.bunnybots2025.utils.math
 
 import edu.wpi.first.math.geometry.Translation2d

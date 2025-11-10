@@ -15,14 +15,11 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.POLAR_DRIVING_GAINS
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.ROTATION_SENSITIVITY
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.TRANSLATION_SENSITIVITY
+import com.frcteam3636.bunnybots2025.subsystems.shooter.distanceToZoo
 import com.frcteam3636.bunnybots2025.subsystems.shooter.zooTranslation
 import com.frcteam3636.bunnybots2025.utils.fieldRelativeTranslation2d
 import com.frcteam3636.bunnybots2025.utils.math.*
-import com.frcteam3636.bunnybots2025.utils.swerve.Corner
-import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
-import com.frcteam3636.bunnybots2025.utils.swerve.cornerStatesToChassisSpeeds
-import com.frcteam3636.bunnybots2025.utils.swerve.toCornerSwerveModuleStates
-import com.frcteam3636.bunnybots2025.utils.swerve.translation2dPerSecond
+import com.frcteam3636.bunnybots2025.utils.swerve.*
 import com.frcteam3636.bunnybots2025.utils.translation2d
 import edu.wpi.first.math.VecBuilder
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator
@@ -152,7 +149,8 @@ object Drivetrain : Subsystem {
                 "limelight-left",
                 {
                     poseEstimator.estimatedPosition.rotation
-                }, {
+                },
+                {
                     inputs.gyroVelocity
                 },
                 false,
@@ -161,7 +159,8 @@ object Drivetrain : Subsystem {
                 "limelight-right",
                 {
                     poseEstimator.estimatedPosition.rotation
-                }, {
+                },
+                {
                     inputs.gyroVelocity
                 },
                 false,
@@ -321,8 +320,14 @@ object Drivetrain : Subsystem {
         Logger.recordOutput("Drivetrain/Pose Estimator/Estimated Pose", poseEstimator.estimatedPosition)
         Logger.recordOutput("Drivetrain/Chassis Speeds", measuredChassisSpeeds)
         Logger.recordOutput("Drivetrain/Desired Chassis Speeds", desiredChassisSpeeds)
-        Logger.recordOutput("Drivetrain/Measured Velocity", measuredChassisSpeeds.translation2dPerSecond.norm.metersPerSecond)
-        Logger.recordOutput("Drivetrain/Desired Velocity", desiredChassisSpeeds.translation2dPerSecond.norm.metersPerSecond)
+        Logger.recordOutput(
+            "Drivetrain/Measured Velocity",
+            measuredChassisSpeeds.translation2dPerSecond.norm.metersPerSecond
+        )
+        Logger.recordOutput(
+            "Drivetrain/Desired Velocity",
+            desiredChassisSpeeds.translation2dPerSecond.norm.metersPerSecond
+        )
 
         Logger.recordOutput(
             "Drivetrain/TagPoses", *FIELD_LAYOUT.tags
@@ -331,6 +336,8 @@ object Drivetrain : Subsystem {
                 }
                 .map { it.pose }
                 .toTypedArray())
+
+        Logger.recordOutput("Drivetrain/Distance To Zoo", distanceToZoo())
     }
 
     /** The desired speeds and angles of the swerve modules. */
