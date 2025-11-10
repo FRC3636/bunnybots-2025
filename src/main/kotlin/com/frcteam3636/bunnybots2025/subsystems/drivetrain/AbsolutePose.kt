@@ -28,19 +28,17 @@ import edu.wpi.first.util.struct.Struct
 import edu.wpi.first.util.struct.Struct.kSizeBool
 import edu.wpi.first.util.struct.Struct.kSizeInt32
 import edu.wpi.first.util.struct.StructSerializable
-import org.littletonrobotics.junction.LogTable
-import org.littletonrobotics.junction.inputs.LoggableInputs
 import org.photonvision.PhotonCamera
 import org.photonvision.simulation.PhotonCameraSim
 import org.photonvision.simulation.SimCameraProperties
+import org.team9432.annotation.Logged
 import java.nio.ByteBuffer
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 import kotlin.math.pow
 
-// we can't use @Logged here because measurement is a nullable SerializableStruct :(
-// TODO: the above is no longer true, we should fix that
-class AbsolutePoseProviderInputs : LoggableInputs {
+@Logged
+open class AbsolutePoseProviderInputs {
     /**
      * The most recent measurement from the pose estimator.
      */
@@ -52,18 +50,6 @@ class AbsolutePoseProviderInputs : LoggableInputs {
     var connected = false
 
     var observedTags: IntArray = intArrayOf()
-
-    override fun toLog(table: LogTable) {
-        table.put("Measurements", *measurements)
-        table.put("Connected", connected)
-        table.put("Observed Tags", observedTags)
-    }
-
-    override fun fromLog(table: LogTable) {
-        measurements = table.get("Measurements", *measurements)
-        connected = table.get("Connected", connected)
-        observedTags = table.get("Observed Tags", observedTags)
-    }
 }
 
 interface AbsolutePoseProvider {

@@ -159,7 +159,7 @@ object Drivetrain : Subsystem {
 //                algorithm = mt2Algo
 //            ),
         )
-    }.mapValues { Pair(it.value, AbsolutePoseProviderInputs()) }
+    }.mapValues { Pair(it.value, LoggedAbsolutePoseProviderInputs()) }
 
     /** Helper for converting a desired drivetrain velocity into the speeds and angles for each swerve module */
     private val kinematics =
