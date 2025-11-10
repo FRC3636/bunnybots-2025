@@ -56,27 +56,6 @@ interface AbsolutePoseProvider {
     fun updateInputs(inputs: AbsolutePoseProviderInputs)
 }
 
-/**
- * A Limelight localization algorithm.
- */
-sealed class LimelightAlgorithm {
-    /**
-     * An older, less accurate localization algorithm.
-     */
-    object MegaTag : LimelightAlgorithm()
-
-    /**
-     * A newer and much more accurate algorithm that requires accurate gyro readings and a right-side-up Limelight.
-     */
-    class MegaTag2(private val gyroGetter: () -> Rotation2d, private val velocityGetter: () -> AngularVelocity) :
-        LimelightAlgorithm() {
-        val gyroPosition: Rotation2d
-            get() = gyroGetter()
-        val gyroVelocity: AngularVelocity
-            get() = velocityGetter()
-    }
-}
-
 data class LimelightMeasurement(
     var poseMeasurement: AbsolutePoseMeasurement? = null,
     var observedTags: IntArray = intArrayOf(),
@@ -104,7 +83,8 @@ data class LimelightMeasurement(
 
 class LimelightPoseProvider(
     private val name: String,
-    private val afterEnableAlgo: LimelightAlgorithm.MegaTag2,
+    private val yawGetter: () -> Rotation2d,
+    private val velocityGetter: () -> AngularVelocity,
     private val isLL4: Boolean
 ) : AbsolutePoseProvider {
     // References:
@@ -127,9 +107,9 @@ class LimelightPoseProvider(
         table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe(doubleArrayOf())
     private var loopsSinceLastSeen: Int = 0
 
-    private var currentAlgorithm: LimelightAlgorithm = LimelightAlgorithm.MegaTag
-
     private var isThrottled = false
+
+    private var wasIMUChanged = false
 
     private var cornerCount = 0
 
@@ -157,7 +137,7 @@ class LimelightPoseProvider(
         if (!isLL4) {
             LimelightHelpers.SetRobotOrientation(
                 name,
-                afterEnableAlgo.gyroPosition.degrees,
+                yawGetter().degrees,
                 // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
                 0.0, 0.0, 0.0, 0.0, 0.0
             )
@@ -166,7 +146,7 @@ class LimelightPoseProvider(
                 LimelightHelpers.SetIMUMode(name, 1)
                 LimelightHelpers.SetRobotOrientation(
                     name,
-                    afterEnableAlgo.gyroPosition.degrees,
+                    yawGetter().degrees,
                     // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
                     0.0, 0.0, 0.0, 0.0, 0.0
                 )
@@ -179,10 +159,11 @@ class LimelightPoseProvider(
             }
         }
 
-        if ((!RobotState.beforeFirstEnable) && currentAlgorithm == LimelightAlgorithm.MegaTag) {
-            currentAlgorithm = afterEnableAlgo
-            if (isLL4)
+        if ((!RobotState.beforeFirstEnable)) {
+            if (isLL4 && !wasIMUChanged) {
                 LimelightHelpers.SetIMUMode(name, 3)
+                wasIMUChanged = true
+            }
         }
 
         for (rawSample in megatag1Subscriber.readQueue()) {
@@ -217,7 +198,7 @@ class LimelightPoseProvider(
             val measurement = LimelightMeasurement()
             val estimate = convertToLLPoseEstimate(rawSample.value, true)
             measurement.observedTags = estimate.rawFiducials.mapNotNull { it?.id }.toIntArray()
-            val highSpeed = afterEnableAlgo.gyroVelocity.abs(DegreesPerSecond) > 360.0
+            val highSpeed = velocityGetter().abs(DegreesPerSecond) > 360.0
             if (estimate.tagCount == 0 || highSpeed) measurement.shouldReject = true
 
             measurement.poseMeasurement = AbsolutePoseMeasurement(

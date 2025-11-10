@@ -132,13 +132,6 @@ object Drivetrain : Subsystem {
         )
     )
 
-    @Suppress("unused")
-    private val mt2Algo = LimelightAlgorithm.MegaTag2({
-        poseEstimator.estimatedPosition.rotation
-    }, {
-        inputs.gyroVelocity
-    })
-
     private var rawGyroRotation = Rotation2d.kZero
 
     // someone please give me a better way to do this
@@ -155,10 +148,24 @@ object Drivetrain : Subsystem {
         )
 
         else -> mapOf(
-//            "Limelight Rear" to LimelightPoseProvider(
-//                "limelight-rear",
-//                algorithm = mt2Algo
-//            ),
+            "Limelight Left" to LimelightPoseProvider(
+                "limelight-left",
+                {
+                    poseEstimator.estimatedPosition.rotation
+                }, {
+                    inputs.gyroVelocity
+                },
+                false,
+            ),
+            "Limelight Right" to LimelightPoseProvider(
+                "limelight-right",
+                {
+                    poseEstimator.estimatedPosition.rotation
+                }, {
+                    inputs.gyroVelocity
+                },
+                false,
+            ),
         )
     }.mapValues { Pair(it.value, LoggedAbsolutePoseProviderInputs()) }
 
