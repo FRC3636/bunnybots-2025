@@ -62,11 +62,11 @@ class FlywheelIOReal : FlywheelIO {
                 closedLoop.apply {
                     pid(PID_GAINS.p, PID_GAINS.i, PID_GAINS.d)
                 }
+
             }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
         }
 
-    private var upperFFController = SimpleMotorFeedforward(FF_GAINS)
-    private var lowerFFController = SimpleMotorFeedforward(FF_GAINS)
+    private var ffController = SimpleMotorFeedforward(FF_GAINS)
 
 
     // TODO: Move this into the feeder subsystem. Doesn't really matter but it makes more sense from an organization level.
@@ -100,13 +100,14 @@ class FlywheelIOReal : FlywheelIO {
     }
 
     override fun setVelocity(velocity: AngularVelocity) {
+        val ffOutput = ffController.calculate(velocity.inRPM())
         upperShooterMotor.closedLoopController.setReference(
             velocity.inRPM(), SparkBase.ControlType.kVelocity,
-            ClosedLoopSlot.kSlot0, upperFFController.calculate(velocity.inRPM())
+            ClosedLoopSlot.kSlot0, ffOutput
         )
         lowerShooterMotor.closedLoopController.setReference(
             velocity.inRPM(), SparkBase.ControlType.kVelocity,
-            ClosedLoopSlot.kSlot0, lowerFFController.calculate(velocity.inRPM())
+            ClosedLoopSlot.kSlot0, ffOutput
         )
     }
 
