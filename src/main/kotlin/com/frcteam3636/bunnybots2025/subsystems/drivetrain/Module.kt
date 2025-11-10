@@ -19,7 +19,6 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition
 import edu.wpi.first.math.kinematics.SwerveModuleState
 import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.math.system.plant.LinearSystemId
-import edu.wpi.first.math.util.Units
 import edu.wpi.first.units.measure.*
 import edu.wpi.first.wpilibj.simulation.DCMotorSim
 import java.util.*
@@ -206,7 +205,7 @@ class DrivingTalon(id: CTREDeviceId) : SwerveDrivingMotor {
     override val signals: Array<BaseStatusSignal> = arrayOf(positionSignal, velocitySignal, temperatureSignal)
 
     override fun periodic() {
-        odometryDrivePositions = positionQueue.map { Units.rotationsToRadians(it) }.toDoubleArray()
+        odometryDrivePositions = positionQueue.map { it.rotations.inRadians() }.toDoubleArray()
         positionQueue.clear()
     }
 }
