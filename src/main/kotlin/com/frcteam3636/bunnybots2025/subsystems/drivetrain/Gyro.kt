@@ -122,7 +122,7 @@ class GyroPigeon(private val pigeon: Pigeon2) : Gyro {
 }
 
 class GyroSim(private val modules: PerCorner<SwerveModule>) : Gyro {
-    override var rotation = Rotation2d.kZero
+    override var rotation: Rotation2d = Rotation2d.kZero
     override var velocity: AngularVelocity = 0.radiansPerSecond
     override val connected = true
     override var odometryYawPositions: DoubleArray = doubleArrayOf()
