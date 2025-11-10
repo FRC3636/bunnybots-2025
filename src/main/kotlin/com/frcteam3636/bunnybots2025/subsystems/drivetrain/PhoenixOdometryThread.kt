@@ -97,10 +97,12 @@ class PhoenixOdometryThread : Thread("PhoenixOdometry") {
     }
 
     companion object {
-        private val instance = PhoenixOdometryThread()
+        private var instance: PhoenixOdometryThread? = null
 
         fun getInstance(): PhoenixOdometryThread {
-            return instance
+            if (instance == null)
+                instance = PhoenixOdometryThread()
+            return instance!!
         }
     }
 }
