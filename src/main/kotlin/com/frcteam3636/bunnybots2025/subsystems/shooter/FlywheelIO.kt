@@ -50,7 +50,7 @@ class FlywheelIOReal : FlywheelIO {
                 idleMode(SparkBaseConfig.IdleMode.kCoast)
 
                 closedLoop.apply {
-                    pid(PID_GAINS.p, PID_GAINS.i, PID_GAINS.d)
+                    UPPER_PID_GAINS.toRevLib()
                 }
             }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
         }
@@ -60,13 +60,14 @@ class FlywheelIOReal : FlywheelIO {
                 idleMode(SparkBaseConfig.IdleMode.kCoast)
 
                 closedLoop.apply {
-                    pid(PID_GAINS.p, PID_GAINS.i, PID_GAINS.d)
+                    LOWER_PID_GAINS.toRevLib()
                 }
 
             }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
         }
 
-    private var ffController = SimpleMotorFeedforward(FF_GAINS)
+    private var upperFFController = SimpleMotorFeedforward(UPPER_FF_GAINS)
+    private var lowerFFController = SimpleMotorFeedforward(LOWER_FF_GAINS)
 
 
     // TODO: Move this into the feeder subsystem. Doesn't really matter but it makes more sense from an organization level.
@@ -100,14 +101,15 @@ class FlywheelIOReal : FlywheelIO {
     }
 
     override fun setVelocity(velocity: AngularVelocity) {
-        val ffOutput = ffController.calculate(velocity.inRPM())
+        val upperFFOutput = upperFFController.calculate(velocity.inRPM())
+        val lowerFFOutput = lowerFFController.calculate(velocity.inRPM())
         upperShooterMotor.closedLoopController.setReference(
             velocity.inRPM(), SparkBase.ControlType.kVelocity,
-            ClosedLoopSlot.kSlot0, ffOutput
+            ClosedLoopSlot.kSlot0, upperFFOutput
         )
         lowerShooterMotor.closedLoopController.setReference(
             velocity.inRPM(), SparkBase.ControlType.kVelocity,
-            ClosedLoopSlot.kSlot0, ffOutput
+            ClosedLoopSlot.kSlot0, lowerFFOutput
         )
     }
 
@@ -125,8 +127,10 @@ class FlywheelIOReal : FlywheelIO {
         get() = arrayOf(detectedSignal)
 
     companion object Constants {
-        val PID_GAINS = PIDGains()
-        val FF_GAINS = MotorFFGains()
+        val UPPER_PID_GAINS = PIDGains()
+        val UPPER_FF_GAINS = MotorFFGains()
+        val LOWER_PID_GAINS = PIDGains()
+        val LOWER_FF_GAINS = MotorFFGains()
     }
 }
 

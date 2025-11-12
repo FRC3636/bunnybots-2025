@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package com.frcteam3636.bunnybots2025.utils.math
 
 import com.ctre.phoenix6.configs.Slot0Configs
@@ -51,3 +52,5 @@ var Slot0Configs.pidGains: PIDGains
     }
 
 fun PIDGains.toPPLib() = com.pathplanner.lib.config.PIDConstants(p, i, d)
+
+fun PIDGains.toRevLib() = com.revrobotics.spark.config.ClosedLoopConfig().pid(p, i, d)
