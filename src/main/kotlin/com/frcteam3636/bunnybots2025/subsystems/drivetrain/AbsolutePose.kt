@@ -44,6 +44,8 @@ open class AbsolutePoseProviderInputs {
      */
     var measurements: Array<AbsolutePoseMeasurement> = arrayOf()
 
+    var latestTargetObservation = TargetObservation(Rotation2d.kZero, Rotation2d.kZero)
+
     /**
      * Whether the provider is connected.
      */
@@ -227,6 +229,8 @@ class LimelightPoseProvider(
             lock.lock()
             inputs.measurements = measurements
             inputs.observedTags = observedTags
+            inputs.latestTargetObservation =
+                TargetObservation(Rotation2d(txSubscriber.get().degrees), Rotation2d(tySubscriber.get().degrees))
             observedTags = intArrayOf()
             measurements = arrayOf()
         } finally {
@@ -274,6 +278,11 @@ class PhotonVisionPoseProvider(name: String, val chassisToCamera: Transform3d) :
 
         for (result in camera.allUnreadResults) {
             if (result.hasTargets()) {
+                inputs.latestTargetObservation =
+                    TargetObservation(
+                        Rotation2d(result.bestTarget.yaw.degrees),
+                        Rotation2d(result.bestTarget.pitch.degrees)
+                    )
                 if (result.multitagResult.isPresent) {
                     val multitagResult = result.multitagResult.get()
 
@@ -326,6 +335,8 @@ class PhotonVisionPoseProvider(name: String, val chassisToCamera: Transform3d) :
                         )
                     }
                 }
+            } else {
+                inputs.latestTargetObservation = TargetObservation()
             }
         }
     }
@@ -396,6 +407,17 @@ data class AbsolutePoseMeasurement(
     }
 }
 
+data class TargetObservation(
+    val tx: Rotation2d = Rotation2d.kZero,
+    val ty: Rotation2d = Rotation2d.kZero,
+) : StructSerializable {
+    companion object {
+        @JvmField
+        @Suppress("unused")
+        val struct = TargetObservationStruct()
+    }
+}
+
 fun SwerveDrivePoseEstimator.addAbsolutePoseMeasurement(measurement: AbsolutePoseMeasurement) {
     addVisionMeasurement(
         measurement.pose,
@@ -434,6 +456,27 @@ class AbsolutePoseMeasurementStruct : Struct<AbsolutePoseMeasurement> {
     }
 }
 
+class TargetObservationStruct : Struct<TargetObservation> {
+    override fun getTypeClass(): Class<TargetObservation> = TargetObservation::class.java
+    override fun getTypeName(): String = "struct:TargetObservation"
+    override fun getTypeString(): String = "struct:TargetObservation"
+    override fun getSize(): Int =
+        Rotation2d.struct.size * 2
+
+    override fun getSchema(): String = "Rotation2d tx; Rotation2d ty;"
+
+    override fun unpack(bb: ByteBuffer): TargetObservation =
+        TargetObservation(
+            Rotation2d.struct.unpack(bb),
+            Rotation2d.struct.unpack(bb)
+        )
+
+
+    override fun pack(bb: ByteBuffer, value: TargetObservation) {
+        Rotation2d.struct.pack(bb, value.tx)
+        Rotation2d.struct.pack(bb, value.ty)
+    }
+}
 
 internal val APRIL_TAG_STD_DEV = { distance: Double, count: Int ->
     val stdDevFactor = distance.pow(2) / count.toDouble()
