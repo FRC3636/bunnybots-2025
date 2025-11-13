@@ -92,7 +92,7 @@ object Robot : LoggedRobot() {
         }
     }
 
-    // This is here because if we put it in drivetrain a NullPointException is thrown
+    // This is here because if we put it in drivetrain a NullPointerException is thrown
     // from PhoenixOdometryThread.
     // I'm guessing this is some sort of race condition.
     // We should look into waiting to initialize PhoenixOdometryThread
@@ -225,7 +225,7 @@ object Robot : LoggedRobot() {
                     ).until(Shooter.Flywheels.isDetected),
                     Shooter.Flywheels.isDetected
                 ),
-                Indexer.index(),
+                Indexer.index().repeatedly(), // retry until subsystem is released. just in case we are shooting at the same time.
             )
         )
     }
@@ -234,7 +234,7 @@ object Robot : LoggedRobot() {
         return Commands.parallel(
             Shooter.Flywheels.shoot(),
             Commands.sequence(
-                Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                Shooter.Feeder.backup().until(Shooter.Flywheels.atDesiredVelocity),
                 Commands.parallel(
                     Shooter.Feeder.feed(Command.InterruptionBehavior.kCancelIncoming),
                     Indexer.index(),

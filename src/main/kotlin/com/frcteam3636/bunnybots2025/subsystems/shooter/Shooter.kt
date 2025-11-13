@@ -208,6 +208,16 @@ object Shooter {
                     io.setSpeed(0.0)
                 }
             ).withInterruptBehavior(interruptBehavior)
+
+        fun backup(): Command =
+            startEnd(
+                {
+                    io.setSpeed(-0.1)
+                },
+                {
+                    io.setSpeed(0.0)
+                }
+            )
     }
 }
 
