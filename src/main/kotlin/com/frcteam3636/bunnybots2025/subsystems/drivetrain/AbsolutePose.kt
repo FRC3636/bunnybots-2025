@@ -120,14 +120,14 @@ class LimelightPoseProvider(
         get() = yawGetter()
 
     init {
-        thread(isDaemon = true) {
+        thread(isDaemon = true) { // TODO: do we need to keep this in a thread?
             while (true) {
                 val temp = updateCurrentMeasurements()
                 try {
                     lock.lock()
-                    for (measurement in measurements) {
-                        measurements += measurement
-                        observedTags += observedTags
+                    for (measurement in temp) {
+                        measurements += measurement.poseMeasurement!!
+                        observedTags += measurement.observedTags
                     }
                 } finally {
                     lock.unlock()
