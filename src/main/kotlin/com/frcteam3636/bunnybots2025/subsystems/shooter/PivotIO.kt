@@ -85,7 +85,9 @@ class PivotIOReal : PivotIO {
         }
     }
 
-    val positionControl: MotionMagicVoltage = MotionMagicVoltage(0.0).withUpdateFreqHz(0.0)
+    val positionControl: MotionMagicVoltage = MotionMagicVoltage(0.0).apply {
+        UpdateFreqHz = 0.0
+    }
 
     override fun turnToAngle(angle: Angle) {
         assert(angle > 0.degrees)

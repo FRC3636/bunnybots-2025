@@ -68,7 +68,7 @@ class Mk5nSwerveModule(
 
     override val state: SwerveModuleState
         get() = SwerveModuleState(
-            drivingMotor.velocity.inMetersPerSecond(),
+            drivingMotor.velocity,
             Rotation2d.fromRadians(turningMotor.position.inRadians()) + chassisAngle
         )
 
@@ -93,10 +93,10 @@ class Mk5nSwerveModule(
             val corrected = SwerveModuleState(value.speedMetersPerSecond, value.angle - chassisAngle)
             // optimize the state to avoid rotating more than 90 degrees
             corrected.optimize(
-                Rotation2d.fromRadians(turningMotor.position.inRadians())
+                Rotation2d(turningMotor.position)
             )
 
-            drivingMotor.velocity = corrected.speed
+            drivingMotor.velocity = corrected.speed + (turningMotor.velocity * COUPLING_RATIO).toLinear(WHEEL_RADIUS)
             turningMotor.position = corrected.angle.measure
 
 
@@ -114,7 +114,9 @@ class Mk5nSwerveModule(
         odometryDrivePositions = drivingMotor.odometryDrivePositions
         odometryPositions = Array(odometryTimestamps.size) { index ->
             SwerveModulePosition(
-                odometryDrivePositions[index].radians.toLinear(WHEEL_RADIUS),
+                (odometryDrivePositions[index].radians - (odometryTurnPositions[index].rotations.rotations * COUPLING_RATIO)).toLinear(
+                    WHEEL_RADIUS
+                ),
                 odometryTurnPositions[index] + chassisAngle
             )
         }
@@ -125,6 +127,7 @@ class Mk5nSwerveModule(
 
 interface SwerveTurningMotor {
     var position: Angle
+    val velocity: AngularVelocity
     var odometryTurnPositions: Array<Rotation2d>
     val temperature: Temperature
     val signals: Array<BaseStatusSignal>
@@ -172,7 +175,7 @@ class DrivingTalon(id: CTREDeviceId) : SwerveDrivingMotor {
 
     init {
         BaseStatusSignal.setUpdateFrequencyForAll(250.0, positionSignal)
-        BaseStatusSignal.setUpdateFrequencyForAll(100.0, velocitySignal)
+        BaseStatusSignal.setUpdateFrequencyForAll(100.0, velocitySignal, temperatureSignal)
         inner.optimizeBusUtilization()
     }
 
@@ -184,6 +187,7 @@ class DrivingTalon(id: CTREDeviceId) : SwerveDrivingMotor {
 
     private var velocityControl = VelocityVoltage(0.0).apply {
         EnableFOC = true
+        UpdateFreqHz = 0.0
     }
 
     override var velocity: LinearVelocity
@@ -235,6 +239,7 @@ class TurningTalon(id: CTREDeviceId, encoderId: CTREDeviceId, magnetOffset: Doub
     }
 
     private val positionSignal = inner.position
+    private val velocitySignal = inner.velocity
     private val temperatureSignal = inner.deviceTemp
 
     private val positionQueue: Queue<Double> =
@@ -248,11 +253,13 @@ class TurningTalon(id: CTREDeviceId, encoderId: CTREDeviceId, magnetOffset: Doub
             })
         }
         BaseStatusSignal.setUpdateFrequencyForAll(250.0, positionSignal)
+        BaseStatusSignal.setUpdateFrequencyForAll(100.0, velocitySignal, temperatureSignal)
         inner.optimizeBusUtilization()
     }
 
     private val positonControl = PositionVoltage(0.0).apply {
         EnableFOC = true
+        UpdateFreqHz = 0.0
     }
 
     override val temperature: Temperature
@@ -264,10 +271,13 @@ class TurningTalon(id: CTREDeviceId, encoderId: CTREDeviceId, magnetOffset: Doub
         }
         get() = positionSignal.value
 
-    override val signals: Array<BaseStatusSignal> = arrayOf(positionSignal, temperatureSignal)
+    override val velocity: AngularVelocity
+        get() = velocitySignal.value
+
+    override val signals: Array<BaseStatusSignal> = arrayOf(positionSignal, temperatureSignal, velocitySignal)
 
     override fun periodic() {
-        odometryTurnPositions = positionQueue.map { Rotation2d.fromRotations(it) }.toTypedArray()
+        odometryTurnPositions = positionQueue.map { Rotation2d(it.rotations) }.toTypedArray()
         positionQueue.clear()
     }
 }
@@ -352,3 +362,5 @@ internal val TURNING_FF_GAINS: MotorFFGains = TunerConstants.steerGains!!.motorF
 
 internal val TURNING_CURRENT_LIMIT = TunerConstants.kSteerCurrentLimit
 internal val DRIVING_CURRENT_LIMIT = TunerConstants.kSlipCurrent // FIXME: Calculate
+
+const val COUPLING_RATIO = 0.0

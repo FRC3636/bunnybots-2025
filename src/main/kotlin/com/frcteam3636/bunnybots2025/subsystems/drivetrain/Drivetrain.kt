@@ -246,9 +246,10 @@ object Drivetrain : Subsystem {
                 val odometryTimestamps = io.odometryTimestamps
                 val odometryPositions = io.odometryPositions
                 val odometryYawPositons = io.odometryYawPositions
-                Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions[0].size)
+                Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions.first().size)
                 for (i in 0..<odometryTimestamps.size) {
                     val modulePositions = Array(4) { index ->
+                        odometryPositions[index][i].distanceMeters
                         odometryPositions[index][i]
                     }
                     val moduleDeltas = Array(4) { index ->
@@ -262,7 +263,7 @@ object Drivetrain : Subsystem {
                     }
 
                     rawGyroRotation = if (inputs.gyroConnected) {
-                        Rotation2d.fromDegrees(odometryYawPositons[i])
+                        Rotation2d(odometryYawPositons[i].degrees)
                     } else {
                         rawGyroRotation.plus(Rotation2d(kinematics.toTwist2d(*moduleDeltas).dtheta))
                     }
