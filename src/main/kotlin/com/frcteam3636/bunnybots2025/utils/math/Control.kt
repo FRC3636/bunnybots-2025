@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package com.frcteam3636.bunnybots2025.utils.math
 
 import com.ctre.phoenix6.configs.Slot0Configs
@@ -8,6 +9,8 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward
 import edu.wpi.first.math.trajectory.TrapezoidProfile
 
 data class MotorFFGains(val s: Double = 0.0, val v: Double = 0.0, val a: Double = 0.0)
+
+fun MotorFFGains.toSimpleMotorFeedforward(): SimpleMotorFeedforward = SimpleMotorFeedforward(s, v, a)
 
 fun SimpleMotorFeedforward(gains: MotorFFGains) = SimpleMotorFeedforward(gains.s, gains.v, gains.a)
 
@@ -49,3 +52,5 @@ var Slot0Configs.pidGains: PIDGains
     }
 
 fun PIDGains.toPPLib() = com.pathplanner.lib.config.PIDConstants(p, i, d)
+
+fun PIDGains.toRevLib() = com.revrobotics.spark.config.ClosedLoopConfig().pid(p, i, d)

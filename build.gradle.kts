@@ -16,7 +16,7 @@ plugins {
 }
 
 val javaVersion by extra(17)
-val jvmVendor: JvmVendorSpec by extra { JvmVendorSpec.AMAZON }
+val jvmVendor: JvmVendorSpec by extra { JvmVendorSpec.ADOPTIUM }
 
 @Suppress("PropertyName")
 val ROBOT_MAIN_CLASS = "com.frcteam3636.bunnybots2025.Main"
@@ -105,6 +105,12 @@ deploy {
 
         roborio.artifacts {
             register<FRCJavaArtifact>("frcJava") {
+//                jvmArgs.add("-Dcom.sun.management.jmxremote=true")
+//                jvmArgs.add("-Dcom.sun.management.jmxremote.port=1198")
+//                jvmArgs.add("-Dcom.sun.management.jmxremote.local.only=false")
+//                jvmArgs.add("-Dcom.sun.management.jmxremote.ssl=false")
+//                jvmArgs.add("-Dcom.sun.management.jmxremote.authenticate=false")
+//                jvmArgs.add("-Djava.rmi.server.hostname=10.36.36.2")
                 jvmArgs.add("-XX:+UnlockExperimentalVMOptions")
                 jvmArgs.add("-XX:GCTimeRatio=5")
                 jvmArgs.add("-XX:+UseSerialGC")
@@ -135,6 +141,7 @@ dependencies {
     annotationProcessor(wpi.java.deps.wpilibAnnotations())
     implementation(wpi.java.deps.wpilib())
     implementation(wpi.java.vendor.java())
+    implementation("com.google.code.gson:gson:2.13.1")
 
     roborioDebug(wpi.java.deps.wpilibJniDebug(NativePlatforms.roborio))
     roborioDebug(wpi.java.vendor.jniDebug(NativePlatforms.roborio))

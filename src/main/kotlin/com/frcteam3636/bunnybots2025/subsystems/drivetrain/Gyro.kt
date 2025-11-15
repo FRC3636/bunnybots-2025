@@ -6,15 +6,14 @@ import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.utils.math.degreesPerSecond
 import com.frcteam3636.bunnybots2025.utils.math.radiansPerSecond
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
-import com.frcteam3636.bunnybots2025.utils.swerve.translation2dPerSecond
 import com.studica.frc.AHRS
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.units.measure.AngularVelocity
-import org.ironmaple.simulation.drivesims.GyroSimulation
 import org.littletonrobotics.junction.Logger
-import java.util.Queue
+import java.util.*
 import kotlin.math.sign
+
 
 interface Gyro {
     /**
@@ -34,15 +33,16 @@ interface Gyro {
     var odometryYawPositions: DoubleArray
     var odometryYawTimestamps: DoubleArray
 
+    val signals: Array<BaseStatusSignal>
+        get() = emptyArray()
+
     fun periodic() {}
-    fun getStatusSignals(): Array<BaseStatusSignal> {
-        return arrayOf()
-    }
 }
 
+@Suppress("unused") // and hopefully it stays that way
 class GyroNavX(private val ahrs: AHRS) : Gyro {
 
-    private var offset = Rotation2d()
+    private var offset = Rotation2d.kZero
 
     init {
         Logger.recordOutput("NavXGyro/Offset", offset)
@@ -78,7 +78,8 @@ class GyroPigeon(private val pigeon: Pigeon2) : Gyro {
             250.0,
             yawSignal
         )
-        BaseStatusSignal.setUpdateFrequencyForAll(50.0,
+        BaseStatusSignal.setUpdateFrequencyForAll(
+            100.0,
             pitchSignal,
             rollSignal,
             angularVelocitySignal
@@ -104,14 +105,13 @@ class GyroPigeon(private val pigeon: Pigeon2) : Gyro {
     override val connected
         get() = yawSignal.status.isOK
 
-    override fun getStatusSignals(): Array<BaseStatusSignal> {
-        return arrayOf(
+    override val signals: Array<BaseStatusSignal>
+        get() = arrayOf(
             yawSignal,
             pitchSignal,
             rollSignal,
             angularVelocitySignal
         )
-    }
 
     override fun periodic() {
         odometryYawTimestamps = yawTimestampQueue.toDoubleArray()
@@ -122,46 +122,37 @@ class GyroPigeon(private val pigeon: Pigeon2) : Gyro {
 }
 
 class GyroSim(private val modules: PerCorner<SwerveModule>) : Gyro {
-    override var rotation = Rotation2d()
+    override var rotation: Rotation2d = Rotation2d.kZero
     override var velocity: AngularVelocity = 0.radiansPerSecond
-        private set
     override val connected = true
-    override var odometryYawPositions: DoubleArray
-        get() = TODO("Not yet implemented")
-        set(value) = TODO("Not yet implemented")
-    override var odometryYawTimestamps: DoubleArray
-        get() = TODO("Not yet implemented")
-        set(value) = TODO("Not yet implemented")
+    override var odometryYawPositions: DoubleArray = doubleArrayOf()
+    override var odometryYawTimestamps: DoubleArray = doubleArrayOf()
+
     override fun periodic() {
-        // Calculate the average translation velocity of each module
-        val moduleVelocities = modules.map { it.state.translation2dPerSecond }
-        val translationVelocity = moduleVelocities.reduce(Translation2d::plus) / moduleVelocities.size.toDouble()
+        val moduleStates = modules.map { it.state }.toTypedArray()
+        val velocityMap = moduleStates
+            .map { Translation2d(it.speedMetersPerSecond, it.angle) }
+            .reduce(Translation2d::plus)
+            .div(moduleStates.size.toDouble())
 
-        // Use the front left module's rotational velocity to calculate the yaw velocity
-        val rotationalVelocities = moduleVelocities.map { it - translationVelocity }
-        val yawVelocity =
-            sign(rotationalVelocities.frontLeft.y) * rotationalVelocities.frontLeft.norm /
-                    Drivetrain.Constants.MODULE_POSITIONS.frontLeft.position.translation.norm
+        val referenceModule = modules.frontLeft.state
+        val referenceModulePosition = Translation2d(
+            TunerConstants.FrontLeft!!.LocationX,
+            TunerConstants.FrontLeft.LocationY
+        )
 
-        velocity = yawVelocity.radiansPerSecond
-        rotation += Rotation2d(yawVelocity) * Robot.period
+        val referenceModuleVelocity = Translation2d(referenceModule.speedMetersPerSecond, referenceModule.angle)
+        val referenceRotationalVelocityComponent = referenceModuleVelocity.minus(velocityMap)
+
+        val cross = referenceModulePosition.x * referenceRotationalVelocityComponent.y -
+                referenceModulePosition.y * referenceRotationalVelocityComponent.x
+
+        val turningDirection = cross.sign  // +1.0 for CCW, -1.0 for CW, 0.0 if no rotation
+
+        val turnRateMagnitude = referenceRotationalVelocityComponent.norm / referenceModulePosition.norm
+        val turnRate = Rotation2d.fromRadians(turnRateMagnitude * turningDirection)
+
+        velocity = turnRate.degrees.degreesPerSecond
+        rotation = rotation.plus(turnRate.times(Robot.period))
     }
-}
-
-class GyroMapleSim(val gyroSimulation: GyroSimulation) : Gyro {
-    override var odometryYawPositions: DoubleArray
-        get() = TODO("Not yet implemented")
-        set(value) = TODO("Not yet implemented")
-    override var odometryYawTimestamps: DoubleArray
-        get() = TODO("Not yet implemented")
-        set(value) = TODO("Not yet implemented")
-    override var rotation: Rotation2d
-        get() = gyroSimulation.gyroReading
-        set(value) {
-            gyroSimulation.setRotation(value)
-        }
-    override val velocity: AngularVelocity
-        get() = gyroSimulation.measuredAngularVelocity
-    override val connected: Boolean
-        get() = true
 }
