@@ -87,7 +87,7 @@ object Drivetrain : Subsystem {
             Commands.run({
                 val speed = limiter.calculate(0.1)
                 driveWithoutDeadband(Translation2d(), Translation2d(0.0, speed))
-            }, Drivetrain)
+            }, this)
         ),
         Commands.sequence(
             // Wait for modules to orient
