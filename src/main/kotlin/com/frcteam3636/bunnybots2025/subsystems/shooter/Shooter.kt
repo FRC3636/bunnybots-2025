@@ -221,7 +221,7 @@ object Shooter {
     }
 }
 
-data class PivotProfile(
+data class ShooterProfile(
     val getPosition: () -> Angle,
     val getVelocity: () -> AngularVelocity
 )
@@ -243,9 +243,9 @@ val flywheelTunable = LoggedNetworkNumber("/Tuning/FlywheelTestSpeed", 0.0)
 
 
 // should we move this inside the shooter object?
-enum class Target(val profile: PivotProfile) {
+enum class Target(val profile: ShooterProfile) {
     AIM(
-        PivotProfile(
+        ShooterProfile(
             {
                 angleInterpolationTable.getAngle(distanceToZoo())
             }, {
@@ -254,7 +254,7 @@ enum class Target(val profile: PivotProfile) {
         )
     ),
     PETTINGZOO(
-        PivotProfile(
+        ShooterProfile(
             {
                 45.degrees
             },
@@ -264,7 +264,7 @@ enum class Target(val profile: PivotProfile) {
         )
     ),
     STOWED(
-        PivotProfile(
+        ShooterProfile(
             {
                 12.degrees
             },
@@ -274,7 +274,7 @@ enum class Target(val profile: PivotProfile) {
         )
     ),
     TUNING(
-        PivotProfile(
+        ShooterProfile(
             {
                 pivotTunable.get().degrees
             },
