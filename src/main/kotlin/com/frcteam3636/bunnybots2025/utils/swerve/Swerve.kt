@@ -1,8 +1,8 @@
+@file:Suppress("unused")
+
 package com.frcteam3636.bunnybots2025.utils.swerve
 
-import com.frcteam3636.bunnybots2025.utils.math.inMetersPerSecond
-import com.frcteam3636.bunnybots2025.utils.math.metersPerSecond
-import com.frcteam3636.bunnybots2025.utils.math.radiansPerSecond
+import com.frcteam3636.bunnybots2025.utils.math.*
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Translation2d
 import edu.wpi.first.math.kinematics.ChassisSpeeds
@@ -10,6 +10,10 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics
 import edu.wpi.first.math.kinematics.SwerveModuleState
 import edu.wpi.first.units.measure.AngularVelocity
 import edu.wpi.first.units.measure.LinearVelocity
+import edu.wpi.first.units.measure.Temperature
+import edu.wpi.first.util.struct.Struct
+import edu.wpi.first.util.struct.StructSerializable
+import java.nio.ByteBuffer
 
 enum class DrivetrainCorner {
     FRONT_LEFT,
@@ -88,6 +92,13 @@ fun SwerveDriveKinematics.cornerStatesToChassisSpeeds(
 fun SwerveDriveKinematics(translations: PerCorner<Translation2d>) =
     SwerveDriveKinematics(*translations.toList().toTypedArray())
 
+inline fun <T> PerCorner<T>.forEachCornerIndexed(block: (corner: DrivetrainCorner, index: Int, value: T) -> Unit) {
+    block(DrivetrainCorner.FRONT_LEFT, 0, frontLeft)
+    block(DrivetrainCorner.FRONT_RIGHT, 1, frontRight)
+    block(DrivetrainCorner.BACK_LEFT, 2, backLeft)
+    block(DrivetrainCorner.BACK_RIGHT, 3, backRight)
+}
+
 /** The speed of the swerve module. */
 var SwerveModuleState.speed: LinearVelocity
     get() = speedMetersPerSecond.metersPerSecond
@@ -106,3 +117,34 @@ val ChassisSpeeds.angularVelocity: AngularVelocity
     get() = omegaRadiansPerSecond.radiansPerSecond
 
 data class Corner(val position: Pose2d, val magnetOffset: Double)
+
+data class SwerveModuleTemperature(
+    val drivingMotorTemperature: Temperature,
+    val turningMotorTemperature: Temperature
+) : StructSerializable {
+    @JvmField
+    @Suppress("unused")
+    val struct = SwerveModuleTemperatureStruct()
+}
+
+class SwerveModuleTemperatureStruct : Struct<SwerveModuleTemperature> {
+    override fun getTypeClass(): Class<SwerveModuleTemperature> = SwerveModuleTemperature::class.java
+    override fun getTypeName(): String = "struct:SwerveModuleTemperature"
+    override fun getTypeString(): String = "struct:SwerveModuleTemperature"
+    override fun getSize(): Int =
+        Struct.kSizeDouble * 2
+
+    override fun getSchema(): String =
+        "double drivingMotorTemperatureCelsius; double turningMotorTemperatureCelsius;"
+
+    override fun unpack(bb: ByteBuffer): SwerveModuleTemperature =
+        SwerveModuleTemperature(
+            bb.double.celsius,
+            bb.double.celsius
+        )
+
+    override fun pack(bb: ByteBuffer, value: SwerveModuleTemperature) {
+        bb.putDouble(value.drivingMotorTemperature.inCelsius())
+        bb.putDouble(value.turningMotorTemperature.inCelsius())
+    }
+}
