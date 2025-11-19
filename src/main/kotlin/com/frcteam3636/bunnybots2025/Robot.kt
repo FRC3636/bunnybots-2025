@@ -238,8 +238,7 @@ object Robot : LoggedRobot() {
                 Commands.parallel(
                     Shooter.Feeder.feed(Command.InterruptionBehavior.kCancelIncoming),
                     Indexer.index(),
-                    blinkLimelight()
-                ).alongWith(
+                    blinkLimelight(),
                     Commands.sequence(
                         Commands.waitUntil(Shooter.Flywheels.isDetected),
                         Commands.runOnce({
@@ -378,14 +377,14 @@ object Robot : LoggedRobot() {
     }
 
     override fun autonomousInit() {
-        if (!RobotState.beforeFirstEnable)
-            RobotState.beforeFirstEnable = true
+        if (RobotState.beforeFirstEnable)
+            RobotState.beforeFirstEnable = false
 
     }
 
     override fun teleopInit() {
-        if (!RobotState.beforeFirstEnable)
-            RobotState.beforeFirstEnable = true
+        if (RobotState.beforeFirstEnable)
+            RobotState.beforeFirstEnable = false
     }
 
     override fun testInit() {
