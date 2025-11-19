@@ -225,8 +225,7 @@ class LimelightPoseProvider(
         if (Robot.isDisabled) { // we don't care about cropping when disabled, seed pose estimator
             LimelightHelpers.setPipelineIndex(name, CLOSE_PIPELINE)
             LimelightHelpers.setCropWindow(name, -1.0, 1.0, -1.0, 1.0)
-        }
-        if (tvSubscriber.get().toInt() == 0) {
+        } else if (tvSubscriber.get().toInt() == 0) {
             // No target, enable search mode
             LimelightHelpers.setPipelineIndex(name, SEARCH_PIPELINE)
             LimelightHelpers.setCropWindow(name, -1.0, 1.0, -1.0, 1.0)
