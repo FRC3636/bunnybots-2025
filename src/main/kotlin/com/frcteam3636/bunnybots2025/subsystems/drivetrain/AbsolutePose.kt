@@ -18,6 +18,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Transform3d
+import edu.wpi.first.math.geometry.Translation3d
 import edu.wpi.first.math.numbers.N1
 import edu.wpi.first.math.numbers.N3
 import edu.wpi.first.networktables.NetworkTableInstance
@@ -104,6 +105,7 @@ class LimelightPoseProvider(
     private var hbSubscriber = table.getDoubleTopic("hb").subscribe(0.0)
     private var txSubscriber = table.getDoubleTopic("tx").subscribe(0.0)
     private var tySubscriber = table.getDoubleTopic("ty").subscribe(0.0)
+    private var tvSubscriber = table.getIntegerTopic("tv").subscribe(0)
     private var megatag1Subscriber = table.getDoubleArrayTopic("botpose_wpiblue").subscribe(doubleArrayOf())
     private var megatag2Subscriber =
         table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe(doubleArrayOf())
@@ -220,6 +222,30 @@ class LimelightPoseProvider(
             measurements += measurement
         }
 
+        if (Robot.isDisabled) { // we don't care about cropping when disabled, seed pose estimator
+            LimelightHelpers.setPipelineIndex(name, CLOSE_PIPELINE)
+            LimelightHelpers.setCropWindow(name, -1.0, 1.0, -1.0, 1.0)
+        }
+        if (tvSubscriber.get().toInt() == 0) {
+            // No target, enable search mode
+            LimelightHelpers.setPipelineIndex(name, SEARCH_PIPELINE)
+            LimelightHelpers.setCropWindow(name, -1.0, 1.0, -1.0, 1.0)
+        } else {
+            // Target found, set correct pipeline and search window
+            val pose = LimelightHelpers.getTargetPose_RobotSpace(name)
+            val distance = Translation3d(
+                pose[0],   // x (forward/backward)
+                pose[1],   // y (left/right)
+                pose[2]    // z (up/down)
+            ).norm.meters
+
+            if (distance > DISABLE_DOWNSCALE_DISTANCE) {
+                LimelightHelpers.setPipelineIndex(name, FAR_PIPELINE)
+            } else {
+                LimelightHelpers.setPipelineIndex(name, CLOSE_PIPELINE)
+            }
+        }
+
 
         return measurements
     }
@@ -256,6 +282,8 @@ class LimelightPoseProvider(
          */
         private val MAX_SINGLE_TAG_DISTANCE = 3.meters
 
+        private val DISABLE_DOWNSCALE_DISTANCE = 1.0.meters
+
         /**
          * The acceptable ambiguity for a single-tag reading on MegaTag v1.
          */
@@ -265,6 +293,13 @@ class LimelightPoseProvider(
          * The amount of time (in robot ticks) an update before considering the camera to be disconnected.
          */
         private const val CONNECTED_TIMEOUT = 250.0
+
+        // 2d tracking, search for targets
+        private const val SEARCH_PIPELINE = 0
+        // 3d, downscaled
+        private const val CLOSE_PIPELINE = 1
+        // 3d, no downscale
+        private const val FAR_PIPELINE = 2
     }
 }
 
