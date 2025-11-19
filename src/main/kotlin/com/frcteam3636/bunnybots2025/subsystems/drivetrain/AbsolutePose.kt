@@ -12,6 +12,7 @@ import com.frcteam3636.bunnybots2025.utils.math.degrees
 import com.frcteam3636.bunnybots2025.utils.math.inSeconds
 import com.frcteam3636.bunnybots2025.utils.math.meters
 import com.frcteam3636.bunnybots2025.utils.math.seconds
+import edu.wpi.first.math.MathUtil.clamp
 import edu.wpi.first.math.Matrix
 import edu.wpi.first.math.VecBuilder
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator
@@ -113,6 +114,8 @@ class LimelightPoseProvider(
 
     private var isThrottled = false
 
+    private var currentPipeline = SEARCH_PIPELINE
+
     private var wasIMUChanged = false
 
     private var cornerCount = 0
@@ -124,6 +127,7 @@ class LimelightPoseProvider(
         get() = yawGetter()
 
     init {
+        LimelightHelpers.setPipelineIndex(name, currentPipeline)
         thread(isDaemon = true) { // TODO: do we need to keep this in a thread?
             while (true) {
                 val temp = updateCurrentMeasurements()
@@ -223,11 +227,15 @@ class LimelightPoseProvider(
         }
 
         if (Robot.isDisabled) { // we don't care about cropping when disabled, seed pose estimator
-            LimelightHelpers.setPipelineIndex(name, CLOSE_PIPELINE)
+            if(currentPipeline != CLOSE_PIPELINE)
+                LimelightHelpers.setPipelineIndex(name, CLOSE_PIPELINE)
+            currentPipeline = CLOSE_PIPELINE
             LimelightHelpers.setCropWindow(name, -1.0, 1.0, -1.0, 1.0)
         } else if (tvSubscriber.get().toInt() == 0) {
             // No target, enable search mode
-            LimelightHelpers.setPipelineIndex(name, SEARCH_PIPELINE)
+            if (currentPipeline != SEARCH_PIPELINE)
+                LimelightHelpers.setPipelineIndex(name, SEARCH_PIPELINE)
+            currentPipeline = SEARCH_PIPELINE
             LimelightHelpers.setCropWindow(name, -1.0, 1.0, -1.0, 1.0)
         } else {
             // Target found, set correct pipeline and search window
@@ -239,10 +247,25 @@ class LimelightPoseProvider(
             ).norm.meters
 
             if (distance > DISABLE_DOWNSCALE_DISTANCE) {
-                LimelightHelpers.setPipelineIndex(name, FAR_PIPELINE)
+                if (currentPipeline != FAR_PIPELINE)
+                    LimelightHelpers.setPipelineIndex(name, FAR_PIPELINE)
+                currentPipeline = FAR_PIPELINE
             } else {
-                LimelightHelpers.setPipelineIndex(name, CLOSE_PIPELINE)
+                if (currentPipeline != CLOSE_PIPELINE)
+                    LimelightHelpers.setPipelineIndex(name, CLOSE_PIPELINE)
+                currentPipeline = CLOSE_PIPELINE
             }
+
+            // calculate cropping
+            val xCrop = (txSubscriber.get() / HORIZONTAL_FOV)
+            val yCrop = (tySubscriber.get() / VERTICAL_FOV)
+
+            val minXCrop = clamp(xCrop - HORIZONTAL_CROP_PADDING, -1.0, 1.0)
+            val minYCrop = clamp(yCrop - VERTICAL_CROP_PADDING, -1.0, 1.0)
+            val maxXCrop = clamp(xCrop + HORIZONTAL_CROP_PADDING, -1.0, 1.0)
+            val maxYCrop = clamp(yCrop + VERTICAL_CROP_PADDING, -1.0, 1.0)
+
+            LimelightHelpers.setCropWindow(name, minXCrop, maxXCrop, minYCrop, maxYCrop)
         }
 
 
@@ -282,6 +305,12 @@ class LimelightPoseProvider(
         private val MAX_SINGLE_TAG_DISTANCE = 3.meters
 
         private val DISABLE_DOWNSCALE_DISTANCE = 1.0.meters
+
+        // actual FOV divided by two because tx/ty are -(FOV / 2) to (FOV / 2)
+        private const val HORIZONTAL_FOV = (82.0 / 2.0)
+        private const val VERTICAL_FOV = (56.2 / 2.0)
+        private const val HORIZONTAL_CROP_PADDING = 0.1
+        private const val VERTICAL_CROP_PADDING = 0.1
 
         /**
          * The acceptable ambiguity for a single-tag reading on MegaTag v1.
