@@ -6,7 +6,6 @@ package com.frcteam3636.bunnybots2025.subsystems.drivetrain
 //import org.photonvision.PhotonPoseEstimator
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.RobotState
-import com.frcteam3636.bunnybots2025.utils.LimelightHelpers
 import com.frcteam3636.bunnybots2025.utils.LimelightHelpers.convertToLLPoseEstimate
 import com.frcteam3636.bunnybots2025.utils.math.degrees
 import com.frcteam3636.bunnybots2025.utils.math.inSeconds
@@ -84,7 +83,7 @@ data class LimelightMeasurement(
 } /* --- END KOTLIN COMPILER GENERATED CODE ---- */
 
 class LimelightPoseProvider(
-    private val name: String,
+    name: String,
     private val yawGetter: () -> Rotation2d,
     private val velocityGetter: () -> AngularVelocity,
     private val isLL4: Boolean
@@ -107,6 +106,9 @@ class LimelightPoseProvider(
     private var megatag1Subscriber = table.getDoubleArrayTopic("botpose_wpiblue").subscribe(doubleArrayOf())
     private var megatag2Subscriber =
         table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe(doubleArrayOf())
+    private val gyroPublisher = table.getDoubleArrayTopic("robot_orientation_set").publish()
+    private val throttlePublisher = table.getIntegerTopic("throttle_set").publish()
+    private val imuModePublisher = table.getIntegerTopic("imumode_set").publish()
     private var loopsSinceLastSeen: Int = 0
 
     private var isThrottled = false
@@ -143,33 +145,25 @@ class LimelightPoseProvider(
         var measurements: Array<LimelightMeasurement> = emptyArray()
 
         if (!isLL4) {
-            LimelightHelpers.SetRobotOrientation(
-                name,
-                gyroAngle.degrees,
-                // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
-                0.0, 0.0, 0.0, 0.0, 0.0
-            )
+            gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees,  0.0, 0.0, 0.0, 0.0, 0.0))
+            NetworkTableInstance.getDefault().flush()
         } else {
             if (RobotState.beforeFirstEnable) {
-                LimelightHelpers.SetIMUMode(name, 1)
-                LimelightHelpers.SetRobotOrientation(
-                    name,
-                    gyroAngle.degrees,
-                    // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
-                    0.0, 0.0, 0.0, 0.0, 0.0
-                )
+                imuModePublisher.accept(1.toLong())
+                gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees,  0.0, 0.0, 0.0, 0.0, 0.0))
+                NetworkTableInstance.getDefault().flush()
             }
             if (Robot.isDisabled && !isThrottled) {
-                LimelightHelpers.SetThrottle(name, 100)
+                throttlePublisher.accept(100.toLong())
                 isThrottled = true
             } else if (Robot.isEnabled && isThrottled) {
-                LimelightHelpers.SetThrottle(name, 0)
+                throttlePublisher.accept(0.toLong())
             }
         }
 
         if ((!RobotState.beforeFirstEnable)) {
             if (isLL4 && !wasIMUChanged) {
-                LimelightHelpers.SetIMUMode(name, 3)
+                imuModePublisher.accept(3.toLong())
                 wasIMUChanged = true
             }
         }
