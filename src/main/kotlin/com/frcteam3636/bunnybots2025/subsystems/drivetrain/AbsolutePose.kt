@@ -6,7 +6,6 @@ package com.frcteam3636.bunnybots2025.subsystems.drivetrain
 //import org.photonvision.PhotonPoseEstimator
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.RobotState
-import com.frcteam3636.bunnybots2025.utils.LimelightHelpers
 import com.frcteam3636.bunnybots2025.utils.LimelightHelpers.convertToLLPoseEstimate
 import com.frcteam3636.bunnybots2025.utils.math.degrees
 import com.frcteam3636.bunnybots2025.utils.math.inSeconds
@@ -86,7 +85,7 @@ data class LimelightMeasurement(
 } /* --- END KOTLIN COMPILER GENERATED CODE ---- */
 
 class LimelightPoseProvider(
-    private val name: String,
+    name: String,
     private val yawGetter: () -> Rotation2d,
     private val velocityGetter: () -> AngularVelocity,
     private val isLL4: Boolean
@@ -102,14 +101,20 @@ class LimelightPoseProvider(
     private var lock = ReentrantLock()
 
     private var lastSeenHb: Double = 0.0
-    private var table = NetworkTableInstance.getDefault().getTable(name)
-    private var hbSubscriber = table.getDoubleTopic("hb").subscribe(0.0)
-    private var txSubscriber = table.getDoubleTopic("tx").subscribe(0.0)
-    private var tySubscriber = table.getDoubleTopic("ty").subscribe(0.0)
-    private var tvSubscriber = table.getIntegerTopic("tv").subscribe(0)
-    private var megatag1Subscriber = table.getDoubleArrayTopic("botpose_wpiblue").subscribe(doubleArrayOf())
-    private var megatag2Subscriber =
+    private val table = NetworkTableInstance.getDefault().getTable(name)
+    private val hbSubscriber = table.getDoubleTopic("hb").subscribe(0.0)
+    private val txSubscriber = table.getDoubleTopic("tx").subscribe(0.0)
+    private val tySubscriber = table.getDoubleTopic("ty").subscribe(0.0)
+    private val tvSubscriber = table.getIntegerTopic("tv").subscribe(0)
+    private val megatag1Subscriber = table.getDoubleArrayTopic("botpose_wpiblue").subscribe(doubleArrayOf())
+    private val megatag2Subscriber =
         table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe(doubleArrayOf())
+    private val targetPoseRobotSpaceSubscriber = table.getDoubleArrayTopic("targetpose_robotspace").subscribe(doubleArrayOf(0.0, 0.0, 0.0))
+    private val gyroPublisher = table.getDoubleArrayTopic("robot_orientation_set").publish()
+    private val throttlePublisher = table.getIntegerTopic("throttle_set").publish()
+    private val imuModePublisher = table.getIntegerTopic("imumode_set").publish()
+    private val cropPublisher = table.getDoubleArrayTopic("crop").publish()
+    private val pipelinePublisher = table.getIntegerTopic("pipeline").publish()
     private var loopsSinceLastSeen: Int = 0
 
     private var isThrottled = false
@@ -127,7 +132,7 @@ class LimelightPoseProvider(
         get() = yawGetter()
 
     init {
-        LimelightHelpers.setPipelineIndex(name, currentPipeline)
+        pipelinePublisher.accept(currentPipeline.toLong())
         thread(isDaemon = true) { // TODO: do we need to keep this in a thread?
             while (true) {
                 val temp = updateCurrentMeasurements()
@@ -149,33 +154,25 @@ class LimelightPoseProvider(
         var measurements: Array<LimelightMeasurement> = emptyArray()
 
         if (!isLL4) {
-            LimelightHelpers.SetRobotOrientation(
-                name,
-                gyroAngle.degrees,
-                // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
-                0.0, 0.0, 0.0, 0.0, 0.0
-            )
+            gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees,  0.0, 0.0, 0.0, 0.0, 0.0))
+            NetworkTableInstance.getDefault().flush()
         } else {
             if (RobotState.beforeFirstEnable) {
-                LimelightHelpers.SetIMUMode(name, 1)
-                LimelightHelpers.SetRobotOrientation(
-                    name,
-                    gyroAngle.degrees,
-                    // The Limelight sample code leaves these as zero, and the API docs call them "Unnecessary."
-                    0.0, 0.0, 0.0, 0.0, 0.0
-                )
+                imuModePublisher.accept(1.toLong())
+                gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees,  0.0, 0.0, 0.0, 0.0, 0.0))
+                NetworkTableInstance.getDefault().flush()
             }
             if (Robot.isDisabled && !isThrottled) {
-                LimelightHelpers.SetThrottle(name, 100)
+                throttlePublisher.accept(100.toLong())
                 isThrottled = true
             } else if (Robot.isEnabled && isThrottled) {
-                LimelightHelpers.SetThrottle(name, 0)
+                throttlePublisher.accept(0.toLong())
             }
         }
 
         if ((!RobotState.beforeFirstEnable)) {
             if (isLL4 && !wasIMUChanged) {
-                LimelightHelpers.SetIMUMode(name, 3)
+                imuModePublisher.accept(3.toLong())
                 wasIMUChanged = true
             }
         }
@@ -227,19 +224,21 @@ class LimelightPoseProvider(
         }
 
         if (Robot.isDisabled) { // we don't care about cropping when disabled, seed pose estimator
-            if(currentPipeline != CLOSE_PIPELINE)
-                LimelightHelpers.setPipelineIndex(name, CLOSE_PIPELINE)
-            currentPipeline = CLOSE_PIPELINE
-            LimelightHelpers.setCropWindow(name, -1.0, 1.0, -1.0, 1.0)
+            if(currentPipeline != CLOSE_PIPELINE) {
+                pipelinePublisher.accept(CLOSE_PIPELINE.toLong())
+                currentPipeline = CLOSE_PIPELINE
+            }
+            cropPublisher.accept(doubleArrayOf(-1.0, 1.0, -1.0, 1.0))
         } else if (tvSubscriber.get().toInt() == 0) {
             // No target, enable search mode
-            if (currentPipeline != SEARCH_PIPELINE)
-                LimelightHelpers.setPipelineIndex(name, SEARCH_PIPELINE)
-            currentPipeline = SEARCH_PIPELINE
-            LimelightHelpers.setCropWindow(name, -1.0, 1.0, -1.0, 1.0)
+            if (currentPipeline != SEARCH_PIPELINE) {
+                pipelinePublisher.accept(SEARCH_PIPELINE.toLong())
+                currentPipeline = SEARCH_PIPELINE
+                cropPublisher.accept(doubleArrayOf(-1.0, 1.0, -1.0, 1.0))
+            }
         } else {
             // Target found, set correct pipeline and search window
-            val pose = LimelightHelpers.getTargetPose_RobotSpace(name)
+            val pose = targetPoseRobotSpaceSubscriber.get()
             val distance = Translation3d(
                 pose[0],   // x (forward/backward)
                 pose[1],   // y (left/right)
@@ -247,13 +246,15 @@ class LimelightPoseProvider(
             ).norm.meters
 
             if (distance > DISABLE_DOWNSCALE_DISTANCE) {
-                if (currentPipeline != FAR_PIPELINE)
-                    LimelightHelpers.setPipelineIndex(name, FAR_PIPELINE)
-                currentPipeline = FAR_PIPELINE
+                if (currentPipeline != FAR_PIPELINE) {
+                    pipelinePublisher.accept(FAR_PIPELINE.toLong())
+                    currentPipeline = FAR_PIPELINE
+                }
             } else {
-                if (currentPipeline != CLOSE_PIPELINE)
-                    LimelightHelpers.setPipelineIndex(name, CLOSE_PIPELINE)
-                currentPipeline = CLOSE_PIPELINE
+                if (currentPipeline != CLOSE_PIPELINE) {
+                    pipelinePublisher.accept(CLOSE_PIPELINE.toLong())
+                    currentPipeline = CLOSE_PIPELINE
+                }
             }
 
             // calculate cropping
@@ -265,7 +266,7 @@ class LimelightPoseProvider(
             val maxXCrop = clamp(xCrop + HORIZONTAL_CROP_PADDING, -1.0, 1.0)
             val maxYCrop = clamp(yCrop + VERTICAL_CROP_PADDING, -1.0, 1.0)
 
-            LimelightHelpers.setCropWindow(name, minXCrop, maxXCrop, minYCrop, maxYCrop)
+            cropPublisher.accept(doubleArrayOf(minXCrop, maxXCrop, minYCrop, maxYCrop))
         }
 
 
