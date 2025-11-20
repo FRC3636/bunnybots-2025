@@ -86,6 +86,7 @@ class LimelightPoseProvider(
     name: String,
     private val yawGetter: () -> Rotation2d,
     private val velocityGetter: () -> AngularVelocity,
+    private val gyroConnectionGetter: () -> Boolean,
     private val isLL4: Boolean
 ) : AbsolutePoseProvider {
     // References:
@@ -122,6 +123,9 @@ class LimelightPoseProvider(
 
     val gyroAngle: Rotation2d
         get() = yawGetter()
+
+    val gyroConnected: Boolean
+        get() = gyroConnectionGetter()
 
     init {
         thread(isDaemon = true) { // TODO: do we need to keep this in a thread?
@@ -196,7 +200,7 @@ class LimelightPoseProvider(
         }
 
         for (rawSample in megatag2Subscriber.readQueue()) {
-            if (rawSample.value.size == 0 || RobotState.beforeFirstEnable) continue
+            if (rawSample.value.size == 0 || RobotState.beforeFirstEnable || !gyroConnected) continue
             val measurement = LimelightMeasurement()
             val estimate = convertToLLPoseEstimate(rawSample.value, true)
             measurement.observedTags = estimate.rawFiducials.mapNotNull { it?.id }.toIntArray()
