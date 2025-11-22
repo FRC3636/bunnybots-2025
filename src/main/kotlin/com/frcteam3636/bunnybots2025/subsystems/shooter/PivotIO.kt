@@ -131,8 +131,8 @@ class PivotIOReal : PivotIO {
 
     companion object Constants {
         private val PID_GAINS = PIDGains(6.0, 0.0, 0.0)
-        private const val SENSOR_TO_MECHANISM_GEAR_RATIO = 0.0
-        private const val ROTOR_TO_SENSOR_GEAR_RATIO = 0.0
+        private const val SENSOR_TO_MECHANISM_GEAR_RATIO = 37.25
+        private const val ROTOR_TO_SENSOR_GEAR_RATIO = 1.0
         private const val MAGNET_OFFSET = 0.0
         private val HARDSTOP_OFFSET = 12.degrees.inRotations()
         val PROFILE_ACCELERATION = 5.0.degreesPerSecondPerSecond

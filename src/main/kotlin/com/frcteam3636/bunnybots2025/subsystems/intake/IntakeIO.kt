@@ -142,8 +142,8 @@ class IntakeIOReal : IntakeIO {
         val PROFILE_ACCELERATION = 0.0.degreesPerSecondPerSecond
         const val PROFILE_JERK = 0.0
         const val ENCODER_MAGNET_OFFSET = 0.0
-        const val ENCODER_TO_PIVOT_GEAR_RATIO = 0.0
-        const val MOTOR_TO_ENCODER_GEAR_RATIO = 0.0
+        const val ENCODER_TO_PIVOT_GEAR_RATIO = 2.25
+        const val MOTOR_TO_ENCODER_GEAR_RATIO = 4.0
     }
 }
 
