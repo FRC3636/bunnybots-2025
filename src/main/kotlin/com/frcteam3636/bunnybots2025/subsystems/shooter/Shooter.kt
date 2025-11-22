@@ -287,7 +287,7 @@ enum class Target(val profile: ShooterProfile) {
 
 val DriverStation.Alliance.zooTranslation: Translation2d
     get() = when (this) { // got these values from apriltag math
-        DriverStation.Alliance.Blue -> Translation2d(
+        DriverStation.Alliance.Red -> Translation2d(
             12.9327783.meters,
             4.0132127.meters,
         )
