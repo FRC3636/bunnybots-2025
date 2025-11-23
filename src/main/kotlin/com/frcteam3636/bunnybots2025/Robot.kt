@@ -10,7 +10,6 @@ import com.frcteam3636.bunnybots2025.subsystems.intake.Intake
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Target
 import com.frcteam3636.bunnybots2025.subsystems.shooter.zooTranslation
-import com.frcteam3636.bunnybots2025.utils.LimelightHelpers
 import com.frcteam3636.version.BUILD_DATE
 import com.frcteam3636.version.DIRTY
 import com.frcteam3636.version.GIT_BRANCH
@@ -200,19 +199,6 @@ object Robot : LoggedRobot() {
         RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler())
     }
 
-
-    fun blinkLimelight(): Command {
-        return Commands.sequence(
-            Commands.runOnce({
-                LimelightHelpers.setLEDMode_ForceBlink("limelight-left")
-            }),
-            Commands.waitSeconds(0.2),
-            Commands.runOnce({
-                LimelightHelpers.setLEDMode_ForceOff("limelight-left")
-            })
-        )
-    }
-
     fun doIntakeSequence(): Command {
         return Commands.parallel(
             Intake.intake(),
@@ -238,7 +224,6 @@ object Robot : LoggedRobot() {
                 Commands.parallel(
                     Shooter.Feeder.feed(Command.InterruptionBehavior.kCancelIncoming),
                     Indexer.index(),
-                    blinkLimelight(),
                     Commands.sequence(
                         Commands.waitUntil(Shooter.Flywheels.isDetected),
                         Commands.runOnce({
