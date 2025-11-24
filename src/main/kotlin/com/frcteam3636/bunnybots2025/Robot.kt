@@ -301,12 +301,24 @@ object Robot : LoggedRobot() {
         controllerDev.x().whileTrue(Shooter.Flywheels.sysIdDynamic(SysIdRoutine.Direction.kReverse))
 
 
-        controllerDev.rightTrigger()
+        controller.rightTrigger()
+            .whileTrue(Commands.parallel(
+                Shooter.Flywheels.shoot(),
+                Commands.sequence(
+                    Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                    Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
+                    Commands.parallel(
+                        Shooter.Feeder.feed(),
+                        Indexer.index()
+                    )
+                )
+            ))
             .onTrue(Shooter.Pivot.setTarget(Target.TUNING))
             .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
-        controllerDev.leftTrigger()
-            .onTrue(Shooter.Pivot.setTarget(Target.AIM))
-            .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
+//            .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
+//        controllerDev.leftTrigger()
+//            .onTrue(Shooter.Pivot.setTarget(Target.AIM))
+//            .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
 
         joystickDev.button(1).whileTrue(Drivetrain.calculateWheelRadius())
 

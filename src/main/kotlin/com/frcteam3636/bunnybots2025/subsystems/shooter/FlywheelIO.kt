@@ -48,7 +48,7 @@ class FlywheelIOReal : FlywheelIO {
         SparkFlex(REVDeviceId.UpperShooterMotor, SparkLowLevel.MotorType.kBrushless).apply {
             configure(SparkFlexConfig().apply {
                 idleMode(SparkBaseConfig.IdleMode.kCoast)
-
+                inverted(true)
                 closedLoop.apply {
                     UPPER_PID_GAINS.toRevLib()
                 }
@@ -58,7 +58,7 @@ class FlywheelIOReal : FlywheelIO {
         SparkFlex(REVDeviceId.LowerShooterMotor, SparkLowLevel.MotorType.kBrushless).apply {
             configure(SparkFlexConfig().apply {
                 idleMode(SparkBaseConfig.IdleMode.kCoast)
-
+                inverted(true)
                 closedLoop.apply {
                     LOWER_PID_GAINS.toRevLib()
                 }
@@ -128,10 +128,10 @@ class FlywheelIOReal : FlywheelIO {
 //        get() = arrayOf(detectedSignal)
 
     companion object Constants {
-        val UPPER_PID_GAINS = PIDGains()
-        val UPPER_FF_GAINS = MotorFFGains()
-        val LOWER_PID_GAINS = PIDGains()
-        val LOWER_FF_GAINS = MotorFFGains()
+        val UPPER_PID_GAINS = PIDGains(0.000046877)
+        val UPPER_FF_GAINS = MotorFFGains(0.10222, 0.0017569, 0.000086383)
+        val LOWER_PID_GAINS = PIDGains(0.0016303)
+        val LOWER_FF_GAINS = MotorFFGains(0.14943, 0.00182, 0.000088777)
     }
 }
 

@@ -4,6 +4,7 @@ import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.FIELD_LAYOUT
+import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Flywheels.setpoint
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Flywheels.speedInterpolationTable
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Pivot.angleInterpolationTable
 import com.frcteam3636.bunnybots2025.utils.math.*
@@ -27,6 +28,7 @@ import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber
+import kotlin.math.abs
 
 object Shooter {
     object Flywheels : Subsystem {
@@ -83,26 +85,18 @@ object Shooter {
         )
 
         @Suppress("unused")
-        fun sysIdQuasistatic(direction: SysIdRoutine.Direction): Command {
-            return run {
-                sysID.quasistatic(direction)
-            }
-        }
+        fun sysIdQuasistatic(direction: SysIdRoutine.Direction): Command = sysID.quasistatic(direction)
 
         @Suppress("unused")
-        fun sysIdDynamic(direction: SysIdRoutine.Direction): Command {
-            return run {
-                sysID.dynamic(direction)
-            }
-        }
+        fun sysIdDynamic(direction: SysIdRoutine.Direction): Command = sysID.dynamic(direction)
 
         override fun periodic() {
             io.updateInputs(inputs)
 
             Logger.processInputs("Shooter/Flywheels", inputs)
 
-            Logger.recordOutput("Shooter/Flywheels/Setpoint", setpoint)
-//            io.setVelocity(setpoint) // move this into commands?
+            Logger.recordOutput("Shooter/Flywheels/Setpoint", setpoint.inRPM())
+            io.setVelocity(setpoint) // move this into commands?
         }
 
         fun idle(): Command =
@@ -170,6 +164,12 @@ object Shooter {
             Logger.recordOutput("Shooter/Pivot/Mechanism", mechanism)
             Logger.recordOutput("Shooter/Pivot/Active Profile", target)
         }
+
+        val atDesiredPosition =
+            Trigger {
+                val difference = inputs.pivotAngle.inDegrees() - target.profile.getPosition().inDegrees()
+                abs(difference) < 2.0
+            }
 
         val signals: Array<BaseStatusSignal>
             get() = io.signals
