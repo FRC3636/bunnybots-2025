@@ -43,7 +43,7 @@ object Intake : Subsystem {
         Logger.recordOutput("Intake/Pivot/Mechanism", mechanism)
 
         // the extra 5 degrees is to account for encoder noise
-        if ((inputs.pivotPosition > 95.degrees || inputs.pivotPosition < (-50).degrees) && !inputs.pivotDisabled) {
+        if ((inputs.pivotPosition > 120.degrees || inputs.pivotPosition < (-75).degrees) && !inputs.pivotDisabled && Robot.isEnabled) {
             io.disablePivot()
             pivotDisabledAlert.set(true)
         }
@@ -91,8 +91,8 @@ object Intake : Subsystem {
         )
 
     enum class Position(val angle: Angle) {
-        Stowed((-45).degrees),
-        Deployed(90.degrees);
+        Stowed((-30).degrees),
+        Deployed(99.degrees);
     }
 
     val signals: Array<BaseStatusSignal>

@@ -102,7 +102,7 @@ object Shooter {
             Logger.processInputs("Shooter/Flywheels", inputs)
 
             Logger.recordOutput("Shooter/Flywheels/Setpoint", setpoint)
-            io.setVelocity(setpoint) // move this into commands?
+//            io.setVelocity(setpoint) // move this into commands?
         }
 
         fun idle(): Command =

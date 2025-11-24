@@ -6,10 +6,13 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
+import com.ctre.phoenix6.signals.InvertedValue
 import com.ctre.phoenix6.signals.NeutralModeValue
 import com.frcteam3636.bunnybots2025.*
 import com.frcteam3636.bunnybots2025.utils.math.*
+import com.revrobotics.spark.SparkBase
 import com.revrobotics.spark.SparkLowLevel
+import com.revrobotics.spark.config.SparkFlexConfig
 import edu.wpi.first.math.numbers.N1
 import edu.wpi.first.math.numbers.N2
 import edu.wpi.first.math.system.LinearSystem
@@ -50,7 +53,11 @@ class IntakeIOReal : IntakeIO {
     private var pivotDisabled = false
     private var brakeModeEnabled = true
 
-    private var intakeMotor = SparkFlex(REVDeviceId.IntakeMotor, SparkLowLevel.MotorType.kBrushless)
+    private var intakeMotor = SparkFlex(REVDeviceId.IntakeMotor, SparkLowLevel.MotorType.kBrushless).apply {
+        configure(SparkFlexConfig().apply {
+            inverted(true)
+        }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
+    }
     private var intakePivotMotor = TalonFX(CTREDeviceId.IntakePivotMotor).apply {
         configurator.apply(TalonFXConfiguration().apply {
             Slot0.apply {
@@ -69,6 +76,7 @@ class IntakeIOReal : IntakeIO {
             }
             MotorOutput.apply {
                 NeutralMode = NeutralModeValue.Brake
+                Inverted = InvertedValue.Clockwise_Positive
             }
         })
     }
@@ -137,11 +145,11 @@ class IntakeIOReal : IntakeIO {
     }
 
     companion object Constants {
-        val PID_GAINS = PIDGains(6.0, 0.0, 0.0)
-        val PROFILE_CRUISE_VELOCITY = 0.0.degreesPerSecond
-        val PROFILE_ACCELERATION = 0.0.degreesPerSecondPerSecond
+        val PID_GAINS = PIDGains(25.0, 0.0, 0.0)
+        val PROFILE_CRUISE_VELOCITY = 15.0.rotationsPerSecond
+        val PROFILE_ACCELERATION = 2.5.rotationsPerSecondPerSecond
         const val PROFILE_JERK = 0.0
-        const val ENCODER_MAGNET_OFFSET = 0.0
+        const val ENCODER_MAGNET_OFFSET = -0.134521
         const val ENCODER_TO_PIVOT_GEAR_RATIO = 2.25
         const val MOTOR_TO_ENCODER_GEAR_RATIO = 4.0
     }

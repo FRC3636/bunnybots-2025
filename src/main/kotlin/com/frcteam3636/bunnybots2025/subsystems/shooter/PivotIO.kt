@@ -7,6 +7,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.NeutralModeValue
+import com.ctre.phoenix6.signals.SensorDirectionValue
 import com.frcteam3636.bunnybots2025.CANcoder
 import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.TalonFX
@@ -80,7 +81,8 @@ class PivotIOReal : PivotIO {
         shooterPivotMotor.optimizeBusUtilization()
         CANcoder(CTREDeviceId.ShooterPivotEncoder).apply {
             configurator.apply(CANcoderConfiguration().apply {
-                MagnetSensor.MagnetOffset = MAGNET_OFFSET - HARDSTOP_OFFSET
+                MagnetSensor.MagnetOffset = MAGNET_OFFSET + HARDSTOP_OFFSET
+                MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive
             })
         }
     }
@@ -130,14 +132,14 @@ class PivotIOReal : PivotIO {
     }
 
     companion object Constants {
-        private val PID_GAINS = PIDGains(6.0, 0.0, 0.0)
+        private val PID_GAINS = PIDGains(62.0, 0.0, 0.0)
         private const val SENSOR_TO_MECHANISM_GEAR_RATIO = 1.0
         private const val ROTOR_TO_SENSOR_GEAR_RATIO = 37.25
-        private const val MAGNET_OFFSET = 0.0
+        private const val MAGNET_OFFSET = -0.191650390625
         private val HARDSTOP_OFFSET = 12.degrees.inRotations()
-        val PROFILE_ACCELERATION = 5.0.degreesPerSecondPerSecond
+        val PROFILE_ACCELERATION = 2.0.rotationsPerSecondPerSecond
         const val PROFILE_JERK = 0.0
-        val PROFILE_VELOCITY = 5.0.degreesPerSecond
+        val PROFILE_VELOCITY = 12.0.rotationsPerSecond
     }
 }
 

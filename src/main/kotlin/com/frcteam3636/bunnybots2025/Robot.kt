@@ -283,42 +283,39 @@ object Robot : LoggedRobot() {
         controller.b().onTrue(Shooter.Pivot.setTarget(Target.PETTINGZOO))
         controller.y().onTrue(Shooter.Pivot.setTarget(Target.AIM))
 
-        if (Preferences.getBoolean("DeveloperMode", false)) {
-            controllerDev.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
-            controllerDev.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
+        controllerDev.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
+        controllerDev.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
 
-            if (Preferences.getBoolean("DrivetrainTuningMode", false)) {
-                controllerDev.y().whileTrue(Drivetrain.sysIdQuasistaticSpin(SysIdRoutine.Direction.kForward))
-                controllerDev.a().whileTrue(Drivetrain.sysIdQuasistaticSpin(SysIdRoutine.Direction.kReverse))
-                controllerDev.b().whileTrue(Drivetrain.sysIdDynamicSpin(SysIdRoutine.Direction.kForward))
-                controllerDev.x().whileTrue(Drivetrain.sysIdDynamicSpin(SysIdRoutine.Direction.kReverse))
+//        controllerDev.y().whileTrue(Drivetrain.sysIdQuasistaticSpin(SysIdRoutine.Direction.kForward))
+//        controllerDev.a().whileTrue(Drivetrain.sysIdQuasistaticSpin(SysIdRoutine.Direction.kReverse))
+//        controllerDev.b().whileTrue(Drivetrain.sysIdDynamicSpin(SysIdRoutine.Direction.kForward))
+//        controllerDev.x().whileTrue(Drivetrain.sysIdDynamicSpin(SysIdRoutine.Direction.kReverse))
 
-                controllerDev.povUp().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward))
-                controllerDev.povDown().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse))
-                controllerDev.povRight().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward))
-                controllerDev.povLeft().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse))
-            } else if (Preferences.getBoolean("FlywheelTuningMode", false)) {
-                controllerDev.y().whileTrue(Shooter.Flywheels.sysIdQuasistatic(SysIdRoutine.Direction.kForward))
-                controllerDev.a().whileTrue(Shooter.Flywheels.sysIdQuasistatic(SysIdRoutine.Direction.kReverse))
-                controllerDev.b().whileTrue(Shooter.Flywheels.sysIdDynamic(SysIdRoutine.Direction.kForward))
-                controllerDev.x().whileTrue(Shooter.Flywheels.sysIdDynamic(SysIdRoutine.Direction.kReverse))
-            }
+//        controllerDev.povUp().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward))
+//        controllerDev.povDown().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse))
+//        controllerDev.povRight().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward))
+//        controllerDev.povLeft().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse))
+        controllerDev.y().whileTrue(Shooter.Flywheels.sysIdQuasistatic(SysIdRoutine.Direction.kForward))
+        controllerDev.a().whileTrue(Shooter.Flywheels.sysIdQuasistatic(SysIdRoutine.Direction.kReverse))
+        controllerDev.b().whileTrue(Shooter.Flywheels.sysIdDynamic(SysIdRoutine.Direction.kForward))
+        controllerDev.x().whileTrue(Shooter.Flywheels.sysIdDynamic(SysIdRoutine.Direction.kReverse))
 
-            controllerDev.rightTrigger()
-                .onTrue(Shooter.Pivot.setTarget(Target.TUNING))
-                .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
-            controllerDev.leftTrigger()
-                .onTrue(Shooter.Pivot.setTarget(Target.AIM))
-                .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
 
-            joystickDev.button(1).whileTrue(Drivetrain.calculateWheelRadius())
+        controllerDev.rightTrigger()
+            .onTrue(Shooter.Pivot.setTarget(Target.TUNING))
+            .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
+        controllerDev.leftTrigger()
+            .onTrue(Shooter.Pivot.setTarget(Target.AIM))
+            .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
 
-            joystickDev.button(2).onTrue(
-                Commands.runOnce({
-                    Drivetrain.zeroFull()
-                })
-            )
-        }
+        joystickDev.button(1).whileTrue(Drivetrain.calculateWheelRadius())
+
+        joystickDev.button(2).onTrue(
+            Commands.runOnce({
+                Drivetrain.zeroFull()
+            })
+        )
+
     }
 
     override fun disabledInit() {}

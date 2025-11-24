@@ -10,7 +10,10 @@ import com.frcteam3636.bunnybots2025.SparkFlex
 import com.frcteam3636.bunnybots2025.utils.math.amps
 import com.frcteam3636.bunnybots2025.utils.math.celsius
 import com.frcteam3636.bunnybots2025.utils.math.rpm
+import com.revrobotics.spark.SparkBase
 import com.revrobotics.spark.SparkLowLevel
+import com.revrobotics.spark.config.SparkBaseConfig
+import com.revrobotics.spark.config.SparkFlexConfig
 import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.math.system.plant.LinearSystemId
 import edu.wpi.first.units.Units.*
@@ -34,7 +37,11 @@ interface IndexerIO {
 }
 
 class IndexerIOReal : IndexerIO {
-    private var indexerMotor = SparkFlex(REVDeviceId.IndexerMotor, SparkLowLevel.MotorType.kBrushless)
+    private var indexerMotor = SparkFlex(REVDeviceId.IndexerMotor, SparkLowLevel.MotorType.kBrushless).apply {
+        configure(SparkFlexConfig().apply {
+            inverted(false)
+        }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
+    }
 //    private var canRange = CANrange(CTREDeviceId.CANRangeIndexer).apply {
 //        configurator.apply(
 //            CANrangeConfiguration().apply {
