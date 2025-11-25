@@ -7,6 +7,7 @@ import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
 import com.frcteam3636.bunnybots2025.subsystems.indexer.Indexer
 import com.frcteam3636.bunnybots2025.subsystems.intake.Intake
+import com.frcteam3636.bunnybots2025.subsystems.intake.Intake.Position
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Target
 import com.frcteam3636.bunnybots2025.subsystems.shooter.zooTranslation
@@ -200,18 +201,21 @@ object Robot : LoggedRobot() {
     }
 
     fun doIntakeSequence(): Command {
-        return Commands.parallel(
-            Intake.intake(),
-            Commands.sequence(
-                Commands.either(
-                    Indexer.index(),
-                    Commands.parallel(
-                        Shooter.Feeder.feed(),
+        return Commands.sequence(
+            Intake.setPivotPosition(Position.Deployed),
+            Commands.parallel(
+                Intake.intake(),
+                Commands.sequence(
+                    Commands.either(
                         Indexer.index(),
-                    ).until(Shooter.Flywheels.isDetected),
-                    Shooter.Flywheels.isDetected
-                ),
-                Indexer.index().repeatedly(), // retry until subsystem is released. just in case we are shooting at the same time.
+                        Commands.parallel(
+                            Shooter.Feeder.feed(),
+                            Indexer.index(),
+                        ).until(Shooter.Flywheels.isDetected),
+                        Shooter.Flywheels.isDetected
+                    ),
+                    Indexer.index().repeatedly(), // retry until subsystem is released. just in case we are shooting at the same time.
+                )
             )
         )
     }
@@ -241,6 +245,7 @@ object Robot : LoggedRobot() {
         Drivetrain.defaultCommand = Drivetrain.driveWithJoysticks(joystickLeft.hid, joystickRight.hid)
         Shooter.Flywheels.defaultCommand = Shooter.Flywheels.idle()
         Shooter.Pivot.defaultCommand = Shooter.Pivot.moveToActiveTarget()
+        Intake.defaultCommand = Intake.setPivotPosition(Intake.Position.Stowed)
         // (The button with the yellow tape on it)
         joystickLeft.button(8).onTrue(Commands.runOnce({
             println("Zeroing gyro.")
@@ -269,10 +274,15 @@ object Robot : LoggedRobot() {
         joystickRight.button(1).whileTrue(doShootSequence())
 
 
-        controller.leftBumper().whileTrue(doIntakeSequence())
-        controller.rightBumper().whileTrue(
+        controller.rightBumper().whileTrue(doIntakeSequence())
+//        controller.rightBumper().onTrue(Intake.setPivotPosition(Intake.Position.Stowed))
+//        controller.leftBumper().onTrue(Intake.setPivotPosition(Intake.Position.Deployed))
+        controller.leftBumper().whileTrue(
             Commands.parallel(
-                Intake.outtake(),
+                Commands.sequence(
+                    Intake.setPivotPosition(Position.Deployed),
+                    Intake.outtake()
+                ),
                 Indexer.outtake()
             )
         )

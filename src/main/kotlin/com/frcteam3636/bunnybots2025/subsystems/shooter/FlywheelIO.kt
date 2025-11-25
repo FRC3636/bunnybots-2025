@@ -1,6 +1,10 @@
 package com.frcteam3636.bunnybots2025.subsystems.shooter
 
 import com.ctre.phoenix6.BaseStatusSignal
+import com.ctre.phoenix6.configs.CANrangeConfiguration
+import com.ctre.phoenix6.signals.UpdateModeValue
+import com.frcteam3636.bunnybots2025.CANrange
+import com.frcteam3636.bunnybots2025.CTREDeviceId
 //import com.ctre.phoenix6.configs.CANrangeConfiguration
 //import com.ctre.phoenix6.signals.UpdateModeValue
 //import com.frcteam3636.bunnybots2025.CANrange
@@ -30,6 +34,7 @@ open class FlywheelInputs {
     var topTemperature = Celsius.zero()!!
     var bottomTemperature = Celsius.zero()!!
     var isDetected = false
+    var carrotDistance = Meters.zero()!!
 }
 
 interface FlywheelIO {
@@ -70,22 +75,24 @@ class FlywheelIOReal : FlywheelIO {
     private var lowerFFController = SimpleMotorFeedforward(LOWER_FF_GAINS)
 
 
-    // TODO: Move this into the feeder subsystem. Doesn't really matter but it makes more sense from an organization level.
-//    private var canRange = CANrange(CTREDeviceId.CANRangeShooter).apply {
-//        configurator.apply(
-//            CANrangeConfiguration().apply {
-//                ProximityParams.ProximityThreshold = 0.1 // fix
-//                ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz
-//            }
-//        )
-//    }
+//     TODO: Move this into the feeder subsystem. Doesn't really matter but it makes more sense from an organization level.
+    private var canRange = CANrange(CTREDeviceId.CANRangeShooter).apply {
+        configurator.apply(
+            CANrangeConfiguration().apply {
+                ProximityParams.ProximityThreshold = .099
+                ProximityParams.ProximityHysteresis = 0.02
+                ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz
+            }
+        )
+    }
 
-//    private val detectedSignal = canRange.isDetected
+    private val detectedSignal = canRange.isDetected // isdetected value not updating
+//    private val distance = canRange.distance
 
-//    init {
-//        BaseStatusSignal.setUpdateFrequencyForAll(100.0, detectedSignal)
-//        canRange.optimizeBusUtilization()
-//    }
+    init {
+        BaseStatusSignal.setUpdateFrequencyForAll(100.0, detectedSignal)
+        canRange.optimizeBusUtilization()
+    }
 
     override fun setSpeed(upperPercent: Double, lowerPercent: Double) {
         assert(upperPercent in -1.0..1.0)
@@ -118,7 +125,7 @@ class FlywheelIOReal : FlywheelIO {
         inputs.topCurrent = upperShooterMotor.outputCurrent.amps
         inputs.bottomVelocity = lowerShooterMotor.encoder.velocity.rpm
         inputs.bottomCurrent = lowerShooterMotor.outputCurrent.amps
-//        inputs.isDetected = detectedSignal.value
+        inputs.isDetected = detectedSignal.value
         inputs.topTemperature = upperShooterMotor.motorTemperature.celsius
         inputs.bottomTemperature = lowerShooterMotor.motorTemperature.celsius
     }

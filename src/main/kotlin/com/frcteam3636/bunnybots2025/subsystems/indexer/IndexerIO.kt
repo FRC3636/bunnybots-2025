@@ -1,6 +1,10 @@
 package com.frcteam3636.bunnybots2025.subsystems.indexer
 
 import com.ctre.phoenix6.BaseStatusSignal
+import com.ctre.phoenix6.configs.CANrangeConfiguration
+import com.ctre.phoenix6.signals.UpdateModeValue
+import com.frcteam3636.bunnybots2025.CANrange
+import com.frcteam3636.bunnybots2025.CTREDeviceId
 //import com.ctre.phoenix6.configs.CANrangeConfiguration
 //import com.ctre.phoenix6.signals.UpdateModeValue
 //import com.frcteam3636.bunnybots2025.CANrange
