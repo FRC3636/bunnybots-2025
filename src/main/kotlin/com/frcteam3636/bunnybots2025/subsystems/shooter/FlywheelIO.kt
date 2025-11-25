@@ -34,7 +34,6 @@ open class FlywheelInputs {
     var topTemperature = Celsius.zero()!!
     var bottomTemperature = Celsius.zero()!!
     var isDetected = false
-    var carrotDistance = Meters.zero()!!
 }
 
 interface FlywheelIO {
@@ -131,8 +130,7 @@ class FlywheelIOReal : FlywheelIO {
     }
 
     override val signals: Array<BaseStatusSignal>
-        get() = arrayOf()
-//        get() = arrayOf(detectedSignal)
+        get() = arrayOf(detectedSignal)
 
     companion object Constants {
         val UPPER_PID_GAINS = PIDGains(0.000046877)
