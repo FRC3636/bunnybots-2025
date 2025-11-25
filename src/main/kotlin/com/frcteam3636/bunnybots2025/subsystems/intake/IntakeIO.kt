@@ -86,6 +86,7 @@ class IntakeIOReal : IntakeIO {
             configurator.apply(CANcoderConfiguration().apply {
                 MagnetSensor.apply {
                     MagnetOffset = ENCODER_MAGNET_OFFSET
+                    AbsoluteSensorDiscontinuityPoint = ABSOLUTE_SENSOR_DISCONTINUITY_POINT
                 }
             })
         }
@@ -152,6 +153,7 @@ class IntakeIOReal : IntakeIO {
         const val ENCODER_MAGNET_OFFSET = -0.134521
         const val ENCODER_TO_PIVOT_GEAR_RATIO = 2.25
         const val MOTOR_TO_ENCODER_GEAR_RATIO = 4.0
+        const val ABSOLUTE_SENSOR_DISCONTINUITY_POINT = 0.8
     }
 }
 
