@@ -55,6 +55,7 @@ class IndexerIOReal : IndexerIO {
         inputs.indexerCurrent = indexerMotor.outputCurrent.amps
         inputs.indexerVelocity = indexerMotor.encoder.velocity.rpm
         inputs.indexerTemperature = indexerMotor.motorTemperature.celsius
+				inputs.isDetected = detectedSignal.value
     }
 
     override val signals: Array<BaseStatusSignal>
