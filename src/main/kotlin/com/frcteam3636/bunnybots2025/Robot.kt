@@ -11,6 +11,7 @@ import com.frcteam3636.bunnybots2025.subsystems.intake.Intake.Position
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Target
 import com.frcteam3636.bunnybots2025.subsystems.shooter.zooTranslation
+import com.frcteam3636.bunnybots2025.utils.math.seconds
 import com.frcteam3636.version.BUILD_DATE
 import com.frcteam3636.version.DIRTY
 import com.frcteam3636.version.GIT_BRANCH
@@ -245,7 +246,7 @@ object Robot : LoggedRobot() {
         Drivetrain.defaultCommand = Drivetrain.driveWithJoysticks(joystickLeft.hid, joystickRight.hid)
         Shooter.Flywheels.defaultCommand = Shooter.Flywheels.idle()
         Shooter.Pivot.defaultCommand = Shooter.Pivot.moveToActiveTarget()
-        Intake.defaultCommand = Intake.setPivotPosition(Intake.Position.Stowed)
+//        Intake.defaultCommand = Intake.setPivotPosition(Intake.Position.Stowed)
         // (The button with the yellow tape on it)
         joystickLeft.button(8).onTrue(Commands.runOnce({
             println("Zeroing gyro.")
@@ -288,6 +289,23 @@ object Robot : LoggedRobot() {
         )
 
         controller.leftTrigger().whileTrue(Intake.bulldoze())
+        controller.rightTrigger().whileTrue(
+           Commands.parallel(
+               Shooter.Flywheels.shoot(),
+               Commands.sequence(
+                    Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                    Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
+                    Commands.waitTime(0.5.seconds),
+                    Commands.parallel(
+                        Shooter.Feeder.feed()
+                    )
+               ),
+               Commands.sequence(
+                   Shooter.Pivot.setTarget(Target.PETTINGZOO),
+                   Shooter.Pivot.moveToActiveTarget()
+               )
+           )
+        )
 
         controller.a().onTrue(Shooter.Pivot.setTarget(Target.STOWED))
         controller.b().onTrue(Shooter.Pivot.setTarget(Target.PETTINGZOO))
@@ -311,20 +329,20 @@ object Robot : LoggedRobot() {
         controllerDev.x().whileTrue(Shooter.Flywheels.sysIdDynamic(SysIdRoutine.Direction.kReverse))
 
 
-        controller.rightTrigger()
-            .whileTrue(Commands.parallel(
-                Shooter.Flywheels.shoot(),
-                Commands.sequence(
-                    Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
-                    Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
-                    Commands.parallel(
-                        Shooter.Feeder.feed(),
-                        Indexer.index()
-                    )
-                )
-            ))
-            .onTrue(Shooter.Pivot.setTarget(Target.TUNING))
-            .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
+//        controller.rightTrigger()
+//            .whileTrue(Commands.parallel(
+//                Shooter.Flywheels.shoot(),
+//                Commands.sequence(
+//                    Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+//                    Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
+//                    Commands.parallel(
+//                        Shooter.Feeder.feed(),
+//                        Indexer.index()
+//                    )
+//                )
+//            ))
+//            .onTrue(Shooter.Pivot.setTarget(Target.TUNING))
+//            .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
 //            .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
 //        controllerDev.leftTrigger()
 //            .onTrue(Shooter.Pivot.setTarget(Target.AIM))

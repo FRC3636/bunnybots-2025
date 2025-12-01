@@ -2,6 +2,7 @@ package com.frcteam3636.bunnybots2025.subsystems.intake
 
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.configs.CANcoderConfiguration
+import com.ctre.phoenix6.configs.ExternalFeedbackConfigs
 import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.MotionMagicVoltage
 import com.ctre.phoenix6.controls.NeutralOut
@@ -24,6 +25,7 @@ import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj.simulation.DCMotorSim
 import org.team9432.annotation.Logged
+import kotlin.apply
 
 @Logged
 open class IntakeInputs {
@@ -88,6 +90,9 @@ class IntakeIOReal : IntakeIO {
                     MagnetOffset = ENCODER_MAGNET_OFFSET
                     AbsoluteSensorDiscontinuityPoint = ABSOLUTE_SENSOR_DISCONTINUITY_POINT
                 }
+                ExternalFeedbackConfigs().apply {
+                    SensorToMechanismRatio = ENCODER_TO_PIVOT_GEAR_RATIO
+                }
             })
         }
     }
@@ -136,24 +141,24 @@ class IntakeIOReal : IntakeIO {
     override val signals: Array<BaseStatusSignal>
         get() = arrayOf(positionSignal, currentSignal, velocitySignal, temperatureSignal, positionReferenceSignal)
 
-    override fun disablePivot() {
-        pivotDisabled = true
-        // this causes a sizeable loop overrun, but I'm willing to do this
-        // to prevent the robot from tearing itself apart
-        if (!brakeModeEnabled)
-            setBrakeMode(true)
-        intakePivotMotor.setControl(NeutralOut())
-    }
+//    override fun disablePivot() {
+//        pivotDisabled = true
+//        // this causes a sizeable loop overrun, but I'm willing to do this
+//        // to prevent the robot from tearing itself apart
+//        if (!brakeModeEnabled)
+//            setBrakeMode(true)
+//        intakePivotMotor.setControl(NeutralOut())
+//    }
 
     companion object Constants {
-        val PID_GAINS = PIDGains(25.0, 0.0, 0.0)
-        val PROFILE_CRUISE_VELOCITY = 15.0.rotationsPerSecond
-        val PROFILE_ACCELERATION = 2.5.rotationsPerSecondPerSecond
+        val PID_GAINS = PIDGains(20.0, 0.0, 0.0)
+        val PROFILE_CRUISE_VELOCITY = 20.0.rotationsPerSecond
+        val PROFILE_ACCELERATION = (6.7 / 2.0).rotationsPerSecondPerSecond
         const val PROFILE_JERK = 0.0
-        const val ENCODER_MAGNET_OFFSET = -0.134521
+        const val ENCODER_MAGNET_OFFSET = -0.17529
         const val ENCODER_TO_PIVOT_GEAR_RATIO = 2.25
         const val MOTOR_TO_ENCODER_GEAR_RATIO = 4.0
-        const val ABSOLUTE_SENSOR_DISCONTINUITY_POINT = 0.8
+        const val ABSOLUTE_SENSOR_DISCONTINUITY_POINT = 0.16
     }
 }
 

@@ -26,7 +26,7 @@ object Indexer : Subsystem {
     fun index(): Command =
         startEnd(
             {
-                io.setIndexerSpeed(0.7)
+                io.setIndexerSpeed(0.4)
             },
             {
                 io.setIndexerSpeed(0.0)

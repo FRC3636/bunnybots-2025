@@ -4,7 +4,6 @@ import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.FIELD_LAYOUT
-import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Flywheels.setpoint
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Flywheels.speedInterpolationTable
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Pivot.angleInterpolationTable
 import com.frcteam3636.bunnybots2025.utils.math.*
@@ -21,6 +20,7 @@ import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.util.Color
 import edu.wpi.first.wpilibj.util.Color8Bit
 import edu.wpi.first.wpilibj2.command.Command
+import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.Subsystem
 import edu.wpi.first.wpilibj2.command.button.Trigger
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
@@ -37,7 +37,8 @@ object Shooter {
             Robot.Model.SIMULATION -> FlywheelIOSim()
         }
 
-        private var setpoint = RadiansPerSecond.zero()!!
+        private var upperSetpoint = RadiansPerSecond.zero()!!
+        private var lowerSetpoint = RadiansPerSecond.zero()!!
 
         val isDetected: Trigger =
             Trigger {
@@ -46,7 +47,7 @@ object Shooter {
 
         val atDesiredVelocity =
             Trigger {
-                val velocityDifference = inputs.topVelocity - setpoint
+                val velocityDifference = inputs.topVelocity - upperSetpoint
                 Logger.recordOutput("Shooter/Flywheels/Velocity Difference", velocityDifference)
                 Logger.recordOutput(
                     "Shooter/Flywheels/At Desired Velocity",
@@ -95,24 +96,35 @@ object Shooter {
 
             Logger.processInputs("Shooter/Flywheels", inputs)
 
-            Logger.recordOutput("Shooter/Flywheels/Setpoint", setpoint.inRPM())
-            io.setVelocity(setpoint) // move this into commands?
+            Logger.recordOutput("Shooter/Flywheels/upperSetpoint", upperSetpoint.inRPM())
+            Logger.recordOutput("Shooter/Flywheels/lowerSetpoint", lowerSetpoint.inRPM())
+            io.setVelocity(upperSetpoint, lowerSetpoint) // move this into commands?
         }
 
         fun idle(): Command =
             startEnd(
                 {
-                    setpoint = 1.radiansPerSecond
+                    upperSetpoint = 1.radiansPerSecond
+                    lowerSetpoint = 1.radiansPerSecond
                 },
                 {
-                    setpoint = 0.radiansPerSecond
+                    upperSetpoint = 0.radiansPerSecond
+                    lowerSetpoint = 0.radiansPerSecond
                 }
             )
 
         fun shoot(): Command =
-            run {
-                setpoint = Pivot.target.profile.getVelocity()
-            }
+            //TODO: Fix
+            startEnd(
+                {
+                    upperSetpoint = 500.radiansPerSecond
+                    lowerSetpoint = 500.radiansPerSecond
+                },
+                {
+                    upperSetpoint = 0.radiansPerSecond
+                    lowerSetpoint = 0.radiansPerSecond
+                }
+            )
 
         val signals: Array<BaseStatusSignal>
             get() = io.signals
@@ -202,7 +214,7 @@ object Shooter {
         fun feed(interruptBehavior: Command.InterruptionBehavior = Command.InterruptionBehavior.kCancelSelf): Command =
             startEnd(
                 {
-                    io.setSpeed(0.7)
+                    io.setSpeed(1.0)
                 },
                 {
                     io.setSpeed(0.0)
@@ -256,7 +268,7 @@ enum class Target(val profile: ShooterProfile) {
     PETTINGZOO(
         ShooterProfile(
             {
-                45.degrees
+                30.degrees
             },
             {
                 1000.rpm

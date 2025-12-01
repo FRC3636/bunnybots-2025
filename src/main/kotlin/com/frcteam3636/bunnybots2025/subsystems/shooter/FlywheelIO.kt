@@ -39,7 +39,7 @@ open class FlywheelInputs {
 interface FlywheelIO {
     fun setSpeed(upperPercent: Double, lowerPercent: Double)
     fun setVoltage(voltage: Voltage)
-    fun setVelocity(velocity: AngularVelocity)
+    fun setVelocity(upperVelocity: AngularVelocity, lowerVelocity: AngularVelocity)
     fun updateInputs(inputs: FlywheelInputs)
 
     val signals: Array<BaseStatusSignal>
@@ -106,15 +106,15 @@ class FlywheelIOReal : FlywheelIO {
         lowerShooterMotor.setVoltage(voltage)
     }
 
-    override fun setVelocity(velocity: AngularVelocity) {
-        val upperFFOutput = upperFFController.calculate(velocity.inRPM())
-        val lowerFFOutput = lowerFFController.calculate(velocity.inRPM())
+    override fun setVelocity(upperVelocity: AngularVelocity, lowerVelocity: AngularVelocity) {
+        val upperFFOutput = upperFFController.calculate(upperVelocity.inRPM())
+        val lowerFFOutput = lowerFFController.calculate(lowerVelocity.inRPM())
         upperShooterMotor.closedLoopController.setReference(
-            velocity.inRPM(), SparkBase.ControlType.kVelocity,
+            upperVelocity.inRPM(), SparkBase.ControlType.kVelocity,
             ClosedLoopSlot.kSlot0, upperFFOutput
         )
         lowerShooterMotor.closedLoopController.setReference(
-            velocity.inRPM(), SparkBase.ControlType.kVelocity,
+            lowerVelocity.inRPM(), SparkBase.ControlType.kVelocity,
             ClosedLoopSlot.kSlot0, lowerFFOutput
         )
     }
@@ -163,8 +163,8 @@ class FlywheelIOSim : FlywheelIO {
         lowerFlywheelMotor.inputVoltage = voltage.inVolts()
     }
 
-    override fun setVelocity(velocity: AngularVelocity) {
-        upperFlywheelMotor.setAngularVelocity(velocity.inRadiansPerSecond())
-        lowerFlywheelMotor.setAngularVelocity(velocity.inRadiansPerSecond())
+    override fun setVelocity(upperVelocity: AngularVelocity, lowerVelocity: AngularVelocity) {
+        upperFlywheelMotor.setAngularVelocity(upperVelocity.inRadiansPerSecond())
+        lowerFlywheelMotor.setAngularVelocity(upperVelocity.inRadiansPerSecond())
     }
 }
