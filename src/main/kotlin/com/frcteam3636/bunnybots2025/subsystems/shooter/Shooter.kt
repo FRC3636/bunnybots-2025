@@ -51,9 +51,9 @@ object Shooter {
                 Logger.recordOutput("Shooter/Flywheels/Velocity Difference", velocityDifference)
                 Logger.recordOutput(
                     "Shooter/Flywheels/At Desired Velocity",
-                    velocityDifference < FLYWHEEL_VELOCITY_TOLERANCE
+                    abs(velocityDifference.inRPM()) < FLYWHEEL_VELOCITY_TOLERANCE.inRPM()
                 )
-                velocityDifference < FLYWHEEL_VELOCITY_TOLERANCE
+                abs(velocityDifference.inRPM()) < FLYWHEEL_VELOCITY_TOLERANCE.inRPM()
             }
 
         val speedInterpolationTable = InterpolatingDoubleTreeMap()
@@ -96,8 +96,8 @@ object Shooter {
 
             Logger.processInputs("Shooter/Flywheels", inputs)
 
-            Logger.recordOutput("Shooter/Flywheels/upperSetpoint", upperSetpoint.inRPM())
-            Logger.recordOutput("Shooter/Flywheels/lowerSetpoint", lowerSetpoint.inRPM())
+            Logger.recordOutput("Shooter/Flywheels/upperSetpoint", upperSetpoint)
+            Logger.recordOutput("Shooter/Flywheels/lowerSetpoint", lowerSetpoint)
             io.setVelocity(upperSetpoint, lowerSetpoint) // move this into commands?
         }
 
@@ -115,16 +115,10 @@ object Shooter {
 
         fun shoot(): Command =
             //TODO: Fix
-            startEnd(
-                {
-                    upperSetpoint = 500.radiansPerSecond
-                    lowerSetpoint = 500.radiansPerSecond
-                },
-                {
-                    upperSetpoint = 0.radiansPerSecond
-                    lowerSetpoint = 0.radiansPerSecond
-                }
-            )
+            run {
+                upperSetpoint = Pivot.target.profile.getVelocity()
+                lowerSetpoint = Pivot.target.profile.getVelocity()
+            }
 
         val signals: Array<BaseStatusSignal>
             get() = io.signals
@@ -175,12 +169,14 @@ object Shooter {
             pivotAngleLigament.angle = inputs.pivotAngle.inDegrees()
             Logger.recordOutput("Shooter/Pivot/Mechanism", mechanism)
             Logger.recordOutput("Shooter/Pivot/Active Profile", target)
+            Logger.recordOutput("Shooter/Pivot/Reference", target.profile.getPosition())
         }
 
         val atDesiredPosition =
             Trigger {
                 val difference = inputs.pivotAngle.inDegrees() - target.profile.getPosition().inDegrees()
-                abs(difference) < 2.0
+                Logger.recordOutput("Shooter/Pivot/At Desired Position", abs(difference) < 3.0)
+                abs(difference) < 3.0
             }
 
         val signals: Array<BaseStatusSignal>
