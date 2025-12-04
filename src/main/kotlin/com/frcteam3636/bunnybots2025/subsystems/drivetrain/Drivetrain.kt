@@ -145,32 +145,32 @@ object Drivetrain : Subsystem {
         )
 
         else -> mapOf(
-//            "Limelight Left" to LimelightPoseProvider(
-//                "limelight-left",
-//                {
-//                    poseEstimator.estimatedPosition.rotation
-//                },
-//                {
-//                    inputs.gyroVelocity
-//                },
-//                {
-//                    inputs.gyroConnected
-//                },
-//                false,
-//            ),
-//            "Limelight Right" to LimelightPoseProvider(
-//                "limelight-right",
-//                {
-//                    poseEstimator.estimatedPosition.rotation
-//                },
-//                {
-//                    inputs.gyroVelocity
-//                },
-//                {
-//                    inputs.gyroConnected
-//                },
-//                false,
-//            ),
+            "Limelight Left" to LimelightPoseProvider(
+                "limelight-left",
+                {
+                    poseEstimator.estimatedPosition.rotation
+                },
+                {
+                    inputs.gyroVelocity
+                },
+                {
+                    inputs.gyroConnected
+                },
+                false,
+            ),
+            "Limelight Right" to LimelightPoseProvider(
+                "limelight-right",
+                {
+                    poseEstimator.estimatedPosition.rotation
+                },
+                {
+                    inputs.gyroVelocity
+                },
+                {
+                    inputs.gyroConnected
+                },
+                false,
+            ),
         )
     }.mapValues { Pair(it.value, LoggedAbsolutePoseProviderInputs()) }
 

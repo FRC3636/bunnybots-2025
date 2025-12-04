@@ -210,7 +210,7 @@ object Shooter {
         fun feed(interruptBehavior: Command.InterruptionBehavior = Command.InterruptionBehavior.kCancelSelf): Command =
             startEnd(
                 {
-                    io.setSpeed(1.0)
+                    io.setSpeed(0.2)
                 },
                 {
                     io.setSpeed(0.0)

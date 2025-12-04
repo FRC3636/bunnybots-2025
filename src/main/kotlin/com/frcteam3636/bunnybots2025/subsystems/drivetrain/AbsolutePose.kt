@@ -197,6 +197,8 @@ class LimelightPoseProvider(
                 measurement.shouldReject,
                 measurement.observedTags.size
             )
+
+            measurements += measurement
         }
 
         for (rawSample in megatag2Subscriber.readQueue()) {
