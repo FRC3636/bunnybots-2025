@@ -44,6 +44,27 @@ object Indexer : Subsystem {
             wasDetected = false
         }
 
+    fun slowIndex(): Command =
+        startEnd(
+            {
+                io.setIndexerSpeed(0.2)
+            },
+            {
+                io.setIndexerSpeed(0.0)
+            }
+        ).alongWith(
+            Commands.run({
+                if (!wasDetected && inputs.isDetected) {
+                    RobotState.heldPieces++
+                    wasDetected = true
+                } else if (!inputs.isDetected) {
+                    wasDetected = false
+                }
+            })
+        ).finallyDo { ->
+            wasDetected = false
+        }
+
     fun outtake(): Command =
         startEnd(
             {

@@ -209,9 +209,12 @@ object Robot : LoggedRobot() {
                 Commands.sequence(
                     Commands.either(
                         Indexer.index(),
-                        Commands.parallel(
-                            Shooter.Feeder.feed(),
-                            Indexer.index(),
+                        Commands.sequence(
+                            Commands.parallel(
+                                Shooter.Feeder.feed(),
+                                Indexer.index(),
+                            ).until (Shooter.Flywheels.isDetected),
+                            Indexer.slowIndex()
                         ).until(Shooter.Flywheels.isDetected),
                         Shooter.Flywheels.isDetected
                     ),
@@ -246,7 +249,7 @@ object Robot : LoggedRobot() {
         Drivetrain.defaultCommand = Drivetrain.driveWithJoysticks(joystickLeft.hid, joystickRight.hid)
         Shooter.Flywheels.defaultCommand = Shooter.Flywheels.idle()
         Shooter.Pivot.defaultCommand = Shooter.Pivot.moveToActiveTarget()
-//        Intake.defaultCommand = Intake.setPivotPosition(Intake.Position.Stowed)
+        Intake.defaultCommand = Intake.setPivotPosition(Intake.Position.Stowed)
         // (The button with the yellow tape on it)
         joystickLeft.button(8).onTrue(Commands.runOnce({
             println("Zeroing gyro.")

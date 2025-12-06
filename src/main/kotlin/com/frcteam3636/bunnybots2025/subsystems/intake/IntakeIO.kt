@@ -158,7 +158,7 @@ class IntakeIOReal : IntakeIO {
         const val ENCODER_MAGNET_OFFSET = -0.17529
         const val ENCODER_TO_PIVOT_GEAR_RATIO = 2.25
         const val MOTOR_TO_ENCODER_GEAR_RATIO = 4.0
-        const val ABSOLUTE_SENSOR_DISCONTINUITY_POINT = 0.16
+        const val ABSOLUTE_SENSOR_DISCONTINUITY_POINT = 0.6
     }
 }
 
