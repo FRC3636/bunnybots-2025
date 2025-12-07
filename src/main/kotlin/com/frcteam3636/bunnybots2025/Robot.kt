@@ -233,6 +233,7 @@ object Robot : LoggedRobot() {
                 Commands.sequence(
                     Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
                     Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
+                    Commands.waitUntil(Drivetrain.isPointedAtZoo),
                     Shooter.Feeder.feed(Command.InterruptionBehavior.kCancelIncoming),
                     Indexer.index(),
                 ),
@@ -285,9 +286,6 @@ object Robot : LoggedRobot() {
                 Indexer.outtake()
             )
         )
-
-        joystickRight.button(1).whileTrue(doShootSequence())
-
 
         controllerDev.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
         controllerDev.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
