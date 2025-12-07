@@ -4,9 +4,8 @@ import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.FIELD_LAYOUT
-import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Flywheels.speedInterpolationTable
-import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Pivot.angleInterpolationTable
 import com.frcteam3636.bunnybots2025.utils.math.*
+import edu.wpi.first.math.MathUtil
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation2d
@@ -27,6 +26,8 @@ import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber
+import kotlin.math.abs
+import kotlin.math.pow
 
 object Shooter {
     object Flywheels : Subsystem {
@@ -35,7 +36,8 @@ object Shooter {
             Robot.Model.SIMULATION -> FlywheelIOSim()
         }
 
-        private var setpoint = RadiansPerSecond.zero()!!
+        private var upperSetpoint = RadiansPerSecond.zero()!!
+        private var lowerSetpoint = RadiansPerSecond.zero()!!
 
         val isDetected: Trigger =
             Trigger {
@@ -44,23 +46,22 @@ object Shooter {
 
         val atDesiredVelocity =
             Trigger {
-                val velocityDifference = inputs.topVelocity - setpoint
+                val velocityDifference = inputs.topVelocity - upperSetpoint
                 Logger.recordOutput("Shooter/Flywheels/Velocity Difference", velocityDifference)
                 Logger.recordOutput(
                     "Shooter/Flywheels/At Desired Velocity",
-                    velocityDifference < FLYWHEEL_VELOCITY_TOLERANCE
+                    abs(velocityDifference.inRPM()) < FLYWHEEL_VELOCITY_TOLERANCE.inRPM()
                 )
-                velocityDifference < FLYWHEEL_VELOCITY_TOLERANCE
+                abs(velocityDifference.inRPM()) < FLYWHEEL_VELOCITY_TOLERANCE.inRPM()
             }
 
         val speedInterpolationTable = InterpolatingDoubleTreeMap()
 
         init {
             //FIXME plot points to create regression
-            speedInterpolationTable.putVelocity(5.0.meters, 60.0.radiansPerSecond)
-            speedInterpolationTable.putVelocity(7.5.meters, 45.0.radiansPerSecond)
-            speedInterpolationTable.putVelocity(10.0.meters, 30.0.radiansPerSecond)
-            speedInterpolationTable.putVelocity(12.5.meters, 25.0.radiansPerSecond)
+            speedInterpolationTable.putVelocity(1.66.meters, 2650.rpm)
+//            speedInterpolationTable.putVelocity(2.5.meters, 3400.rpm)
+            speedInterpolationTable.putVelocity(3.4.meters, 4300.rpm)
         }
 
         private val inputs = LoggedFlywheelInputs()
@@ -83,41 +84,38 @@ object Shooter {
         )
 
         @Suppress("unused")
-        fun sysIdQuasistatic(direction: SysIdRoutine.Direction): Command {
-            return run {
-                sysID.quasistatic(direction)
-            }
-        }
+        fun sysIdQuasistatic(direction: SysIdRoutine.Direction): Command = sysID.quasistatic(direction)
 
         @Suppress("unused")
-        fun sysIdDynamic(direction: SysIdRoutine.Direction): Command {
-            return run {
-                sysID.dynamic(direction)
-            }
-        }
+        fun sysIdDynamic(direction: SysIdRoutine.Direction): Command = sysID.dynamic(direction)
 
         override fun periodic() {
             io.updateInputs(inputs)
 
             Logger.processInputs("Shooter/Flywheels", inputs)
 
-            Logger.recordOutput("Shooter/Flywheels/Setpoint", setpoint)
-            io.setVelocity(setpoint) // move this into commands?
+            Logger.recordOutput("Shooter/Flywheels/upperSetpoint", upperSetpoint)
+            Logger.recordOutput("Shooter/Flywheels/lowerSetpoint", lowerSetpoint)
+            io.setVelocity(upperSetpoint, lowerSetpoint) // move this into commands?
         }
 
         fun idle(): Command =
             startEnd(
                 {
-                    setpoint = 1.radiansPerSecond
+                    upperSetpoint = 1.radiansPerSecond
+                    lowerSetpoint = 1.radiansPerSecond
                 },
                 {
-                    setpoint = 0.radiansPerSecond
+                    upperSetpoint = 0.radiansPerSecond
+                    lowerSetpoint = 0.radiansPerSecond
                 }
             )
 
         fun shoot(): Command =
+            //TODO: Fix
             run {
-                setpoint = Pivot.target.profile.getVelocity()
+                upperSetpoint = Pivot.target.profile.getVelocity()
+                lowerSetpoint = Pivot.target.profile.getVelocity()
             }
 
         val signals: Array<BaseStatusSignal>
@@ -146,10 +144,9 @@ object Shooter {
 
         init {
             //FIXME plot points to create regression
-            angleInterpolationTable.putAngle(5.0.meters, 60.0.degrees)
-            angleInterpolationTable.putAngle(7.5.meters, 45.0.degrees)
-            angleInterpolationTable.putAngle(10.0.meters, 30.0.degrees)
-            angleInterpolationTable.putAngle(12.5.meters, 25.0.degrees)
+            angleInterpolationTable.putAngle(1.66.meters, 55.0.degrees)
+//            angleInterpolationTable.putAngle(2.5.meters, 50.0.degrees)
+            angleInterpolationTable.putAngle(3.4.meters, 40.0.degrees)
 
             mechanism.getRoot("Shooter Pivot", 50.0, 150.0).apply {
                 append(pivotAngleLigament)
@@ -169,7 +166,15 @@ object Shooter {
             pivotAngleLigament.angle = inputs.pivotAngle.inDegrees()
             Logger.recordOutput("Shooter/Pivot/Mechanism", mechanism)
             Logger.recordOutput("Shooter/Pivot/Active Profile", target)
+            Logger.recordOutput("Shooter/Pivot/Reference", target.profile.getPosition())
         }
+
+        val atDesiredPosition =
+            Trigger {
+                val difference = inputs.pivotAngle.inDegrees() - target.profile.getPosition().inDegrees()
+                Logger.recordOutput("Shooter/Pivot/At Desired Position", abs(difference) < 3.0)
+                abs(difference) < 3.0
+            }
 
         val signals: Array<BaseStatusSignal>
             get() = io.signals
@@ -202,7 +207,7 @@ object Shooter {
         fun feed(interruptBehavior: Command.InterruptionBehavior = Command.InterruptionBehavior.kCancelSelf): Command =
             startEnd(
                 {
-                    io.setSpeed(0.7)
+                    io.setSpeed(0.1)
                 },
                 {
                     io.setSpeed(0.0)
@@ -247,16 +252,20 @@ enum class Target(val profile: ShooterProfile) {
     AIM(
         ShooterProfile(
             {
-                angleInterpolationTable.getAngle(distanceToZoo())
+                val distance = distanceToZoo().inMeters()
+                val angle = ((-2.96479 * distance.pow(2)) + (6.38113 * distance) + 52.57708)
+                MathUtil.clamp(angle, 12.0, 60.0).degrees
             }, {
-                speedInterpolationTable.getVelocity(distanceToZoo())
+                val distance = distanceToZoo().inMeters()
+                val speed = ((61.57635 * distance.pow(2)) + (636.69951 * distance) + 1423.39901)
+                MathUtil.clamp(speed, 0.0, 5500.0).rpm
             }
         )
     ),
     PETTINGZOO(
         ShooterProfile(
             {
-                45.degrees
+                30.degrees
             },
             {
                 1000.rpm
@@ -287,15 +296,11 @@ enum class Target(val profile: ShooterProfile) {
 
 val DriverStation.Alliance.zooTranslation: Translation2d
     get() = when (this) { // got these values from apriltag math
-        DriverStation.Alliance.Red -> Translation2d(
-            12.9327783.meters,
-            4.0132127.meters,
-        )
+        DriverStation.Alliance.Red -> (FIELD_LAYOUT.getTagPose(5).get().translation.toTranslation2d() +
+                FIELD_LAYOUT.getTagPose(7).get().translation.toTranslation2d()) / 2.0
 
-        else -> Translation2d(
-            FIELD_LAYOUT.fieldLength.meters - 12.9327783.meters,
-            4.0132127.meters
-        )
+        else -> (FIELD_LAYOUT.getTagPose(1).get().translation.toTranslation2d() +
+                FIELD_LAYOUT.getTagPose(3).get().translation.toTranslation2d()) / 2.0
     }
 
 internal val FLYWHEEL_VELOCITY_TOLERANCE = 2.radiansPerSecond

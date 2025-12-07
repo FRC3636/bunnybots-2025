@@ -149,12 +149,12 @@ class LimelightPoseProvider(
         var measurements: Array<LimelightMeasurement> = emptyArray()
 
         if (!isLL4) {
-            gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees,  0.0, 0.0, 0.0, 0.0, 0.0))
+            gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees, 0.0, 0.0, 0.0, 0.0, 0.0))
             NetworkTableInstance.getDefault().flush()
         } else {
             if (RobotState.beforeFirstEnable) {
                 imuModePublisher.accept(1.toLong())
-                gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees,  0.0, 0.0, 0.0, 0.0, 0.0))
+                gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees, 0.0, 0.0, 0.0, 0.0, 0.0))
                 NetworkTableInstance.getDefault().flush()
             }
             if (Robot.isDisabled && !isThrottled) {
@@ -173,7 +173,7 @@ class LimelightPoseProvider(
         }
 
         for (rawSample in megatag1Subscriber.readQueue()) {
-            if (rawSample.value.size == 0) continue
+            if (rawSample.value.size == 0 || !RobotState.beforeFirstEnable) continue
             val measurement = LimelightMeasurement()
 
             val estimate = convertToLLPoseEstimate(rawSample.value, false)
@@ -197,6 +197,8 @@ class LimelightPoseProvider(
                 measurement.shouldReject,
                 measurement.observedTags.size
             )
+
+            measurements += measurement
         }
 
         for (rawSample in megatag2Subscriber.readQueue()) {
@@ -209,7 +211,7 @@ class LimelightPoseProvider(
 
             measurement.poseMeasurement = AbsolutePoseMeasurement(
                 estimate.pose,
-                estimate.timestampSeconds.seconds,
+                (rawSample.timestamp * 1.0e-6 - rawSample.value[6] * 1.0e-3).seconds,
                 MEGATAG2_STD_DEV(estimate.avgTagDist, estimate.tagCount),
                 measurement.shouldReject,
                 measurement.observedTags.size

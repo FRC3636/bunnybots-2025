@@ -5,6 +5,10 @@ import com.ctre.phoenix6.configs.CANrangeConfiguration
 import com.ctre.phoenix6.signals.UpdateModeValue
 import com.frcteam3636.bunnybots2025.CANrange
 import com.frcteam3636.bunnybots2025.CTREDeviceId
+//import com.ctre.phoenix6.configs.CANrangeConfiguration
+//import com.ctre.phoenix6.signals.UpdateModeValue
+//import com.frcteam3636.bunnybots2025.CANrange
+//import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.REVDeviceId
 import com.frcteam3636.bunnybots2025.SparkFlex
 import com.frcteam3636.bunnybots2025.utils.math.*
@@ -35,7 +39,7 @@ open class FlywheelInputs {
 interface FlywheelIO {
     fun setSpeed(upperPercent: Double, lowerPercent: Double)
     fun setVoltage(voltage: Voltage)
-    fun setVelocity(velocity: AngularVelocity)
+    fun setVelocity(upperVelocity: AngularVelocity, lowerVelocity: AngularVelocity)
     fun updateInputs(inputs: FlywheelInputs)
 
     val signals: Array<BaseStatusSignal>
@@ -48,7 +52,7 @@ class FlywheelIOReal : FlywheelIO {
         SparkFlex(REVDeviceId.UpperShooterMotor, SparkLowLevel.MotorType.kBrushless).apply {
             configure(SparkFlexConfig().apply {
                 idleMode(SparkBaseConfig.IdleMode.kCoast)
-
+                inverted(true)
                 closedLoop.apply {
                     UPPER_PID_GAINS.toRevLib()
                 }
@@ -58,7 +62,7 @@ class FlywheelIOReal : FlywheelIO {
         SparkFlex(REVDeviceId.LowerShooterMotor, SparkLowLevel.MotorType.kBrushless).apply {
             configure(SparkFlexConfig().apply {
                 idleMode(SparkBaseConfig.IdleMode.kCoast)
-
+                inverted(true)
                 closedLoop.apply {
                     LOWER_PID_GAINS.toRevLib()
                 }
@@ -70,17 +74,19 @@ class FlywheelIOReal : FlywheelIO {
     private var lowerFFController = SimpleMotorFeedforward(LOWER_FF_GAINS)
 
 
-    // TODO: Move this into the feeder subsystem. Doesn't really matter but it makes more sense from an organization level.
+    //     TODO: Move this into the feeder subsystem. Doesn't really matter but it makes more sense from an organization level.
     private var canRange = CANrange(CTREDeviceId.CANRangeShooter).apply {
         configurator.apply(
             CANrangeConfiguration().apply {
-                ProximityParams.ProximityThreshold = 0.1 // fix
+                ProximityParams.ProximityThreshold = 0.12
+                ProximityParams.ProximityHysteresis = 0.02
                 ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz
             }
         )
     }
 
-    private val detectedSignal = canRange.isDetected
+    private val detectedSignal = canRange.isDetected // isdetected value not updating
+//    private val distance = canRange.distance
 
     init {
         BaseStatusSignal.setUpdateFrequencyForAll(100.0, detectedSignal)
@@ -100,15 +106,15 @@ class FlywheelIOReal : FlywheelIO {
         lowerShooterMotor.setVoltage(voltage)
     }
 
-    override fun setVelocity(velocity: AngularVelocity) {
-        val upperFFOutput = upperFFController.calculate(velocity.inRPM())
-        val lowerFFOutput = lowerFFController.calculate(velocity.inRPM())
+    override fun setVelocity(upperVelocity: AngularVelocity, lowerVelocity: AngularVelocity) {
+        val upperFFOutput = upperFFController.calculate(upperVelocity.inRPM())
+        val lowerFFOutput = lowerFFController.calculate(lowerVelocity.inRPM())
         upperShooterMotor.closedLoopController.setReference(
-            velocity.inRPM(), SparkBase.ControlType.kVelocity,
+            upperVelocity.inRPM(), SparkBase.ControlType.kVelocity,
             ClosedLoopSlot.kSlot0, upperFFOutput
         )
         lowerShooterMotor.closedLoopController.setReference(
-            velocity.inRPM(), SparkBase.ControlType.kVelocity,
+            lowerVelocity.inRPM(), SparkBase.ControlType.kVelocity,
             ClosedLoopSlot.kSlot0, lowerFFOutput
         )
     }
@@ -127,10 +133,10 @@ class FlywheelIOReal : FlywheelIO {
         get() = arrayOf(detectedSignal)
 
     companion object Constants {
-        val UPPER_PID_GAINS = PIDGains()
-        val UPPER_FF_GAINS = MotorFFGains()
-        val LOWER_PID_GAINS = PIDGains()
-        val LOWER_FF_GAINS = MotorFFGains()
+        val UPPER_PID_GAINS = PIDGains(0.000046877)
+        val UPPER_FF_GAINS = MotorFFGains(0.10222, 0.0017569, 0.000086383)
+        val LOWER_PID_GAINS = PIDGains(0.0016303)
+        val LOWER_FF_GAINS = MotorFFGains(0.14943, 0.00182, 0.000088777)
     }
 }
 
@@ -157,8 +163,8 @@ class FlywheelIOSim : FlywheelIO {
         lowerFlywheelMotor.inputVoltage = voltage.inVolts()
     }
 
-    override fun setVelocity(velocity: AngularVelocity) {
-        upperFlywheelMotor.setAngularVelocity(velocity.inRadiansPerSecond())
-        lowerFlywheelMotor.setAngularVelocity(velocity.inRadiansPerSecond())
+    override fun setVelocity(upperVelocity: AngularVelocity, lowerVelocity: AngularVelocity) {
+        upperFlywheelMotor.setAngularVelocity(upperVelocity.inRadiansPerSecond())
+        lowerFlywheelMotor.setAngularVelocity(upperVelocity.inRadiansPerSecond())
     }
 }

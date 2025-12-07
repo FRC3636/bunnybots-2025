@@ -7,10 +7,9 @@ import com.ctre.phoenix6.SignalLogger
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
 import com.frcteam3636.bunnybots2025.subsystems.indexer.Indexer
 import com.frcteam3636.bunnybots2025.subsystems.intake.Intake
+import com.frcteam3636.bunnybots2025.subsystems.intake.Intake.Position
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Target
-import com.frcteam3636.bunnybots2025.subsystems.shooter.zooTranslation
-import com.frcteam3636.bunnybots2025.utils.LimelightHelpers
 import com.frcteam3636.version.BUILD_DATE
 import com.frcteam3636.version.DIRTY
 import com.frcteam3636.version.GIT_BRANCH
@@ -42,7 +41,6 @@ import org.littletonrobotics.urcl.URCL
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.io.path.Path
 import kotlin.io.path.exists
-import kotlin.jvm.optionals.getOrDefault
 
 
 /**
@@ -137,6 +135,8 @@ object Robot : LoggedRobot() {
         statusSignals += Shooter.Flywheels.signals
 
         SmartDashboard.putData("Auto Chooser", autoChooser)
+
+//        Threads.setCurrentThreadPriority(true, Thread.NORM_PRIORITY)
     }
 
     /** Start logging or pull replay logs from a file */
@@ -200,32 +200,26 @@ object Robot : LoggedRobot() {
         RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler())
     }
 
-
-    fun blinkLimelight(): Command {
-        return Commands.sequence(
-            Commands.runOnce({
-                LimelightHelpers.setLEDMode_ForceBlink("limelight-left")
-            }),
-            Commands.waitSeconds(0.2),
-            Commands.runOnce({
-                LimelightHelpers.setLEDMode_ForceOff("limelight-left")
-            })
-        )
-    }
-
     fun doIntakeSequence(): Command {
-        return Commands.parallel(
-            Intake.intake(),
-            Commands.sequence(
-                Commands.either(
-                    Indexer.index(),
-                    Commands.parallel(
-                        Shooter.Feeder.feed(),
+        return Commands.sequence(
+            Intake.setPivotPosition(Position.Deployed),
+            Commands.parallel(
+                Intake.intake(),
+                Commands.sequence(
+                    Commands.either(
                         Indexer.index(),
-                    ).until(Shooter.Flywheels.isDetected),
-                    Shooter.Flywheels.isDetected
-                ),
-                Indexer.index().repeatedly(), // retry until subsystem is released. just in case we are shooting at the same time.
+                        Commands.sequence(
+                            Commands.parallel(
+                                Shooter.Feeder.feed(),
+                                Indexer.index(),
+                            ).until(Shooter.Flywheels.isDetected),
+                            Indexer.slowIndex()
+                        ).until(Shooter.Flywheels.isDetected),
+                        Shooter.Flywheels.isDetected
+                    ),
+                    Indexer.index()
+                        .repeatedly(), // retry until subsystem is released. just in case we are shooting at the same time.
+                )
             )
         )
     }
@@ -233,20 +227,20 @@ object Robot : LoggedRobot() {
     fun doShootSequence(): Command {
         return Commands.parallel(
             Shooter.Flywheels.shoot(),
-            Commands.sequence(
-                Shooter.Feeder.backup().until(Shooter.Flywheels.atDesiredVelocity),
-                Commands.parallel(
+            Commands.parallel(
+                Commands.sequence(
+                    Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                    Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
                     Shooter.Feeder.feed(Command.InterruptionBehavior.kCancelIncoming),
                     Indexer.index(),
-                    blinkLimelight(),
-                    Commands.sequence(
-                        Commands.waitUntil(Shooter.Flywheels.isDetected),
-                        Commands.runOnce({
-                            RobotState.heldPieces--
-                        }),
-                        Commands.waitUntil(Shooter.Flywheels.isDetected.negate())
-                    ).repeatedly()
-                )
+                ),
+                Commands.sequence(
+                    Commands.waitUntil(Shooter.Flywheels.isDetected),
+                    Commands.runOnce({
+                        RobotState.heldPieces--
+                    }),
+                    Commands.waitUntil(Shooter.Flywheels.isDetected.negate())
+                ).repeatedly()
             )
         )
     }
@@ -256,84 +250,100 @@ object Robot : LoggedRobot() {
         Drivetrain.defaultCommand = Drivetrain.driveWithJoysticks(joystickLeft.hid, joystickRight.hid)
         Shooter.Flywheels.defaultCommand = Shooter.Flywheels.idle()
         Shooter.Pivot.defaultCommand = Shooter.Pivot.moveToActiveTarget()
+        Intake.defaultCommand = Intake.setPivotPosition(Position.Stowed)
         // (The button with the yellow tape on it)
         joystickLeft.button(8).onTrue(Commands.runOnce({
             println("Zeroing gyro.")
             Drivetrain.zeroGyro()
         }).ignoringDisable(true))
 
-        joystickLeft.button(1).whileTrue(
-            Commands.defer({ // TODO: check if this shit really needs to be deferred. it probably does lol.
-                Drivetrain.driveWithJoystickPointingTowards(
-                    joystickLeft.hid,
-                    DriverStation.getAlliance()
-                        .getOrDefault(DriverStation.Alliance.Blue)
-                        .zooTranslation
+//        joystickLeft.button(1).whileTrue(
+//            Commands.defer({ // TODO: check if this shit really needs to be deferred. it probably does lol.
+//                Drivetrain.driveWithJoystickPointingTowards(
+//                    joystickLeft.hid,
+//                    DriverStation.getAlliance()
+//                        .getOrDefault(DriverStation.Alliance.Blue)
+//                        .zooTranslation
+//                )
+//            }, setOf(Drivetrain))
+//        )
+
+        joystickRight.button(1).whileTrue(
+            Commands.parallel(
+                Shooter.Flywheels.shoot(),
+                Commands.sequence(
+                    Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                    Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
+                    Commands.parallel(
+                        Shooter.Feeder.feed(),
+                        Indexer.index()
+                    )
                 )
-            }, setOf(Drivetrain))
+            )
+        )
+            .onTrue(Shooter.Pivot.setTarget(Target.AIM))
+            .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
+
+        joystickLeft.button(1).whileTrue(
+            doIntakeSequence()
         )
 
-        joystickRight.button(3).onTrue(Commands.runOnce({
-            RobotState.heldPieces--
-        }))
-
-        joystickRight.button(4).onTrue(Commands.runOnce({
-            RobotState.heldPieces++
-        }))
-
-        joystickRight.button(1).whileTrue(doShootSequence())
-
-
-        controller.leftBumper().whileTrue(doIntakeSequence())
-        controller.rightBumper().whileTrue(
+        joystickLeft.button(4).whileTrue(
             Commands.parallel(
                 Intake.outtake(),
                 Indexer.outtake()
             )
         )
 
-        controller.leftTrigger().whileTrue(Intake.bulldoze())
+        joystickRight.button(1).whileTrue(doShootSequence())
 
-        controller.a().onTrue(Shooter.Pivot.setTarget(Target.STOWED))
-        controller.b().onTrue(Shooter.Pivot.setTarget(Target.PETTINGZOO))
-        controller.y().onTrue(Shooter.Pivot.setTarget(Target.AIM))
 
-        if (Preferences.getBoolean("DeveloperMode", false)) {
-            controllerDev.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
-            controllerDev.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
+        controllerDev.leftBumper().onTrue(Commands.runOnce(SignalLogger::start))
+        controllerDev.rightBumper().onTrue(Commands.runOnce(SignalLogger::stop))
 
-            if (Preferences.getBoolean("DrivetrainTuningMode", false)) {
-                controllerDev.y().whileTrue(Drivetrain.sysIdQuasistaticSpin(SysIdRoutine.Direction.kForward))
-                controllerDev.a().whileTrue(Drivetrain.sysIdQuasistaticSpin(SysIdRoutine.Direction.kReverse))
-                controllerDev.b().whileTrue(Drivetrain.sysIdDynamicSpin(SysIdRoutine.Direction.kForward))
-                controllerDev.x().whileTrue(Drivetrain.sysIdDynamicSpin(SysIdRoutine.Direction.kReverse))
+//        controllerDev.y().whileTrue(Drivetrain.sysIdQuasistaticSpin(SysIdRoutine.Direction.kForward))
+//        controllerDev.a().whileTrue(Drivetrain.sysIdQuasistaticSpin(SysIdRoutine.Direction.kReverse))
+//        controllerDev.b().whileTrue(Drivetrain.sysIdDynamicSpin(SysIdRoutine.Direction.kForward))
+//        controllerDev.x().whileTrue(Drivetrain.sysIdDynamicSpin(SysIdRoutine.Direction.kReverse))
 
-                controllerDev.povUp().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward))
-                controllerDev.povDown().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse))
-                controllerDev.povRight().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward))
-                controllerDev.povLeft().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse))
-            } else if (Preferences.getBoolean("FlywheelTuningMode", false)) {
-                controllerDev.y().whileTrue(Shooter.Flywheels.sysIdQuasistatic(SysIdRoutine.Direction.kForward))
-                controllerDev.a().whileTrue(Shooter.Flywheels.sysIdQuasistatic(SysIdRoutine.Direction.kReverse))
-                controllerDev.b().whileTrue(Shooter.Flywheels.sysIdDynamic(SysIdRoutine.Direction.kForward))
-                controllerDev.x().whileTrue(Shooter.Flywheels.sysIdDynamic(SysIdRoutine.Direction.kReverse))
-            }
+        controllerDev.povUp().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward))
+        controllerDev.povDown().whileTrue(Drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse))
+        controllerDev.povRight().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward))
+        controllerDev.povLeft().whileTrue(Drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse))
+//        controllerDev.y().whileTrue(Shooter.Flywheels.sysIdQuasistatic(SysIdRoutine.Direction.kForward))
+//        controllerDev.a().whileTrue(Shooter.Flywheels.sysIdQuasistatic(SysIdRoutine.Direction.kReverse))
+//        controllerDev.b().whileTrue(Shooter.Flywheels.sysIdDynamic(SysIdRoutine.Direction.kForward))
+//        controllerDev.x().whileTrue(Shooter.Flywheels.sysIdDynamic(SysIdRoutine.Direction.kReverse))
 
-            controllerDev.rightTrigger()
-                .onTrue(Shooter.Pivot.setTarget(Target.TUNING))
-                .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
-            controllerDev.leftTrigger()
-                .onTrue(Shooter.Pivot.setTarget(Target.AIM))
-                .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
 
-            joystickDev.button(1).whileTrue(Drivetrain.calculateWheelRadius())
-
-            joystickDev.button(2).onTrue(
-                Commands.runOnce({
-                    Drivetrain.zeroFull()
-                })
+        controllerDev.rightTrigger()
+            .whileTrue(
+                Commands.parallel(
+                    Shooter.Flywheels.shoot(),
+                    Commands.sequence(
+                        Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                        Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
+                        Commands.parallel(
+                            Shooter.Feeder.feed(),
+                            Indexer.index()
+                        )
+                    )
+                )
             )
-        }
+            .onTrue(Shooter.Pivot.setTarget(Target.AIM))
+            .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
+//        controllerDev.leftTrigger()
+//            .onTrue(Shooter.Pivot.setTarget(Target.AIM))
+//            .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
+
+        joystickDev.button(1).whileTrue(Drivetrain.calculateWheelRadius())
+
+        joystickDev.button(2).onTrue(
+            Commands.runOnce({
+                Drivetrain.zeroFull()
+            })
+        )
+
     }
 
     override fun disabledInit() {}

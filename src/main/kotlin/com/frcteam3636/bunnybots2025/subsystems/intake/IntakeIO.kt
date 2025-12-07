@@ -2,14 +2,17 @@ package com.frcteam3636.bunnybots2025.subsystems.intake
 
 import com.ctre.phoenix6.BaseStatusSignal
 import com.ctre.phoenix6.configs.CANcoderConfiguration
+import com.ctre.phoenix6.configs.ExternalFeedbackConfigs
 import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.MotionMagicVoltage
-import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
+import com.ctre.phoenix6.signals.InvertedValue
 import com.ctre.phoenix6.signals.NeutralModeValue
 import com.frcteam3636.bunnybots2025.*
 import com.frcteam3636.bunnybots2025.utils.math.*
+import com.revrobotics.spark.SparkBase
 import com.revrobotics.spark.SparkLowLevel
+import com.revrobotics.spark.config.SparkFlexConfig
 import edu.wpi.first.math.numbers.N1
 import edu.wpi.first.math.numbers.N2
 import edu.wpi.first.math.system.LinearSystem
@@ -50,7 +53,11 @@ class IntakeIOReal : IntakeIO {
     private var pivotDisabled = false
     private var brakeModeEnabled = true
 
-    private var intakeMotor = SparkFlex(REVDeviceId.IntakeMotor, SparkLowLevel.MotorType.kBrushless)
+    private var intakeMotor = SparkFlex(REVDeviceId.IntakeMotor, SparkLowLevel.MotorType.kBrushless).apply {
+        configure(SparkFlexConfig().apply {
+            inverted(true)
+        }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
+    }
     private var intakePivotMotor = TalonFX(CTREDeviceId.IntakePivotMotor).apply {
         configurator.apply(TalonFXConfiguration().apply {
             Slot0.apply {
@@ -69,6 +76,7 @@ class IntakeIOReal : IntakeIO {
             }
             MotorOutput.apply {
                 NeutralMode = NeutralModeValue.Brake
+                Inverted = InvertedValue.Clockwise_Positive
             }
         })
     }
@@ -78,6 +86,10 @@ class IntakeIOReal : IntakeIO {
             configurator.apply(CANcoderConfiguration().apply {
                 MagnetSensor.apply {
                     MagnetOffset = ENCODER_MAGNET_OFFSET
+                    AbsoluteSensorDiscontinuityPoint = ABSOLUTE_SENSOR_DISCONTINUITY_POINT
+                }
+                ExternalFeedbackConfigs().apply {
+                    SensorToMechanismRatio = ENCODER_TO_PIVOT_GEAR_RATIO
                 }
             })
         }
@@ -127,23 +139,24 @@ class IntakeIOReal : IntakeIO {
     override val signals: Array<BaseStatusSignal>
         get() = arrayOf(positionSignal, currentSignal, velocitySignal, temperatureSignal, positionReferenceSignal)
 
-    override fun disablePivot() {
-        pivotDisabled = true
-        // this causes a sizeable loop overrun, but I'm willing to do this
-        // to prevent the robot from tearing itself apart
-        if (!brakeModeEnabled)
-            setBrakeMode(true)
-        intakePivotMotor.setControl(NeutralOut())
-    }
+//    override fun disablePivot() {
+//        pivotDisabled = true
+//        // this causes a sizeable loop overrun, but I'm willing to do this
+//        // to prevent the robot from tearing itself apart
+//        if (!brakeModeEnabled)
+//            setBrakeMode(true)
+//        intakePivotMotor.setControl(NeutralOut())
+//    }
 
     companion object Constants {
-        val PID_GAINS = PIDGains(6.0, 0.0, 0.0)
-        val PROFILE_CRUISE_VELOCITY = 0.0.degreesPerSecond
-        val PROFILE_ACCELERATION = 0.0.degreesPerSecondPerSecond
+        val PID_GAINS = PIDGains(30.0, 0.0, 0.0)
+        val PROFILE_CRUISE_VELOCITY = 20.0.rotationsPerSecond
+        val PROFILE_ACCELERATION = (6.7 / 2.0).rotationsPerSecondPerSecond
         const val PROFILE_JERK = 0.0
-        const val ENCODER_MAGNET_OFFSET = 0.0
+        const val ENCODER_MAGNET_OFFSET = -0.17529
         const val ENCODER_TO_PIVOT_GEAR_RATIO = 2.25
         const val MOTOR_TO_ENCODER_GEAR_RATIO = 4.0
+        const val ABSOLUTE_SENSOR_DISCONTINUITY_POINT = 0.6
     }
 }
 

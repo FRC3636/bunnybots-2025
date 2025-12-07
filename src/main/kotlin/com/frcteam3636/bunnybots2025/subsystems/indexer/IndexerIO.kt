@@ -1,16 +1,18 @@
 package com.frcteam3636.bunnybots2025.subsystems.indexer
 
+//import com.ctre.phoenix6.configs.CANrangeConfiguration
+//import com.ctre.phoenix6.signals.UpdateModeValue
+//import com.frcteam3636.bunnybots2025.CANrange
+//import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.ctre.phoenix6.BaseStatusSignal
-import com.ctre.phoenix6.configs.CANrangeConfiguration
-import com.ctre.phoenix6.signals.UpdateModeValue
-import com.frcteam3636.bunnybots2025.CANrange
-import com.frcteam3636.bunnybots2025.CTREDeviceId
 import com.frcteam3636.bunnybots2025.REVDeviceId
 import com.frcteam3636.bunnybots2025.SparkFlex
 import com.frcteam3636.bunnybots2025.utils.math.amps
 import com.frcteam3636.bunnybots2025.utils.math.celsius
 import com.frcteam3636.bunnybots2025.utils.math.rpm
+import com.revrobotics.spark.SparkBase
 import com.revrobotics.spark.SparkLowLevel
+import com.revrobotics.spark.config.SparkFlexConfig
 import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.math.system.plant.LinearSystemId
 import edu.wpi.first.units.Units.*
@@ -34,32 +36,37 @@ interface IndexerIO {
 }
 
 class IndexerIOReal : IndexerIO {
-    private var indexerMotor = SparkFlex(REVDeviceId.IndexerMotor, SparkLowLevel.MotorType.kBrushless)
-    private var canRange = CANrange(CTREDeviceId.CANRangeIndexer).apply {
-        configurator.apply(
-            CANrangeConfiguration().apply {
-                ProximityParams.ProximityThreshold = 0.35 // fix
-                ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz
-            }
-        )
+    private var indexerMotor = SparkFlex(REVDeviceId.IndexerMotor, SparkLowLevel.MotorType.kBrushless).apply {
+        configure(SparkFlexConfig().apply {
+            inverted(false)
+        }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
     }
+//    private var canRange = CANrange(CTREDeviceId.CANRangeIndexer).apply {
+//        configurator.apply(
+//            CANrangeConfiguration().apply {
+//                ProximityParams.ProximityThreshold = 0.35 // fix
+//                ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz
+//            }
+//        )
+//    }
 
-    private val detectedSignal = canRange.isDetected
-
-    init {
-        BaseStatusSignal.setUpdateFrequencyForAll(100.0, detectedSignal)
-        canRange.optimizeBusUtilization()
-    }
+//    private val detectedSignal = canRange.isDetected
+//
+//    init {
+//        BaseStatusSignal.setUpdateFrequencyForAll(100.0, detectedSignal)
+//        canRange.optimizeBusUtilization()
+//    }
 
     override fun updateInputs(inputs: IndexerInputs) {
         inputs.indexerCurrent = indexerMotor.outputCurrent.amps
         inputs.indexerVelocity = indexerMotor.encoder.velocity.rpm
         inputs.indexerTemperature = indexerMotor.motorTemperature.celsius
-				inputs.isDetected = detectedSignal.value
+//        inputs.isDetected = detectedSignal.value
     }
 
     override val signals: Array<BaseStatusSignal>
-        get() = arrayOf(detectedSignal)
+        get() = arrayOf()
+//        get() = arrayOf(detectedSignal)
 
     override fun setIndexerSpeed(percentage: Double) {
         assert(percentage in -1.0..1.0)

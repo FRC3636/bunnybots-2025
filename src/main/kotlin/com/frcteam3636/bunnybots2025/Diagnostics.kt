@@ -18,7 +18,9 @@ object Diagnostics {
     sealed class RobotAlert(message: String, alertType: AlertType = AlertType.kError) {
         val alert = Alert(message, alertType)
 
-        object GyroDisconnected : RobotAlert("Failed to connect to gyro, falling back to module deltas, expect rotational drift.")
+        object GyroDisconnected :
+            RobotAlert("Failed to connect to gyro, falling back to module deltas, expect rotational drift.")
+
         object LimelightDisconnected :
             RobotAlert("Failed to connect to one or more LimeLights, vision will be impaired.")
 
