@@ -149,12 +149,12 @@ class LimelightPoseProvider(
         var measurements: Array<LimelightMeasurement> = emptyArray()
 
         if (!isLL4) {
-            gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees,  0.0, 0.0, 0.0, 0.0, 0.0))
+            gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees, 0.0, 0.0, 0.0, 0.0, 0.0))
             NetworkTableInstance.getDefault().flush()
         } else {
             if (RobotState.beforeFirstEnable) {
                 imuModePublisher.accept(1.toLong())
-                gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees,  0.0, 0.0, 0.0, 0.0, 0.0))
+                gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees, 0.0, 0.0, 0.0, 0.0, 0.0))
                 NetworkTableInstance.getDefault().flush()
             }
             if (Robot.isDisabled && !isThrottled) {

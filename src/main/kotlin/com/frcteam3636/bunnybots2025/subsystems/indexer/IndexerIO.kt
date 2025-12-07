@@ -1,14 +1,10 @@
 package com.frcteam3636.bunnybots2025.subsystems.indexer
 
-import com.ctre.phoenix6.BaseStatusSignal
-import com.ctre.phoenix6.configs.CANrangeConfiguration
-import com.ctre.phoenix6.signals.UpdateModeValue
-import com.frcteam3636.bunnybots2025.CANrange
-import com.frcteam3636.bunnybots2025.CTREDeviceId
 //import com.ctre.phoenix6.configs.CANrangeConfiguration
 //import com.ctre.phoenix6.signals.UpdateModeValue
 //import com.frcteam3636.bunnybots2025.CANrange
 //import com.frcteam3636.bunnybots2025.CTREDeviceId
+import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.REVDeviceId
 import com.frcteam3636.bunnybots2025.SparkFlex
 import com.frcteam3636.bunnybots2025.utils.math.amps
@@ -16,7 +12,6 @@ import com.frcteam3636.bunnybots2025.utils.math.celsius
 import com.frcteam3636.bunnybots2025.utils.math.rpm
 import com.revrobotics.spark.SparkBase
 import com.revrobotics.spark.SparkLowLevel
-import com.revrobotics.spark.config.SparkBaseConfig
 import com.revrobotics.spark.config.SparkFlexConfig
 import edu.wpi.first.math.system.plant.DCMotor
 import edu.wpi.first.math.system.plant.LinearSystemId

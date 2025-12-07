@@ -74,7 +74,7 @@ class FlywheelIOReal : FlywheelIO {
     private var lowerFFController = SimpleMotorFeedforward(LOWER_FF_GAINS)
 
 
-//     TODO: Move this into the feeder subsystem. Doesn't really matter but it makes more sense from an organization level.
+    //     TODO: Move this into the feeder subsystem. Doesn't really matter but it makes more sense from an organization level.
     private var canRange = CANrange(CTREDeviceId.CANRangeShooter).apply {
         configurator.apply(
             CANrangeConfiguration().apply {

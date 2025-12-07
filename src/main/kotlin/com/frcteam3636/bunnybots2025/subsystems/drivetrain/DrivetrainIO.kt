@@ -6,10 +6,12 @@ import com.frcteam3636.bunnybots2025.Diagnostics
 import com.frcteam3636.bunnybots2025.Pigeon2
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain.Constants.MODULE_POSITIONS
-import com.frcteam3636.bunnybots2025.utils.math.*
+import com.frcteam3636.bunnybots2025.utils.math.degrees
+import com.frcteam3636.bunnybots2025.utils.math.degreesPerSecond
+import com.frcteam3636.bunnybots2025.utils.math.inRadians
+import com.frcteam3636.bunnybots2025.utils.math.radians
 import com.frcteam3636.bunnybots2025.utils.swerve.DrivetrainCorner
 import com.frcteam3636.bunnybots2025.utils.swerve.PerCorner
-import com.frcteam3636.bunnybots2025.utils.swerve.SwerveModuleTemperature
 import edu.wpi.first.apriltag.AprilTagFieldLayout
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.kinematics.SwerveModulePosition

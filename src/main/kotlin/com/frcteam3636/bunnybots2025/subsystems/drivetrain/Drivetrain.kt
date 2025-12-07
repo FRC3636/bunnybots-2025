@@ -345,7 +345,10 @@ object Drivetrain : Subsystem {
                 .toTypedArray())
 
         Logger.recordOutput("Drivetrain/Distance To Zoo", distanceToZoo())
-        Logger.recordOutput("Drivetrain/Zoo Translation", Pose2d(DriverStation.getAlliance().get().zooTranslation, Rotation2d.kZero))
+        Logger.recordOutput(
+            "Drivetrain/Zoo Translation",
+            Pose2d(DriverStation.getAlliance().get().zooTranslation, Rotation2d.kZero)
+        )
     }
 
     /** The desired speeds and angles of the swerve modules. */

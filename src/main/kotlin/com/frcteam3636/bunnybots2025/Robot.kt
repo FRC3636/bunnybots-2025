@@ -10,8 +10,6 @@ import com.frcteam3636.bunnybots2025.subsystems.intake.Intake
 import com.frcteam3636.bunnybots2025.subsystems.intake.Intake.Position
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Target
-import com.frcteam3636.bunnybots2025.subsystems.shooter.zooTranslation
-import com.frcteam3636.bunnybots2025.utils.math.seconds
 import com.frcteam3636.version.BUILD_DATE
 import com.frcteam3636.version.DIRTY
 import com.frcteam3636.version.GIT_BRANCH
@@ -23,7 +21,6 @@ import edu.wpi.first.hal.HAL
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.DriverStation
 import edu.wpi.first.wpilibj.Preferences
-import edu.wpi.first.wpilibj.Threads
 import edu.wpi.first.wpilibj.simulation.DriverStationSim
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import edu.wpi.first.wpilibj.util.WPILibVersion
@@ -44,7 +41,6 @@ import org.littletonrobotics.urcl.URCL
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.io.path.Path
 import kotlin.io.path.exists
-import kotlin.jvm.optionals.getOrDefault
 
 
 /**
@@ -216,12 +212,13 @@ object Robot : LoggedRobot() {
                             Commands.parallel(
                                 Shooter.Feeder.feed(),
                                 Indexer.index(),
-                            ).until (Shooter.Flywheels.isDetected),
+                            ).until(Shooter.Flywheels.isDetected),
                             Indexer.slowIndex()
                         ).until(Shooter.Flywheels.isDetected),
                         Shooter.Flywheels.isDetected
                     ),
-                    Indexer.index().repeatedly(), // retry until subsystem is released. just in case we are shooting at the same time.
+                    Indexer.index()
+                        .repeatedly(), // retry until subsystem is released. just in case we are shooting at the same time.
                 )
             )
         )
@@ -271,17 +268,19 @@ object Robot : LoggedRobot() {
 //            }, setOf(Drivetrain))
 //        )
 
-        joystickRight.button(1).whileTrue(Commands.parallel(
-            Shooter.Flywheels.shoot(),
-            Commands.sequence(
-                Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
-                Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
-                Commands.parallel(
-                    Shooter.Feeder.feed(),
-                    Indexer.index()
+        joystickRight.button(1).whileTrue(
+            Commands.parallel(
+                Shooter.Flywheels.shoot(),
+                Commands.sequence(
+                    Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                    Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
+                    Commands.parallel(
+                        Shooter.Feeder.feed(),
+                        Indexer.index()
+                    )
                 )
             )
-        ))
+        )
             .onTrue(Shooter.Pivot.setTarget(Target.AIM))
             .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
 
@@ -318,17 +317,19 @@ object Robot : LoggedRobot() {
 
 
         controllerDev.rightTrigger()
-            .whileTrue(Commands.parallel(
-                Shooter.Flywheels.shoot(),
-                Commands.sequence(
-                    Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
-                    Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
-                    Commands.parallel(
-                        Shooter.Feeder.feed(),
-                        Indexer.index()
+            .whileTrue(
+                Commands.parallel(
+                    Shooter.Flywheels.shoot(),
+                    Commands.sequence(
+                        Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                        Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
+                        Commands.parallel(
+                            Shooter.Feeder.feed(),
+                            Indexer.index()
+                        )
                     )
                 )
-            ))
+            )
             .onTrue(Shooter.Pivot.setTarget(Target.AIM))
             .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
 //        controllerDev.leftTrigger()
