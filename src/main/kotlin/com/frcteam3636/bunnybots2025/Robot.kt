@@ -10,6 +10,7 @@ import com.frcteam3636.bunnybots2025.subsystems.intake.Intake
 import com.frcteam3636.bunnybots2025.subsystems.intake.Intake.Position
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Target
+import com.frcteam3636.bunnybots2025.subsystems.shooter.zooTranslation
 import com.frcteam3636.version.BUILD_DATE
 import com.frcteam3636.version.DIRTY
 import com.frcteam3636.version.GIT_BRANCH
@@ -41,6 +42,7 @@ import org.littletonrobotics.urcl.URCL
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.io.path.Path
 import kotlin.io.path.exists
+import kotlin.jvm.optionals.getOrDefault
 
 
 /**
@@ -257,28 +259,17 @@ object Robot : LoggedRobot() {
             Drivetrain.zeroGyro()
         }).ignoringDisable(true))
 
-//        joystickLeft.button(1).whileTrue(
-//            Commands.defer({ // TODO: check if this shit really needs to be deferred. it probably does lol.
-//                Drivetrain.driveWithJoystickPointingTowards(
-//                    joystickLeft.hid,
-//                    DriverStation.getAlliance()
-//                        .getOrDefault(DriverStation.Alliance.Blue)
-//                        .zooTranslation
-//                )
-//            }, setOf(Drivetrain))
-//        )
-
         joystickRight.button(1).whileTrue(
             Commands.parallel(
-                Shooter.Flywheels.shoot(),
-                Commands.sequence(
-                    Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
-                    Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
-                    Commands.parallel(
-                        Shooter.Feeder.feed(),
-                        Indexer.index()
+                doShootSequence(),
+                Commands.defer({ // TODO: check if this shit really needs to be deferred. it probably does lol.
+                    Drivetrain.driveWithJoystickPointingTowards(
+                        joystickLeft.hid,
+                        DriverStation.getAlliance()
+                            .getOrDefault(DriverStation.Alliance.Blue)
+                            .zooTranslation
                     )
-                )
+                }, setOf(Drivetrain))
             )
         )
             .onTrue(Shooter.Pivot.setTarget(Target.AIM))
