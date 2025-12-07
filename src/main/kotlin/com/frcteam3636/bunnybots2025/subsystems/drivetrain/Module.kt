@@ -121,7 +121,7 @@ class Mk5nSwerveModule(
             )
         }
         timestampQueue.clear()
-        temperatures = SwerveModuleTemperature(drivingMotor.temperature, turningMotor.temperature)
+//        temperatures = SwerveModuleTemperature(drivingMotor.temperature, turningMotor.temperature)
     }
 }
 

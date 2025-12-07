@@ -7,6 +7,7 @@ import com.frcteam3636.bunnybots2025.subsystems.drivetrain.FIELD_LAYOUT
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Flywheels.speedInterpolationTable
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Pivot.angleInterpolationTable
 import com.frcteam3636.bunnybots2025.utils.math.*
+import edu.wpi.first.math.MathUtil
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation2d
@@ -29,6 +30,7 @@ import org.littletonrobotics.junction.mechanism.LoggedMechanism2d
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber
 import kotlin.math.abs
+import kotlin.math.pow
 
 object Shooter {
     object Flywheels : Subsystem {
@@ -60,10 +62,9 @@ object Shooter {
 
         init {
             //FIXME plot points to create regression
-            speedInterpolationTable.putVelocity(5.0.meters, 60.0.radiansPerSecond)
-            speedInterpolationTable.putVelocity(7.5.meters, 45.0.radiansPerSecond)
-            speedInterpolationTable.putVelocity(10.0.meters, 30.0.radiansPerSecond)
-            speedInterpolationTable.putVelocity(12.5.meters, 25.0.radiansPerSecond)
+            speedInterpolationTable.putVelocity(1.66.meters, 2650.rpm)
+//            speedInterpolationTable.putVelocity(2.5.meters, 3400.rpm)
+            speedInterpolationTable.putVelocity(3.4.meters, 4300.rpm)
         }
 
         private val inputs = LoggedFlywheelInputs()
@@ -146,10 +147,9 @@ object Shooter {
 
         init {
             //FIXME plot points to create regression
-            angleInterpolationTable.putAngle(5.0.meters, 60.0.degrees)
-            angleInterpolationTable.putAngle(7.5.meters, 45.0.degrees)
-            angleInterpolationTable.putAngle(10.0.meters, 30.0.degrees)
-            angleInterpolationTable.putAngle(12.5.meters, 25.0.degrees)
+            angleInterpolationTable.putAngle(1.66.meters, 55.0.degrees)
+//            angleInterpolationTable.putAngle(2.5.meters, 50.0.degrees)
+            angleInterpolationTable.putAngle(3.4.meters, 40.0.degrees)
 
             mechanism.getRoot("Shooter Pivot", 50.0, 150.0).apply {
                 append(pivotAngleLigament)
@@ -210,7 +210,7 @@ object Shooter {
         fun feed(interruptBehavior: Command.InterruptionBehavior = Command.InterruptionBehavior.kCancelSelf): Command =
             startEnd(
                 {
-                    io.setSpeed(0.2)
+                    io.setSpeed(0.1)
                 },
                 {
                     io.setSpeed(0.0)
@@ -255,9 +255,13 @@ enum class Target(val profile: ShooterProfile) {
     AIM(
         ShooterProfile(
             {
-                angleInterpolationTable.getAngle(distanceToZoo())
+                val distance = distanceToZoo().inMeters()
+                val angle = ((-2.96479 * distance.pow(2)) + (6.38113 * distance) + 52.57708)
+                MathUtil.clamp(angle, 12.0, 60.0).degrees
             }, {
-                speedInterpolationTable.getVelocity(distanceToZoo())
+                val distance = distanceToZoo().inMeters()
+                val speed = ((61.57635 * distance.pow(2)) + (636.69951 * distance) + 1423.39901)
+                MathUtil.clamp(speed, 0.0, 5500.0).rpm
             }
         )
     ),
@@ -295,15 +299,11 @@ enum class Target(val profile: ShooterProfile) {
 
 val DriverStation.Alliance.zooTranslation: Translation2d
     get() = when (this) { // got these values from apriltag math
-        DriverStation.Alliance.Red -> Translation2d(
-            12.9327783.meters,
-            4.0132127.meters,
-        )
+        DriverStation.Alliance.Red -> (FIELD_LAYOUT.getTagPose(5).get().translation.toTranslation2d() +
+                FIELD_LAYOUT.getTagPose(7).get().translation.toTranslation2d()) / 2.0
 
-        else -> Translation2d(
-            FIELD_LAYOUT.fieldLength.meters - 12.9327783.meters,
-            4.0132127.meters
-        )
+        else -> (FIELD_LAYOUT.getTagPose(1).get().translation.toTranslation2d() +
+                FIELD_LAYOUT.getTagPose(3).get().translation.toTranslation2d()) / 2.0
     }
 
 internal val FLYWHEEL_VELOCITY_TOLERANCE = 2.radiansPerSecond
