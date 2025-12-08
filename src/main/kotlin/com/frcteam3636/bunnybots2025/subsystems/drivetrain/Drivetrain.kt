@@ -38,6 +38,7 @@ import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.Subsystem
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
+import edu.wpi.first.wpilibj2.command.button.Trigger
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine
 import org.littletonrobotics.junction.Logger
 import kotlin.jvm.optionals.getOrDefault
@@ -451,6 +452,11 @@ object Drivetrain : Subsystem {
         }
     }
 
+    val isPointedAtZoo = Trigger {
+        val target = DriverStation.getAlliance().get().zooTranslation
+        target.minus(estimatedPose.translation).angle.radians.radians < 5.degrees
+    }
+
     @Suppress("unused")
     fun driveWithJoystickPointingTowards(translationJoystick: Joystick, target: Translation2d): Command {
         Logger.recordOutput("Drivetrain/Polar Driving/Target", Pose2d(target, Rotation2d.kZero))
@@ -467,7 +473,7 @@ object Drivetrain : Subsystem {
             }
             val magnitude = polarDrivingPIDController.calculate(
                 estimatedPose.rotation.radians,
-                target.minus(estimatedPose.translation).angle.radians - TAU
+                target.minus(estimatedPose.translation).angle.radians
             )
 
             Logger.recordOutput("Drivetrain/Polar Driving/PID Output", magnitude)
@@ -535,18 +541,22 @@ object Drivetrain : Subsystem {
         )
     )
 
+    @Suppress("unused")
     fun sysIdQuasistatic(direction: SysIdRoutine.Direction) = run {
         io.runCharacterization(0.volts, shouldStraight = true)
     }.withTimeout(2.0).andThen(sysID.quasistatic(direction))!!
 
+    @Suppress("unused")
     fun sysIdDynamic(direction: SysIdRoutine.Direction) = run {
         io.runCharacterization(0.volts, shouldStraight = true)
     }.withTimeout(2.0).andThen(sysID.dynamic(direction))!!
 
+    @Suppress("unused")
     fun sysIdQuasistaticSpin(direction: SysIdRoutine.Direction) = run {
         io.runCharacterization(0.volts, shouldSpin = true)
     }.withTimeout(2.0).andThen(sysID.quasistatic(direction))!!
 
+    @Suppress("unused")
     fun sysIdDynamicSpin(direction: SysIdRoutine.Direction) = run {
         io.runCharacterization(0.volts, shouldSpin = true)
     }.withTimeout(2.0).andThen(sysID.dynamic(direction))!!
