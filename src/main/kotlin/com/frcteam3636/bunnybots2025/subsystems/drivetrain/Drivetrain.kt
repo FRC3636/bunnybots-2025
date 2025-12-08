@@ -454,7 +454,10 @@ object Drivetrain : Subsystem {
 
     val isPointedAtZoo = Trigger {
         val target = DriverStation.getAlliance().get().zooTranslation
-        target.minus(estimatedPose.translation).angle.radians.radians < 5.degrees
+        val isPointed = (estimatedPose.rotation.radians.radians - target.minus(estimatedPose.translation).angle.radians.radians) < 5.degrees
+        Logger.recordOutput("Drivetrain/Zoo Difference", (estimatedPose.rotation.radians.radians - target.minus(estimatedPose.translation).angle.radians.radians))
+        Logger.recordOutput("Drivetrain/Is Pointed at Zoo", isPointed)
+        isPointed
     }
 
     @Suppress("unused")
@@ -626,7 +629,7 @@ object Drivetrain : Subsystem {
         val PATH_FOLLOWING_TRANSLATION_GAINS = PIDGains(10.0)
         val PATH_FOLLOWING_ROTATION_GAINS = PIDGains(7.5)
 
-        val POLAR_DRIVING_GAINS = PIDGains(0.15, 0.0, 0.05)
+        val POLAR_DRIVING_GAINS = PIDGains(5.0, 0.0, 0.0)
 
         // CAN IDs
         val MODULE_CAN_IDS =
