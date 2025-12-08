@@ -111,6 +111,7 @@ class LimelightPoseProvider(
     private val throttlePublisher = table.getIntegerTopic("throttle_set").publish()
     private val imuModePublisher = table.getIntegerTopic("imumode_set").publish()
     private var loopsSinceLastSeen: Int = 0
+    private var connected = false
 
     private var isThrottled = false
 
@@ -137,6 +138,14 @@ class LimelightPoseProvider(
                         measurements += measurement.poseMeasurement!!
                         observedTags += measurement.observedTags
                     }
+                    // We assume the camera has disconnected if there are no new updates for several ticks.
+                    val hb = hbSubscriber.get()
+                    connected = hb > lastSeenHb || loopsSinceLastSeen < CONNECTED_TIMEOUT
+                    if (hb == lastSeenHb)
+                        loopsSinceLastSeen++
+                    else
+                        loopsSinceLastSeen = 0
+                    lastSeenHb = hb
                 } finally {
                     lock.unlock()
                 }
@@ -233,18 +242,10 @@ class LimelightPoseProvider(
                 TargetObservation(Rotation2d(txSubscriber.get().degrees), Rotation2d(tySubscriber.get().degrees))
             observedTags = intArrayOf()
             measurements = arrayOf()
+            inputs.connected = connected
         } finally {
             lock.unlock()
         }
-
-        // We assume the camera has disconnected if there are no new updates for several ticks.
-        val hb = hbSubscriber.get()
-        inputs.connected = hb > lastSeenHb || loopsSinceLastSeen < CONNECTED_TIMEOUT
-        if (hb == lastSeenHb)
-            loopsSinceLastSeen++
-        else
-            loopsSinceLastSeen = 0
-        lastSeenHb = hb
     }
 
     companion object {
