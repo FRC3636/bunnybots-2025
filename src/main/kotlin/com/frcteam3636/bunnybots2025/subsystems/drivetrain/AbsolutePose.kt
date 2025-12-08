@@ -186,7 +186,7 @@ class LimelightPoseProvider(
             }
             if (estimate.tagCount == 1) {
                 val fiducial = estimate.rawFiducials[0]!!
-                if (fiducial.ambiguity > AMBIGUITY_THRESHOLD || fiducial.distToCamera > MAX_SINGLE_TAG_DISTANCE)
+                if (fiducial.ambiguity > AMBIGUITY_THRESHOLD)
                     measurement.shouldReject = true
             }
 
