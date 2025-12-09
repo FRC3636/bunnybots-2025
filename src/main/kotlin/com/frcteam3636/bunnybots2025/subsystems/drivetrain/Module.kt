@@ -60,10 +60,14 @@ class Mk5nSwerveModule(
 ) : SwerveModule {
     private var timestampQueue: Queue<Double> = PhoenixOdometryThread.getInstance().makeTimestampQueue()
 
-    override var odometryTimestamps: DoubleArray = doubleArrayOf()
+    private val maxQueueSize = 100  // or however many timestamps we expect
+    // preallocate to reduce GC pressure
+    private val emptySwerveModulePosition = SwerveModulePosition()
+    override var odometryTimestamps: DoubleArray = DoubleArray(maxQueueSize)
     override var odometryDrivePositions = doubleArrayOf()
-    override var odometryTurnPositions: Array<Rotation2d> = emptyArray()
-    override var odometryPositions: Array<SwerveModulePosition> = emptyArray()
+    override var odometryTurnPositions: Array<Rotation2d> = Array(maxQueueSize) { Rotation2d.kZero }
+    override var odometryPositions: Array<SwerveModulePosition> = Array(maxQueueSize) { emptySwerveModulePosition }
+    private var currentSize = 0
     override var temperatures: SwerveModuleTemperature = SwerveModuleTemperature(0.0.celsius, 0.0.celsius)
 
     override val state: SwerveModuleState
@@ -107,21 +111,31 @@ class Mk5nSwerveModule(
         get() = turningMotor.signals + drivingMotor.signals
 
     override fun periodic() {
-        odometryTimestamps = timestampQueue.map { it.toDouble() }.toTypedArray().toDoubleArray()
+        currentSize = timestampQueue.size
+
+        // Fill the odometryTimestamps array in-place
+        var i = 0
+        for (timestamp in timestampQueue) {
+            odometryTimestamps[i++] = timestamp.toDouble()
+        }
+
         drivingMotor.periodic()
         turningMotor.periodic()
         odometryTurnPositions = turningMotor.odometryTurnPositions
         odometryDrivePositions = drivingMotor.odometryDrivePositions
-        odometryPositions = Array(odometryTimestamps.size) { index ->
-            SwerveModulePosition(
-                (odometryDrivePositions[index].radians - (odometryTurnPositions[index].rotations.rotations * COUPLING_RATIO)).toLinear(
-                    WHEEL_RADIUS
-                ),
-                odometryTurnPositions[index] + chassisAngle
-            )
+
+        // Update positions in-place
+        for (index in 0..currentSize) {
+            val distance = (odometryDrivePositions[index].radians -
+                    (odometryTurnPositions[index].rotations.rotations * COUPLING_RATIO)).toLinear(WHEEL_RADIUS)
+            val angle = odometryTurnPositions[index] + chassisAngle
+
+            val pos = odometryPositions[index]
+            pos.distanceMeters = distance.inMeters()
+            pos.angle = angle
         }
+
         timestampQueue.clear()
-//        temperatures = SwerveModuleTemperature(drivingMotor.temperature, turningMotor.temperature)
     }
 }
 
