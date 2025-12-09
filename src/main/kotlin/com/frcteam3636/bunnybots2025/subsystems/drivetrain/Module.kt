@@ -115,9 +115,8 @@ class Mk5nSwerveModule(
         validTimestamps = timestampQueue.size
 
         // Fill the odometryTimestamps array in-place
-        var i = 0
-        for (timestamp in timestampQueue) {
-            odometryTimestamps[i++] = timestamp.toDouble()
+        for ((i, timestamp) in timestampQueue.withIndex()) {
+            odometryTimestamps[i] = timestamp
         }
 
         drivingMotor.periodic()
