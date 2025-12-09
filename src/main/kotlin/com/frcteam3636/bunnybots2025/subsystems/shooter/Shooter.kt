@@ -103,16 +103,10 @@ object Shooter {
         }
 
         fun idle(): Command =
-            startEnd(
+            runEnd(
                 {
-                    if (Shooter.Flywheels.isDetected.asBoolean) {
-                        upperSetpoint = -3.radiansPerSecond
-                        lowerSetpoint = -3.radiansPerSecond
-                    }
-                    else {
-                        lowerSetpoint = 0.radiansPerSecond
-                        upperSetpoint = 0.radiansPerSecond
-                    }
+                    upperSetpoint = -3.radiansPerSecond
+                    lowerSetpoint = -3.radiansPerSecond
                 },
                 {
                     upperSetpoint = 0.radiansPerSecond
@@ -214,9 +208,14 @@ object Shooter {
         }
 
         fun idle(): Command =
-            startEnd(
+            runEnd(
                 {
-                    io.setSpeed(-0.04)
+                    if (Shooter.Flywheels.isDetected.asBoolean) {
+                        io.setSpeed(-0.04)
+                    }
+                    else {
+                        io.setSpeed(0.0)
+                    }
                 },
                 {
                     io.setSpeed(0.0)

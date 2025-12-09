@@ -3,6 +3,7 @@ package com.frcteam3636.bunnybots2025.subsystems.indexer
 import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.RobotState
+import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.Subsystem
@@ -22,6 +23,21 @@ object Indexer : Subsystem {
         io.updateInputs(inputs)
         Logger.processInputs("Indexer", inputs)
     }
+
+    fun idle(): Command =
+        runEnd(
+            {
+                if (Shooter.Flywheels.isDetected.asBoolean) {
+                    io.setIndexerSpeed(-0.04)
+                }
+                else {
+                    io.setIndexerSpeed(0.0)
+                }
+            },
+            {
+                io.setIndexerSpeed(0.0)
+            }
+        )
 
     fun index(): Command =
         startEnd(
