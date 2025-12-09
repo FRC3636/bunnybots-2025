@@ -4,6 +4,9 @@ import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.FIELD_LAYOUT
+import com.frcteam3636.bunnybots2025.subsystems.indexer.Indexer
+import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Flywheels.lowerSetpoint
+import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Flywheels.upperSetpoint
 import com.frcteam3636.bunnybots2025.utils.math.*
 import edu.wpi.first.math.MathUtil
 import edu.wpi.first.math.geometry.Pose2d
@@ -100,10 +103,10 @@ object Shooter {
         }
 
         fun idle(): Command =
-            startEnd(
+            runEnd(
                 {
-                    upperSetpoint = 1.radiansPerSecond
-                    lowerSetpoint = 1.radiansPerSecond
+                    upperSetpoint = -3.radiansPerSecond
+                    lowerSetpoint = -3.radiansPerSecond
                 },
                 {
                     upperSetpoint = 0.radiansPerSecond
@@ -203,6 +206,20 @@ object Shooter {
             io.updateInputs(inputs)
             Logger.processInputs("Shooter/Feeder", inputs)
         }
+
+        fun idle(): Command =
+            runEnd(
+                {
+                    if (Shooter.Flywheels.isDetected.asBoolean) {
+                        io.setSpeed(-0.04)
+                    } else {
+                        io.setSpeed(0.0)
+                    }
+                },
+                {
+                    io.setSpeed(0.0)
+                }
+            )
 
         fun feed(interruptBehavior: Command.InterruptionBehavior = Command.InterruptionBehavior.kCancelSelf): Command =
             startEnd(
