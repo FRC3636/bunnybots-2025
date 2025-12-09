@@ -101,6 +101,9 @@ abstract class DrivetrainIO {
     val odometryYawPositions: DoubleArray
         get() = gyro.odometryYawPositions
 
+    val validTimestamps: Int
+        get() = modules[DrivetrainCorner.FRONT_LEFT].validTimestamps
+
     val signals: Array<BaseStatusSignal>
         get() {
             var signals = arrayOf<BaseStatusSignal>()

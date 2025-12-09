@@ -260,8 +260,9 @@ object Drivetrain : Subsystem {
                 val odometryTimestamps = io.odometryTimestamps
                 val odometryPositions = io.odometryPositions
                 val odometryYawPositons = io.odometryYawPositions
+                val validTimestamps = io.validTimestamps
                 Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions.first().size)
-                for (i in 0..<odometryTimestamps.size) {
+                for (i in 0..<validTimestamps) {
                     for (index in 0..3) {
                         val pos = odometryPositions[index][i]
                         modulePositions[index].distanceMeters = pos.distanceMeters

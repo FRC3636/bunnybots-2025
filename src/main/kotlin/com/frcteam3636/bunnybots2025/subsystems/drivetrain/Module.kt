@@ -47,6 +47,7 @@ interface SwerveModule {
     var odometryTurnPositions: Array<Rotation2d>
     var odometryDrivePositions: DoubleArray
     var odometryPositions: Array<SwerveModulePosition>
+    var validTimestamps: Int
     var temperatures: SwerveModuleTemperature
     val signals: Array<BaseStatusSignal>
         get() = emptyArray()
@@ -67,7 +68,7 @@ class Mk5nSwerveModule(
     override var odometryDrivePositions = doubleArrayOf()
     override var odometryTurnPositions: Array<Rotation2d> = Array(maxQueueSize) { Rotation2d.kZero }
     override var odometryPositions: Array<SwerveModulePosition> = Array(maxQueueSize) { emptySwerveModulePosition }
-    private var currentSize = 0
+    override var validTimestamps: Int = 0
     override var temperatures: SwerveModuleTemperature = SwerveModuleTemperature(0.0.celsius, 0.0.celsius)
 
     override val state: SwerveModuleState
@@ -111,7 +112,7 @@ class Mk5nSwerveModule(
         get() = turningMotor.signals + drivingMotor.signals
 
     override fun periodic() {
-        currentSize = timestampQueue.size
+        validTimestamps = timestampQueue.size
 
         // Fill the odometryTimestamps array in-place
         var i = 0
@@ -125,7 +126,7 @@ class Mk5nSwerveModule(
         odometryDrivePositions = drivingMotor.odometryDrivePositions
 
         // Update positions in-place
-        for (index in 0..currentSize) {
+        for (index in 0..validTimestamps) {
             val distance = (odometryDrivePositions[index].radians -
                     (odometryTurnPositions[index].rotations.rotations * COUPLING_RATIO)).toLinear(WHEEL_RADIUS)
             val angle = odometryTurnPositions[index] + chassisAngle
@@ -302,6 +303,7 @@ class SimSwerveModule() : SwerveModule {
     override var odometryTurnPositions: Array<Rotation2d> = emptyArray()
     override var odometryPositions: Array<SwerveModulePosition> = emptyArray()
     override var temperatures: SwerveModuleTemperature = SwerveModuleTemperature(0.0.celsius, 0.0.celsius)
+    override var validTimestamps: Int = 0
     private val driveMotorSystem = LinearSystemId.createDCMotorSystem(
         DCMotor.getKrakenX60Foc(1),
         0.0001,
