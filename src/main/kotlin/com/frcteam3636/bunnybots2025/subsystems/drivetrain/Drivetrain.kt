@@ -291,10 +291,13 @@ object Drivetrain : Subsystem {
 
 
         // Update absolute pose sensors and add their measurements to the pose estimator
+        val acceptedPoses: MutableList<Pose2d> = mutableListOf()
+        val rejectedPoses: MutableList<Pose2d> = mutableListOf()
         for ((name, ioPair) in absolutePoseIOs) {
             val (sensorIO, inputs) = ioPair
-            val acceptedPoses: MutableList<Pose2d> = mutableListOf()
-            val rejectedPoses: MutableList<Pose2d> = mutableListOf()
+
+            acceptedPoses.clear()
+            rejectedPoses.clear()
 
             sensorIO.updateInputs(inputs)
             Logger.processInputs("Drivetrain/Absolute Pose/$name", inputs)

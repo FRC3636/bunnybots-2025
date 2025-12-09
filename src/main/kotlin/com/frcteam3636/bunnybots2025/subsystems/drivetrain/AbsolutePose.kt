@@ -93,9 +93,9 @@ class LimelightPoseProvider(
     // https://docs.limelightvision.io/docs/docs-limelight/tutorials/tutorial-swerve-pose-estimation
     // https://docs.limelightvision.io/docs/docs-limelight/apis/limelight-lib#4-field-localization-with-megatag
 
-    private var observedTags = intArrayOf()
+    private var observedTags = mutableListOf<Int>()
 
-    private var measurements = arrayOf<AbsolutePoseMeasurement>()
+    private var measurements = mutableListOf<AbsolutePoseMeasurement>()
     private var shouldReject: Boolean = false
     private var lock = ReentrantLock()
 
@@ -134,9 +134,12 @@ class LimelightPoseProvider(
                 val temp = updateCurrentMeasurements()
                 try {
                     lock.lock()
+                    observedTags.clear()
                     for (measurement in temp) {
-                        measurements += measurement.poseMeasurement!!
-                        observedTags += measurement.observedTags
+                        measurements.add(measurement.poseMeasurement!!)
+                        for (tag in measurement.observedTags) {
+                            observedTags.add(tag)
+                        }
                     }
                     // We assume the camera has disconnected if there are no new updates for several ticks.
                     val hb = hbSubscriber.get()
@@ -154,8 +157,8 @@ class LimelightPoseProvider(
         }
     }
 
-    private fun updateCurrentMeasurements(): Array<LimelightMeasurement> {
-        var measurements: Array<LimelightMeasurement> = emptyArray()
+    private fun updateCurrentMeasurements(): MutableList<LimelightMeasurement> {
+        val measurements: MutableList<LimelightMeasurement> = mutableListOf()
 
         if (!isLL4) {
             gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees, 0.0, 0.0, 0.0, 0.0, 0.0))
@@ -207,7 +210,7 @@ class LimelightPoseProvider(
                 measurement.observedTags.size
             )
 
-            measurements += measurement
+            measurements.add(measurement)
         }
 
         for (rawSample in megatag2Subscriber.readQueue()) {
@@ -226,7 +229,7 @@ class LimelightPoseProvider(
                 measurement.observedTags.size
             )
 
-            measurements += measurement
+            measurements.add(measurement)
         }
 
 
@@ -236,12 +239,11 @@ class LimelightPoseProvider(
     override fun updateInputs(inputs: AbsolutePoseProviderInputs) {
         try {
             lock.lock()
-            inputs.measurements = measurements
-            inputs.observedTags = observedTags
+            inputs.measurements = measurements.toTypedArray()
+            inputs.observedTags = observedTags.toIntArray()
+            measurements.clear()
             inputs.latestTargetObservation =
                 TargetObservation(Rotation2d(txSubscriber.get().degrees), Rotation2d(tySubscriber.get().degrees))
-            observedTags = intArrayOf()
-            measurements = arrayOf()
             inputs.connected = connected
         } finally {
             lock.unlock()
@@ -357,7 +359,7 @@ class CameraSimPoseProvider(name: String, val chassisToCamera: Transform3d) : Ab
     override fun updateInputs(inputs: AbsolutePoseProviderInputs) {
         inputs.connected = camera.isConnected
         inputs.measurements = arrayOf()
-        inputs.observedTags = intArrayOf()
+
         val unreadResults = camera.allUnreadResults
         for (result in unreadResults) {
             if (result.hasTargets()) {
