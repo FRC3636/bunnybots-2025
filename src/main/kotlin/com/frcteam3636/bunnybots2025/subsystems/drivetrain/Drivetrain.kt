@@ -436,7 +436,7 @@ object Drivetrain : Subsystem {
                 estimatedPose.rotation.radians,
                 DriverStation.getAlliance().getOrDefault(DriverStation.Alliance.Blue).zooTranslation.minus(
                     estimatedPose.translation
-                ).angle.radians - TAU
+                ).angle.radians
             )
 
             Logger.recordOutput("Drivetrain/Align To Zoo/PID Output", magnitude)
@@ -447,9 +447,7 @@ object Drivetrain : Subsystem {
                 magnitude,
                 poseEstimator.estimatedPosition.rotation
             )
-        }.until {
-            polarDrivingPIDController.atSetpoint()
-        }
+        }.until(isPointedAtZoo)
     }
 
     val isPointedAtZoo = Trigger {
