@@ -183,6 +183,10 @@ object Drivetrain : Subsystem {
                 .toTypedArray()
         )
 
+
+    private val acceptedPoses: MutableList<Pose2d> = mutableListOf()
+    private val rejectedPoses: MutableList<Pose2d> = mutableListOf()
+
     /** Helper for estimating the location of the drivetrain on the field */
     val poseEstimator =
         SwerveDrivePoseEstimator(
@@ -291,13 +295,10 @@ object Drivetrain : Subsystem {
 
 
         // Update absolute pose sensors and add their measurements to the pose estimator
-        val acceptedPoses: MutableList<Pose2d> = mutableListOf()
-        val rejectedPoses: MutableList<Pose2d> = mutableListOf()
+        rejectedPoses.clear()
+        acceptedPoses.clear()
         for ((name, ioPair) in absolutePoseIOs) {
             val (sensorIO, inputs) = ioPair
-
-            acceptedPoses.clear()
-            rejectedPoses.clear()
 
             sensorIO.updateInputs(inputs)
             Logger.processInputs("Drivetrain/Absolute Pose/$name", inputs)
@@ -317,10 +318,10 @@ object Drivetrain : Subsystem {
                     rejectedPoses.add(measurement.pose)
                 }
             }
-
-            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Accepted Poses", *acceptedPoses.toTypedArray())
-            Logger.recordOutput("Drivetrain/Absolute Pose/$name/Rejected Poses", *rejectedPoses.toTypedArray())
         }
+
+        Logger.recordOutput("Drivetrain/Absolute Pose/Accepted Poses", *acceptedPoses.toTypedArray())
+        Logger.recordOutput("Drivetrain/Absolute Pose/Rejected Poses", *rejectedPoses.toTypedArray())
 
 //        // Use the new measurements to update the pose estimator
 //        poseEstimator.update(
