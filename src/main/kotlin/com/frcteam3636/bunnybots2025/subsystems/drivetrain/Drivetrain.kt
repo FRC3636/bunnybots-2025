@@ -248,6 +248,9 @@ object Drivetrain : Subsystem {
         headingController.enableContinuousInput(-PI, PI)
     }
 
+    val modulePositions = Array(4) { SwerveModulePosition() }
+    val moduleDeltas = Array(4) { SwerveModulePosition() }
+
     override fun periodic() {
         if (Robot.model != Robot.Model.SIMULATION) {
             try {
@@ -259,18 +262,21 @@ object Drivetrain : Subsystem {
                 val odometryYawPositons = io.odometryYawPositions
                 Logger.recordOutput("Drivetrain/Odometry Positions Count", odometryPositions.first().size)
                 for (i in 0..<odometryTimestamps.size) {
-                    val modulePositions = Array(4) { index ->
-                        odometryPositions[index][i].distanceMeters
-                        odometryPositions[index][i]
+                    for (index in 0..3) {
+                        val pos = odometryPositions[index][i]
+                        modulePositions[index].distanceMeters = pos.distanceMeters
+                        modulePositions[index].angle = pos.angle
                     }
-                    val moduleDeltas = Array(4) { index ->
-                        SwerveModulePosition(
-                            modulePositions[index].distanceMeters - lastModulePositions[index].distanceMeters,
-                            modulePositions[index].angle - lastModulePositions[index].angle
-                        )
-                    }
-                    for (moduleIndex in 0..3) {
-                        lastModulePositions[moduleIndex] = modulePositions[moduleIndex]
+
+                    // Compute deltas in-place
+                    for (index in 0..3) {
+                        val deltaDistance = modulePositions[index].distanceMeters - lastModulePositions[index].distanceMeters
+                        val deltaAngle = modulePositions[index].angle - lastModulePositions[index].angle
+                        moduleDeltas[index].distanceMeters = deltaDistance
+                        moduleDeltas[index].angle = deltaAngle
+
+                        // Update last positions
+                        lastModulePositions[index] = modulePositions[index]
                     }
 
                     rawGyroRotation = if (inputs.gyroConnected) {
