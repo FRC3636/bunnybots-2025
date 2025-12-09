@@ -251,6 +251,7 @@ object Robot : LoggedRobot() {
         Drivetrain.defaultCommand = Drivetrain.driveWithJoysticks(joystickLeft.hid, joystickRight.hid)
         Shooter.Flywheels.defaultCommand = Shooter.Flywheels.idle()
         Shooter.Pivot.defaultCommand = Shooter.Pivot.moveToActiveTarget()
+        Shooter.Feeder.defaultCommand = Shooter.Feeder.idle()
         Intake.defaultCommand = Intake.setPivotPosition(Position.Stowed)
         // (The button with the yellow tape on it)
         joystickLeft.button(8).onTrue(Commands.runOnce({
