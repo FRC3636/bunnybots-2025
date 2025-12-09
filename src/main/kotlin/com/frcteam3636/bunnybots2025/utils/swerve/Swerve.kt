@@ -22,7 +22,7 @@ enum class DrivetrainCorner {
     BACK_RIGHT
 }
 
-data class PerCorner<T>(val frontLeft: T, val frontRight: T, val backLeft: T, val backRight: T) :
+data class PerCorner<T>(var frontLeft: T, var frontRight: T, var backLeft: T, var backRight: T) :
     Collection<T> {
     operator fun get(corner: DrivetrainCorner): T =
         when (corner) {
@@ -41,6 +41,14 @@ data class PerCorner<T>(val frontLeft: T, val frontRight: T, val backLeft: T, va
             3 -> backRight
             else -> throw IndexOutOfBoundsException()
         }
+
+    operator fun set(index: Int, value: T) = when (index) {
+        0 -> frontLeft = value
+        1 -> frontRight = value
+        2 -> backLeft = value
+        3 -> backRight = value
+        else -> throw IndexOutOfBoundsException()
+    }
 
     fun <U> map(block: (T) -> U): PerCorner<U> = mapWithCorner { x, _ -> block(x) }
     fun <U> mapWithCorner(block: (T, DrivetrainCorner) -> U): PerCorner<U> = generate { corner ->

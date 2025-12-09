@@ -452,7 +452,7 @@ object Drivetrain : Subsystem {
 
     val isPointedAtZoo = Trigger {
         val target = DriverStation.getAlliance().get().zooTranslation
-        val isPointed = (estimatedPose.rotation.radians.radians - target.minus(estimatedPose.translation).angle.radians.radians) < 5.degrees
+        val isPointed = polarDrivingPIDController.atSetpoint()
         Logger.recordOutput("Drivetrain/Zoo Difference", (estimatedPose.rotation.radians.radians - target.minus(estimatedPose.translation).angle.radians.radians))
         Logger.recordOutput("Drivetrain/Is Pointed at Zoo", isPointed)
         isPointed
@@ -468,7 +468,7 @@ object Drivetrain : Subsystem {
             val translationInput = if (abs(translationJoystick.x) > JOYSTICK_DEADBAND
                 || abs(translationJoystick.y) > JOYSTICK_DEADBAND
             ) {
-                Translation2d(-translationJoystick.y, -translationJoystick.x)
+                translationJoystick.fieldRelativeTranslation2d
             } else {
                 Translation2d()
             }
