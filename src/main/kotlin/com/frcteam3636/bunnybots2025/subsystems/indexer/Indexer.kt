@@ -29,8 +29,7 @@ object Indexer : Subsystem {
             {
                 if (Shooter.Flywheels.isDetected.asBoolean) {
                     io.setIndexerSpeed(-0.04)
-                }
-                else {
+                } else {
                     io.setIndexerSpeed(0.0)
                 }
             },

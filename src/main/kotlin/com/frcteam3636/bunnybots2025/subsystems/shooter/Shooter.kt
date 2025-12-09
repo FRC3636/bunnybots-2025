@@ -212,8 +212,7 @@ object Shooter {
                 {
                     if (Shooter.Flywheels.isDetected.asBoolean) {
                         io.setSpeed(-0.04)
-                    }
-                    else {
+                    } else {
                         io.setSpeed(0.0)
                     }
                 },
