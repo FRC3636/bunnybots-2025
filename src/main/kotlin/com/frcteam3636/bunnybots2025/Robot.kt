@@ -201,25 +201,22 @@ object Robot : LoggedRobot() {
     }
 
     fun doIntakeSequence(): Command {
-        return Commands.sequence(
-            Intake.setPivotPosition(Position.Deployed),
-            Commands.parallel(
-                Intake.intake(),
-                Commands.sequence(
-                    Commands.either(
-                        Indexer.index(),
-                        Commands.sequence(
-                            Commands.parallel(
-                                Shooter.Feeder.feed(),
-                                Indexer.index(),
-                            ).until(Shooter.Flywheels.isDetected),
-                            Indexer.slowIndex()
-                        ).until(Shooter.Flywheels.isDetected),
-                        Shooter.Flywheels.isDetected
-                    ),
-                    Indexer.index()
-                        .repeatedly(), // retry until subsystem is released. just in case we are shooting at the same time.
-                )
+        return Commands.sequence (
+            Intake.setPivotPosition(Position.Stowed),
+            Commands.sequence(
+                Commands.parallel(
+                    Shooter.Feeder.feed(),
+                    Intake.intake()
+                ).until(Shooter.Flywheels.isDetected),
+
+                Indexer.setTarget(Indexer.Target.OUTDEX),
+                Commands.parallel(
+                    Shooter.Feeder.backup(),
+                    Intake.intake()
+                ).until(Shooter.Flywheels.isDetected.negate()),
+
+                Indexer.setTarget(Indexer.Target.STOP),
+                Intake.intake()
             )
         )
     }
@@ -233,7 +230,7 @@ object Robot : LoggedRobot() {
                     Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
                     Commands.waitUntil(Drivetrain.isPointedAtZoo),
                     Shooter.Feeder.feed(Command.InterruptionBehavior.kCancelIncoming),
-                    Indexer.index(),
+                    Indexer.setTarget(Indexer.Target.INDEX)
                 ),
                 Commands.sequence(
                     Commands.waitUntil(Shooter.Flywheels.isDetected),
@@ -251,8 +248,6 @@ object Robot : LoggedRobot() {
         Drivetrain.defaultCommand = Drivetrain.driveWithJoysticks(joystickLeft.hid, joystickRight.hid)
         Shooter.Flywheels.defaultCommand = Shooter.Flywheels.idle()
         Shooter.Pivot.defaultCommand = Shooter.Pivot.moveToActiveTarget()
-        Shooter.Feeder.defaultCommand = Shooter.Feeder.idle()
-        Indexer.defaultCommand = Indexer.idle()
         Intake.defaultCommand = Intake.setPivotPosition(Position.Stowed)
         // (The button with the yellow tape on it)
         joystickLeft.button(8).onTrue(Commands.runOnce({
@@ -274,16 +269,41 @@ object Robot : LoggedRobot() {
             )
         )
             .onTrue(Shooter.Pivot.setTarget(Target.AIM))
-            .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
+            .onFalse(
+                Commands.sequence(
+                    Shooter.Pivot.setTarget(Target.STOWED),
+                    Indexer.setTarget(Indexer.Target.STOP)
+//                    Commands.either(
+//                        Indexer.setTarget(Indexer.currentTarget),
+//                        Indexer.setTarget(Indexer.Target.STOP),
+//                        joystickLeft.button(1)
+//                    )
+                )
+            )
 
         joystickLeft.button(1).whileTrue(
             doIntakeSequence()
         )
+            .onTrue(
+                Indexer.setTarget(Indexer.Target.INDEX),
+            )
+            .onFalse(
+                Commands.sequence(
+                    Intake.setPivotPosition(Position.Stowed),
+                    Indexer.setTarget(Indexer.Target.STOP),
+                )
+
+//                Commands.either(
+//                    Indexer.setTarget(Indexer.currentTarget),
+//                    Indexer.setTarget(Indexer.Target.STOP),
+//                    joystickRight.button(1)
+//                )
+            )
 
         joystickLeft.button(4).whileTrue(
-            Commands.parallel(
-                Intake.outtake(),
-                Indexer.outtake()
+            Commands.sequence(
+                Indexer.setTarget(Indexer.Target.OUTDEX),
+                Intake.outtake()
             )
         )
 
@@ -314,7 +334,7 @@ object Robot : LoggedRobot() {
                         Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
                         Commands.parallel(
                             Shooter.Feeder.feed(),
-                            Indexer.index()
+                            Indexer.setTarget(Indexer.Target.INDEX)
                         )
                     )
                 )

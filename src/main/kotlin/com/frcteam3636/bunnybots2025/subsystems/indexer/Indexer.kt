@@ -2,10 +2,7 @@ package com.frcteam3636.bunnybots2025.subsystems.indexer
 
 import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
-import com.frcteam3636.bunnybots2025.RobotState
-import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
 import edu.wpi.first.wpilibj2.command.Command
-import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.Subsystem
 import org.littletonrobotics.junction.Logger
 
@@ -17,90 +14,37 @@ object Indexer : Subsystem {
 
     var inputs = LoggedIndexerInputs()
 
-    private var wasDetected = false
+    var currentTarget = Target.STOP
 
     override fun periodic() {
         io.updateInputs(inputs)
         Logger.processInputs("Indexer", inputs)
+
+        io.setIndexerSpeed(currentTarget.profile.getPercent())
     }
-
-    fun idle(): Command =
-        runEnd(
-            {
-                if (Shooter.Flywheels.isDetected.asBoolean) {
-                    io.setIndexerSpeed(-0.04)
-                } else {
-                    io.setIndexerSpeed(0.0)
-                }
-            },
-            {
-                io.setIndexerSpeed(0.0)
-            }
-        )
-
-    fun index(): Command =
-        startEnd(
-            {
-                io.setIndexerSpeed(0.4)
-            },
-            {
-                io.setIndexerSpeed(0.0)
-            }
-        ).alongWith(
-            Commands.run({
-                if (!wasDetected && inputs.isDetected) {
-                    RobotState.heldPieces++
-                    wasDetected = true
-                } else if (!inputs.isDetected) {
-                    wasDetected = false
-                }
-            })
-        ).finallyDo { ->
-            wasDetected = false
-        }
-
-    fun slowIndex(): Command =
-        startEnd(
-            {
-                io.setIndexerSpeed(0.2)
-            },
-            {
-                io.setIndexerSpeed(0.0)
-            }
-        ).alongWith(
-            Commands.run({
-                if (!wasDetected && inputs.isDetected) {
-                    RobotState.heldPieces++
-                    wasDetected = true
-                } else if (!inputs.isDetected) {
-                    wasDetected = false
-                }
-            })
-        ).finallyDo { ->
-            wasDetected = false
-        }
-
-    fun outtake(): Command =
-        startEnd(
-            {
-                io.setIndexerSpeed(-0.5)
-            },
-            {
-                io.setIndexerSpeed(0.0)
-            }
-        ).alongWith(
-            Commands.run({
-                if (!wasDetected && inputs.isDetected) {
-                    RobotState.heldPieces--
-                    wasDetected = true
-                } else if (!inputs.isDetected) {
-                    wasDetected = false
-                }
-            })
-        ).finallyDo { ->
-            wasDetected = false
-        }
 
     val signals: Array<BaseStatusSignal>
         get() = io.signals
+
+    fun setTarget(target: Target): Command =
+        runOnce { currentTarget = target }
+
+    enum class Target(val profile: IndexerProfile) {
+        INDEX(
+            IndexerProfile { 0.4 }
+        ),
+        SLOWINDEX(
+            IndexerProfile { 0.1 }
+        ),
+        OUTDEX(
+            IndexerProfile { -0.4 }
+        ),
+        STOP(
+            IndexerProfile { 0.0 }
+        )
+    }
+
+    data class IndexerProfile(
+        val getPercent: () -> Double
+    )
 }
