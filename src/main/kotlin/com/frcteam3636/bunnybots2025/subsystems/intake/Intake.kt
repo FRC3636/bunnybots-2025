@@ -48,12 +48,11 @@ object Intake : Subsystem {
         }
     }
 
-    fun setPivotPosition(position: Position): Command = (
+    fun setPivotPosition(position: Position): Command =
             runOnce {
                 Logger.recordOutput("Intake/Pivot/Active Setpoint", position.angle)
                 io.setPivotPosition(position.angle)
             }
-            )
 
     fun intake(): Command =
         startEnd(

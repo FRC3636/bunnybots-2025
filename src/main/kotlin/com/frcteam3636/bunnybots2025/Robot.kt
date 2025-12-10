@@ -232,16 +232,23 @@ object Robot : LoggedRobot() {
                     Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
                     Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
                     Commands.waitUntil(Drivetrain.isPointedAtZoo),
-                    Shooter.Feeder.feed(Command.InterruptionBehavior.kCancelIncoming),
+                    Shooter.Feeder.feed(),
                     Indexer.index(),
-                ),
-                Commands.sequence(
-                    Commands.waitUntil(Shooter.Flywheels.isDetected),
-                    Commands.runOnce({
-                        RobotState.heldPieces--
-                    }),
-                    Commands.waitUntil(Shooter.Flywheels.isDetected.negate())
-                ).repeatedly()
+                )
+            )
+        )
+    }
+
+    fun weLostSleepWritingThisFunctionBecauseCalvinWantedToBeAbleToIntakeAndShootAtTheSameTime(): Command {
+        return Commands.parallel(
+            Intake.intake(),
+            Indexer.index(),
+            Shooter.Flywheels.shoot(),
+            Commands.sequence(
+                Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
+                Commands.waitUntil(Drivetrain.isPointedAtZoo),
+                Shooter.Feeder.feed(),
             )
         )
     }
@@ -279,6 +286,23 @@ object Robot : LoggedRobot() {
         joystickLeft.button(1).whileTrue(
             doIntakeSequence()
         )
+
+        joystickLeft.button(1).and(joystickRight.button(1)).whileTrue(
+            Commands.parallel(
+                weLostSleepWritingThisFunctionBecauseCalvinWantedToBeAbleToIntakeAndShootAtTheSameTime(),
+                Commands.defer({ // TODO: check if this shit really needs to be deferred. it probably does lol.
+                    Drivetrain.driveWithJoystickPointingTowards(
+                        joystickLeft.hid,
+                        DriverStation.getAlliance()
+                            .getOrDefault(DriverStation.Alliance.Blue)
+                            .zooTranslation
+                        )
+                    }, setOf(Drivetrain)
+                )
+            )
+        )
+            .onTrue(Shooter.Pivot.setTarget(Target.AIM))
+            .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
 
         joystickLeft.button(4).whileTrue(
             Commands.parallel(
