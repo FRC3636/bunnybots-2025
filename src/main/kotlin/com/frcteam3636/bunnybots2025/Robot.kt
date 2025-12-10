@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj.util.WPILibVersion
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
 import edu.wpi.first.wpilibj2.command.Commands
+import edu.wpi.first.wpilibj2.command.Subsystem
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers
@@ -39,6 +40,7 @@ import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.littletonrobotics.urcl.URCL
+import java.lang.Thread.interrupted
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.io.path.Path
 import kotlin.io.path.exists
@@ -202,22 +204,20 @@ object Robot : LoggedRobot() {
 
     fun doIntakeSequence(): Command {
         return Commands.sequence (
-            Intake.setPivotPosition(Position.Stowed),
-            Commands.sequence(
-                Commands.parallel(
-                    Shooter.Feeder.feed(),
-                    Intake.intake()
-                ).until(Shooter.Flywheels.isDetected),
+            Intake.setPivotPosition(Position.Deployed),
+            Commands.parallel(
+                Shooter.Feeder.feed(),
+                Intake.intake(),
+                Indexer.setTarget(Indexer.Target.INDEX)
+            ).until(Shooter.Flywheels.isDetected),
 
-                Indexer.setTarget(Indexer.Target.OUTDEX),
-                Commands.parallel(
-                    Shooter.Feeder.backup(),
-                    Intake.intake()
-                ).until(Shooter.Flywheels.isDetected.negate()),
-
-                Indexer.setTarget(Indexer.Target.STOP),
+            Indexer.setTarget(Indexer.Target.OUTDEX),
+            Commands.parallel(
+                Shooter.Feeder.backup(),
                 Intake.intake()
-            )
+            ).until(Shooter.Flywheels.isDetected.negate()),
+
+            Indexer.setTarget(Indexer.Target.SLOWINDEX)
         )
     }
 
@@ -256,49 +256,34 @@ object Robot : LoggedRobot() {
         }).ignoringDisable(true))
 
         joystickRight.button(1).whileTrue(
-            Commands.parallel(
-                doShootSequence(),
-                Commands.defer({ // TODO: check if this shit really needs to be deferred. it probably does lol.
-                    Drivetrain.driveWithJoystickPointingTowards(
-                        joystickLeft.hid,
-                        DriverStation.getAlliance()
-                            .getOrDefault(DriverStation.Alliance.Blue)
-                            .zooTranslation
-                    )
-                }, setOf(Drivetrain))
-            )
-        )
-            .onTrue(Shooter.Pivot.setTarget(Target.AIM))
-            .onFalse(
+            Commands.parallel (
                 Commands.sequence(
-                    Shooter.Pivot.setTarget(Target.STOWED),
-                    Indexer.setTarget(Indexer.Target.STOP)
-//                    Commands.either(
-//                        Indexer.setTarget(Indexer.currentTarget),
-//                        Indexer.setTarget(Indexer.Target.STOP),
-//                        joystickLeft.button(1)
-//                    )
+                    Shooter.Pivot.setTarget(Target.AIM),
+                    doShootSequence(),
+                ).finallyDo { interrupted ->
+                    Shooter.Pivot.setTarget(Target.STOWED)
+                    if (interrupted && !joystickLeft.button(1).asBoolean) {
+                        Indexer.setTarget(Indexer.Target.STOP)
+                    }
+                },
+                Drivetrain.driveWithJoystickPointingTowards(
+                    joystickLeft.hid,
+                    DriverStation.getAlliance()
+                        .getOrDefault(DriverStation.Alliance.Blue)
+                        .zooTranslation
                 )
             )
+        )
+
 
         joystickLeft.button(1).whileTrue(
-            doIntakeSequence()
+            doIntakeSequence().finallyDo { interrupted ->
+                Intake.setPivotPosition(Position.Stowed)
+                if (interrupted && !joystickRight.button(1).asBoolean) {
+                    Indexer.setTarget(Indexer.Target.STOP)
+                }
+            }
         )
-            .onTrue(
-                Indexer.setTarget(Indexer.Target.INDEX),
-            )
-            .onFalse(
-                Commands.sequence(
-                    Intake.setPivotPosition(Position.Stowed),
-                    Indexer.setTarget(Indexer.Target.STOP),
-                )
-
-//                Commands.either(
-//                    Indexer.setTarget(Indexer.currentTarget),
-//                    Indexer.setTarget(Indexer.Target.STOP),
-//                    joystickRight.button(1)
-//                )
-            )
 
         joystickLeft.button(4).whileTrue(
             Commands.sequence(
