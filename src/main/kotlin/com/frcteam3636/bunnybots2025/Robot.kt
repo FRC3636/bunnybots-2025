@@ -262,12 +262,14 @@ object Robot : LoggedRobot() {
                         Indexer.setTarget(Indexer.Target.STOP)
                     }
                 },
-                Drivetrain.driveWithJoystickPointingTowards(
-                    joystickLeft.hid,
-                    DriverStation.getAlliance()
-                        .getOrDefault(DriverStation.Alliance.Blue)
-                        .zooTranslation
-                )
+                Commands.defer({
+                    Drivetrain.driveWithJoystickPointingTowards(
+                        joystickLeft.hid,
+                        DriverStation.getAlliance()
+                            .getOrDefault(DriverStation.Alliance.Blue)
+                            .zooTranslation
+                    )
+                }, setOf(Drivetrain))
             )
         )
 
