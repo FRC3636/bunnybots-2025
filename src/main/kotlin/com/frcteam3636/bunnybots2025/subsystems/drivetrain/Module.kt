@@ -125,7 +125,7 @@ class Mk5nSwerveModule(
         odometryDrivePositions = drivingMotor.odometryDrivePositions
 
         // Update positions in-place
-        for (index in 0..validTimestamps) {
+        for (index in 0..<validTimestamps) {
             val distance = (odometryDrivePositions[index].radians -
                     (odometryTurnPositions[index].rotations.rotations * COUPLING_RATIO)).toLinear(WHEEL_RADIUS)
             val angle = odometryTurnPositions[index] + chassisAngle
