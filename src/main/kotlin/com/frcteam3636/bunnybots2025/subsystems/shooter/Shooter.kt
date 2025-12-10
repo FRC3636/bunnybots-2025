@@ -4,9 +4,6 @@ import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.FIELD_LAYOUT
-import com.frcteam3636.bunnybots2025.subsystems.indexer.Indexer
-import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Flywheels.lowerSetpoint
-import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter.Flywheels.upperSetpoint
 import com.frcteam3636.bunnybots2025.utils.math.*
 import edu.wpi.first.math.MathUtil
 import edu.wpi.first.math.geometry.Pose2d
@@ -210,7 +207,7 @@ object Shooter {
         fun idle(): Command =
             runEnd(
                 {
-                    if (Shooter.Flywheels.isDetected.asBoolean) {
+                    if (Flywheels.isDetected.asBoolean) {
                         io.setSpeed(-0.04)
                     } else {
                         io.setSpeed(0.0)
@@ -225,16 +222,6 @@ object Shooter {
             startEnd(
                 {
                     io.setSpeed(0.1)
-                },
-                {
-                    io.setSpeed(0.0)
-                }
-            )
-
-        fun backup(): Command =
-            startEnd(
-                {
-                    io.setSpeed(-0.1)
                 },
                 {
                     io.setSpeed(0.0)
@@ -279,6 +266,7 @@ enum class Target(val profile: ShooterProfile) {
             }
         )
     ),
+    @Suppress("unused")
     PETTINGZOO(
         ShooterProfile(
             {
@@ -299,6 +287,7 @@ enum class Target(val profile: ShooterProfile) {
             }
         )
     ),
+    @Suppress("unused")
     TUNING(
         ShooterProfile(
             {
