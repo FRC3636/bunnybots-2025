@@ -28,7 +28,6 @@ import edu.wpi.first.wpilibj.util.WPILibVersion
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
 import edu.wpi.first.wpilibj2.command.Commands
-import edu.wpi.first.wpilibj2.command.Subsystem
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers
@@ -40,7 +39,6 @@ import org.littletonrobotics.junction.networktables.NT4Publisher
 import org.littletonrobotics.junction.wpilog.WPILOGReader
 import org.littletonrobotics.junction.wpilog.WPILOGWriter
 import org.littletonrobotics.urcl.URCL
-import java.lang.Thread.interrupted
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.io.path.Path
 import kotlin.io.path.exists
@@ -224,22 +222,20 @@ object Robot : LoggedRobot() {
     fun doShootSequence(): Command {
         return Commands.parallel(
             Shooter.Flywheels.shoot(),
-            Commands.parallel(
-                Commands.sequence(
-                    Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
-                    Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
-                    Commands.waitUntil(Drivetrain.isPointedAtZoo),
-                    Shooter.Feeder.feed(Command.InterruptionBehavior.kCancelIncoming),
-                    Indexer.setTarget(Indexer.Target.INDEX)
+            Commands.sequence(
+                Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
+                Commands.waitUntil(Drivetrain.isPointedAtZoo),
+                Shooter.Feeder.feed(Command.InterruptionBehavior.kCancelIncoming),
+                Indexer.setTarget(Indexer.Target.INDEX),
+            ),
+            Commands.sequence(
+                Commands.waitUntil(Shooter.Flywheels.isDetected),
+                Commands.runOnce(
+                    {RobotState.heldPieces--}
                 ),
-                Commands.sequence(
-                    Commands.waitUntil(Shooter.Flywheels.isDetected),
-                    Commands.runOnce({
-                        RobotState.heldPieces--
-                    }),
-                    Commands.waitUntil(Shooter.Flywheels.isDetected.negate())
-                ).repeatedly()
-            )
+                Commands.waitUntil(Shooter.Flywheels.isDetected.negate())
+            ).repeatedly()
         )
     }
 
