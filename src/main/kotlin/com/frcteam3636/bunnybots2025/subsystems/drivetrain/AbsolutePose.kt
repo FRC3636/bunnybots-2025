@@ -36,7 +36,6 @@ import java.nio.ByteBuffer
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 import kotlin.math.pow
-import kotlin.time.Duration.Companion.milliseconds
 
 @Logged
 open class AbsolutePoseProviderInputs {
@@ -176,6 +175,7 @@ class LimelightPoseProvider(
                 throttlePublisher.accept(100.toLong())
                 isThrottled = true
             } else if (Robot.isEnabled && isThrottled) {
+                isThrottled = false
                 throttlePublisher.accept(0.toLong())
             }
         }
