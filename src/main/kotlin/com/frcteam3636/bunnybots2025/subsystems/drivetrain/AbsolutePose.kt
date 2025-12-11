@@ -134,7 +134,8 @@ class LimelightPoseProvider(
                 val temp = updateCurrentMeasurements()
                 try {
                     lock.lock()
-                    observedTags.clear()
+                    if (measurements.isEmpty())
+                        observedTags.clear()
                     for (measurement in temp) {
                         measurements.add(measurement.poseMeasurement!!)
                         for (tag in measurement.observedTags) {

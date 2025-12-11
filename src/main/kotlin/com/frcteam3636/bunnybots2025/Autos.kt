@@ -12,9 +12,7 @@ import edu.wpi.first.wpilibj2.command.Commands
 object Autos {
     private fun intakeThenBulldoze(): Command {
         return Commands.sequence(
-            Robot.doIntakeSequence().until {
-                RobotState.heldPieces == 4
-            },
+            Robot.doIntakeSequence().withTimeout(BULLDOZE_TIMEOUT),
             Intake.bulldoze()
         )
     }
@@ -39,9 +37,7 @@ object Autos {
         driveToZoo.done().onTrue(
             Commands.sequence(
                 Drivetrain.alignToZoo(),
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
-                    RobotState.heldPieces == 0
-                }
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT)
             )
         )
 
@@ -71,9 +67,7 @@ object Autos {
         driveToZoo.done().onTrue(
             Commands.sequence(
                 Drivetrain.alignToZoo(),
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
-                    RobotState.heldPieces == 0
-                },
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
                 driveToPatchFromFirstScore.cmd()
             )
         )
@@ -89,9 +83,7 @@ object Autos {
         driveToZooFromFirstPatch.active().onTrue(
             Commands.sequence(
                 Drivetrain.alignToZoo(),
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
-                    RobotState.heldPieces == 0
-                },
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
                 driveToPatchFromSecondScore.cmd()
             )
         )
@@ -127,9 +119,7 @@ object Autos {
         driveToZoo.done().onTrue(
             Commands.sequence(
                 Drivetrain.alignToZoo(),
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
-                    RobotState.heldPieces == 0
-                },
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
                 driveToPatchFromFirstScore.cmd()
             )
         )
@@ -145,9 +135,7 @@ object Autos {
         driveToZooFromFirstPatch.done().onTrue(
             Commands.sequence(
                 Drivetrain.alignToZoo(),
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
-                    RobotState.heldPieces == 0
-                },
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
                 driveToPatchFromSecondScore.cmd()
             )
         )
@@ -165,9 +153,7 @@ object Autos {
         driveToZooFromSecondPatch.done().onTrue(
             Commands.sequence(
                 Drivetrain.alignToZoo(),
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT).until {
-                    RobotState.heldPieces == 0
-                },
+                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
                 driveToPatchFromSecondScore.cmd()
             )
         )
@@ -176,5 +162,6 @@ object Autos {
     }
 
     const val SHOOT_TIMEOUT = 3.0
+    const val BULLDOZE_TIMEOUT = 2.0
     const val TIME_REMAINING_REQUIREMENT = 5
 }

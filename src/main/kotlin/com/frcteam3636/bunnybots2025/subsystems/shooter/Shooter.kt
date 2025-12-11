@@ -26,6 +26,7 @@ import org.littletonrobotics.junction.Logger
 import org.littletonrobotics.junction.mechanism.LoggedMechanism2d
 import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber
+import kotlin.jvm.optionals.getOrDefault
 import kotlin.math.abs
 import kotlin.math.pow
 
@@ -221,7 +222,17 @@ object Shooter {
         fun feed(): Command =
             startEnd(
                 {
-                    io.setSpeed(0.1)
+                    io.setSpeed(0.2)
+                },
+                {
+                    io.setSpeed(0.0)
+                }
+            )
+
+        fun eject(): Command =
+            startEnd(
+                {
+                    io.setSpeed(-0.2)
                 },
                 {
                     io.setSpeed(0.0)
@@ -237,7 +248,7 @@ data class ShooterProfile(
 
 fun distanceToZoo(): Distance {
     val pettingZooTranslation = DriverStation.getAlliance()
-        .orElse(DriverStation.Alliance.Blue)
+        .getOrDefault(DriverStation.Alliance.Blue)
         .zooTranslation
     val zooPose = Pose2d(
         pettingZooTranslation,

@@ -2,7 +2,6 @@ package com.frcteam3636.bunnybots2025.subsystems.indexer
 
 import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
-import com.frcteam3636.bunnybots2025.RobotState
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.Commands
@@ -41,7 +40,7 @@ object Indexer : Subsystem {
     fun index(): Command =
         startEnd(
             {
-                io.setIndexerSpeed(0.4)
+                io.setIndexerSpeed(0.8)
             },
             {
                 io.setIndexerSpeed(0.0)
@@ -49,7 +48,6 @@ object Indexer : Subsystem {
         ).alongWith(
             Commands.run({
                 if (!wasDetected && inputs.isDetected) {
-                    RobotState.heldPieces++
                     wasDetected = true
                 } else if (!inputs.isDetected) {
                     wasDetected = false
@@ -70,7 +68,6 @@ object Indexer : Subsystem {
         ).alongWith(
             Commands.run({
                 if (!wasDetected && inputs.isDetected) {
-                    RobotState.heldPieces++
                     wasDetected = true
                 } else if (!inputs.isDetected) {
                     wasDetected = false
@@ -91,7 +88,6 @@ object Indexer : Subsystem {
         ).alongWith(
             Commands.run({
                 if (!wasDetected && inputs.isDetected) {
-                    RobotState.heldPieces--
                     wasDetected = true
                 } else if (!inputs.isDetected) {
                     wasDetected = false

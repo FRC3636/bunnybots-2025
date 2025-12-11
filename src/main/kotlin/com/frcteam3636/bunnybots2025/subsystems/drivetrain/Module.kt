@@ -62,6 +62,7 @@ class Mk5nSwerveModule(
     private var timestampQueue: Queue<Double> = PhoenixOdometryThread.getInstance().makeTimestampQueue()
 
     private val maxQueueSize = 100  // or however many timestamps we expect
+
     // preallocate to reduce GC pressure
     private val emptySwerveModulePosition = SwerveModulePosition()
     override var odometryTimestamps: DoubleArray = DoubleArray(maxQueueSize)
@@ -125,6 +126,7 @@ class Mk5nSwerveModule(
         odometryDrivePositions = drivingMotor.odometryDrivePositions
 
         // Update positions in-place
+        @Suppress("EmptyRange") // for some reason intellij determines this using the default value lol
         for (index in 0..<validTimestamps) {
             val distance = (odometryDrivePositions[index].radians -
                     (odometryTurnPositions[index].rotations.rotations * COUPLING_RATIO)).toLinear(WHEEL_RADIUS)
@@ -296,7 +298,7 @@ class TurningTalon(id: CTREDeviceId, encoderId: CTREDeviceId, magnetOffset: Doub
     }
 }
 
-class SimSwerveModule() : SwerveModule {
+class SimSwerveModule : SwerveModule {
 
     override var odometryDrivePositions: DoubleArray = doubleArrayOf()
     override var odometryTurnPositions: Array<Rotation2d> = emptyArray()

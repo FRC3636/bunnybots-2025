@@ -271,7 +271,8 @@ object Drivetrain : Subsystem {
 
                     // Compute deltas in-place
                     for (index in 0..3) {
-                        val deltaDistance = modulePositions[index].distanceMeters - lastModulePositions[index].distanceMeters
+                        val deltaDistance =
+                            modulePositions[index].distanceMeters - lastModulePositions[index].distanceMeters
                         val deltaAngle = modulePositions[index].angle - lastModulePositions[index].angle
                         moduleDeltas[index].distanceMeters = deltaDistance
                         moduleDeltas[index].angle = deltaAngle
@@ -462,9 +463,12 @@ object Drivetrain : Subsystem {
     }
 
     val isPointedAtZoo = Trigger {
-        val target = DriverStation.getAlliance().get().zooTranslation
+        val target = DriverStation.getAlliance().getOrDefault(DriverStation.Alliance.Blue).zooTranslation
         val isPointed = polarDrivingPIDController.atSetpoint()
-        Logger.recordOutput("Drivetrain/Zoo Difference", (estimatedPose.rotation.radians.radians - target.minus(estimatedPose.translation).angle.radians.radians))
+        Logger.recordOutput(
+            "Drivetrain/Zoo Difference",
+            (estimatedPose.rotation.radians.radians - target.minus(estimatedPose.translation).angle.radians.radians)
+        )
         Logger.recordOutput("Drivetrain/Is Pointed at Zoo", isPointed)
         isPointed
     }

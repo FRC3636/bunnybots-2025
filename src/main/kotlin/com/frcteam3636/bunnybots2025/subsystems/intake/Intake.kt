@@ -4,6 +4,7 @@ import com.ctre.phoenix6.BaseStatusSignal
 import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.utils.math.degrees
 import com.frcteam3636.bunnybots2025.utils.math.inDegrees
+import com.frcteam3636.bunnybots2025.utils.math.volts
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.wpilibj.Alert
 import edu.wpi.first.wpilibj.util.Color
@@ -57,7 +58,7 @@ object Intake : Subsystem {
     fun intake(): Command =
         startEnd(
             {
-                io.setRollerSpeed(0.7)
+                io.setRollerVoltage((0.7 * 12.0).volts)
                 setPivotPosition(Position.Deployed)
             },
             {
@@ -92,7 +93,7 @@ object Intake : Subsystem {
 
     enum class Position(val angle: Angle) {
         //        Stowed((-40).degrees),
-        Stowed(0.degrees),
+        Stowed(-(20).degrees),
         Deployed(90.degrees)
     }
 

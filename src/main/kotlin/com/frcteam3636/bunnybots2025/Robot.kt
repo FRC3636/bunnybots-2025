@@ -227,11 +227,11 @@ object Robot : LoggedRobot() {
     fun doShootSequence(): Command {
         return Commands.parallel(
             Shooter.Flywheels.shoot(),
-            Commands.parallel(
-                Commands.sequence(
-                    Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
-                    Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
-                    Commands.waitUntil(Drivetrain.isPointedAtZoo),
+            Commands.sequence(
+                Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
+                Commands.waitUntil(Drivetrain.isPointedAtZoo),
+                Commands.parallel(
                     Shooter.Feeder.feed(),
                     Indexer.index(),
                 )
@@ -305,8 +305,13 @@ object Robot : LoggedRobot() {
             .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
 
         joystickLeft.button(4).whileTrue(
+            Intake.outtake()
+        )
+
+        joystickRight.button(3).whileTrue(
             Commands.parallel(
                 Intake.outtake(),
+                Shooter.Feeder.eject(),
                 Indexer.outtake()
             )
         )
@@ -387,15 +392,6 @@ object Robot : LoggedRobot() {
 
         Diagnostics.send()
 
-        // clamp held pieces just in case stuff starts to break
-        if (RobotState.heldPieces < 0) {
-            Logger.recordOutput("RobotState/Held Pieces/Clamped", true)
-            RobotState.heldPieces = 0
-        } else {
-            Logger.recordOutput("RobotState/Held Pieces/Clamped", false)
-        }
-
-        Logger.recordOutput("RobotState/Held Pieces", RobotState.heldPieces)
         Logger.recordOutput("RobotState/Before First Enable", RobotState.beforeFirstEnable)
     }
 

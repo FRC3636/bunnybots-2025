@@ -21,6 +21,7 @@ import edu.wpi.first.math.system.plant.LinearSystemId
 import edu.wpi.first.math.trajectory.TrapezoidProfile
 import edu.wpi.first.units.Units.*
 import edu.wpi.first.units.measure.Angle
+import edu.wpi.first.units.measure.Voltage
 import edu.wpi.first.wpilibj.Timer
 import edu.wpi.first.wpilibj.simulation.DCMotorSim
 import org.team9432.annotation.Logged
@@ -40,6 +41,7 @@ open class IntakeInputs {
 
 interface IntakeIO {
     fun setRollerSpeed(percentage: Double)
+    fun setRollerVoltage(voltage: Voltage)
     fun setPivotPosition(pivotPosition: Angle)
     fun updateInputs(inputs: IntakeInputs)
     fun disablePivot() {}
@@ -51,11 +53,11 @@ interface IntakeIO {
 
 class IntakeIOReal : IntakeIO {
     private var pivotDisabled = false
-    private var brakeModeEnabled = true
 
     private var intakeMotor = SparkFlex(REVDeviceId.IntakeMotor, SparkLowLevel.MotorType.kBrushless).apply {
         configure(SparkFlexConfig().apply {
             inverted(true)
+            smartCurrentLimit(90)
         }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
     }
     private var intakePivotMotor = TalonFX(CTREDeviceId.IntakePivotMotor).apply {
@@ -114,6 +116,11 @@ class IntakeIOReal : IntakeIO {
         intakePivotMotor.setControl(positionControl.withPosition(pivotPosition))
     }
 
+    override fun setRollerVoltage(voltage: Voltage) {
+        assert(voltage.inVolts() in -12.0..12.0)
+        intakeMotor.setVoltage(voltage)
+    }
+
     override fun setBrakeMode(enabled: Boolean) {
         intakePivotMotor.setNeutralMode(
             if (enabled) {
@@ -149,9 +156,9 @@ class IntakeIOReal : IntakeIO {
 //    }
 
     companion object Constants {
-        val PID_GAINS = PIDGains(30.0, 0.0, 0.0)
-        val PROFILE_CRUISE_VELOCITY = 20.0.rotationsPerSecond
-        val PROFILE_ACCELERATION = (6.7 / 2.0).rotationsPerSecondPerSecond
+        val PID_GAINS = PIDGains(10.0, 0.0, 0.0)
+        val PROFILE_CRUISE_VELOCITY = 75.0.rotationsPerSecond
+        val PROFILE_ACCELERATION = (6.7 * 2.0).rotationsPerSecondPerSecond
         const val PROFILE_JERK = 0.0
         const val ENCODER_MAGNET_OFFSET = -0.17529
         const val ENCODER_TO_PIVOT_GEAR_RATIO = 2.25
@@ -179,6 +186,10 @@ class IntakeIOSim : IntakeIO {
 
     override fun setRollerSpeed(percentage: Double) {
         rollerMotor.inputVoltage = percentage * 12.0
+    }
+
+    override fun setRollerVoltage(voltage: Voltage) {
+        rollerMotor.inputVoltage = voltage.inVolts()
     }
 
     override fun updateInputs(inputs: IntakeInputs) {
