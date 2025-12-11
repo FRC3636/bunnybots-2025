@@ -93,8 +93,8 @@ object Shooter {
         fun idle(): Command =
             runEnd(
                 {
-                    upperSetpoint = -3.radiansPerSecond
-                    lowerSetpoint = -3.radiansPerSecond
+                    upperSetpoint = (-3).radiansPerSecond
+                    lowerSetpoint = (-3).radiansPerSecond
                 },
                 {
                     upperSetpoint = 0.radiansPerSecond
