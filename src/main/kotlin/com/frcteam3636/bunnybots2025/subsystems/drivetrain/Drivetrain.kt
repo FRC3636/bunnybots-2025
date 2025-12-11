@@ -360,7 +360,7 @@ object Drivetrain : Subsystem {
         Logger.recordOutput("Drivetrain/Distance To Zoo", distanceToZoo())
         Logger.recordOutput(
             "Drivetrain/Zoo Translation",
-            Pose2d(DriverStation.getAlliance().get().zooTranslation, Rotation2d.kZero)
+            Pose2d(DriverStation.getAlliance().getOrDefault(DriverStation.Alliance.Blue).zooTranslation, Rotation2d.kZero)
         )
     }
 
