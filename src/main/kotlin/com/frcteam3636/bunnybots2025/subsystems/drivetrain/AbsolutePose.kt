@@ -130,7 +130,7 @@ class LimelightPoseProvider(
         get() = gyroConnectionGetter()
 
     init {
-        thread(isDaemon = true) { // TODO: do we need to keep this in a thread?
+        thread(isDaemon = true, name = name) { // TODO: do we need to keep this in a thread?
             while (true) {
                 val temp = updateCurrentMeasurements()
                 try {
