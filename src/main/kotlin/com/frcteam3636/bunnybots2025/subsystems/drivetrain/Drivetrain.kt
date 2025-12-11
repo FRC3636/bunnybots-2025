@@ -170,7 +170,7 @@ object Drivetrain : Subsystem {
                 {
                     inputs.gyroConnected
                 },
-                false,
+                true,
             ),
         )
     }.mapValues { Pair(it.value, LoggedAbsolutePoseProviderInputs()) }

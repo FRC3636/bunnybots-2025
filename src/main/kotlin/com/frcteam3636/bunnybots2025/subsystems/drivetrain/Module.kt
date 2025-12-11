@@ -251,6 +251,9 @@ class TurningTalon(id: CTREDeviceId, encoderId: CTREDeviceId, magnetOffset: Doub
                     StatorCurrentLimitEnable = true
                 }
             }
+            ClosedLoopGeneral.apply {
+                ContinuousWrap = true
+            }
         })
     }
 
