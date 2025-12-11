@@ -274,7 +274,7 @@ enum class Target(val profile: ShooterProfile) {
     STOWED(
         ShooterProfile(
             {
-                12.degrees
+                13.degrees
             },
             {
                 1000.rpm // dude idek what to set this to lmao
