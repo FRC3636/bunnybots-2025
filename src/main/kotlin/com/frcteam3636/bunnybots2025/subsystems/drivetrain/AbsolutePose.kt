@@ -8,6 +8,7 @@ import com.frcteam3636.bunnybots2025.Robot
 import com.frcteam3636.bunnybots2025.RobotState
 import com.frcteam3636.bunnybots2025.utils.LimelightHelpers.convertToLLPoseEstimate
 import com.frcteam3636.bunnybots2025.utils.math.degrees
+import com.frcteam3636.bunnybots2025.utils.math.inMilliseconds
 import com.frcteam3636.bunnybots2025.utils.math.inSeconds
 import com.frcteam3636.bunnybots2025.utils.math.meters
 import com.frcteam3636.bunnybots2025.utils.math.seconds
@@ -35,6 +36,7 @@ import java.nio.ByteBuffer
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.thread
 import kotlin.math.pow
+import kotlin.time.Duration.Companion.milliseconds
 
 @Logged
 open class AbsolutePoseProviderInputs {
@@ -153,7 +155,7 @@ class LimelightPoseProvider(
                 } finally {
                     lock.unlock()
                 }
-                Thread.sleep(Robot.period.toLong())
+                Thread.sleep(Robot.period.seconds.inMilliseconds().toLong())
             }
         }
     }
