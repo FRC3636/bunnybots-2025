@@ -9,7 +9,6 @@ import edu.wpi.first.math.MathUtil
 import edu.wpi.first.math.geometry.Pose2d
 import edu.wpi.first.math.geometry.Rotation2d
 import edu.wpi.first.math.geometry.Translation2d
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap
 import edu.wpi.first.units.Units.RadiansPerSecond
 import edu.wpi.first.units.measure.Angle
 import edu.wpi.first.units.measure.AngularVelocity
@@ -55,15 +54,6 @@ object Shooter {
                 )
                 abs(velocityDifference.inRPM()) < FLYWHEEL_VELOCITY_TOLERANCE.inRPM()
             }
-
-        val speedInterpolationTable = InterpolatingDoubleTreeMap()
-
-        init {
-            //FIXME plot points to create regression
-            speedInterpolationTable.putVelocity(1.66.meters, 2650.rpm)
-//            speedInterpolationTable.putVelocity(2.5.meters, 3400.rpm)
-            speedInterpolationTable.putVelocity(3.4.meters, 4300.rpm)
-        }
 
         private val inputs = LoggedFlywheelInputs()
 
@@ -136,22 +126,15 @@ object Shooter {
         var mechanism = LoggedMechanism2d(100.0, 200.0)
         var pivotAngleLigament = LoggedMechanismLigament2d("Pivot Ligament", 50.0, 180.0, 5.0, Color8Bit(Color.kGreen))
 
-        val angleInterpolationTable = InterpolatingDoubleTreeMap()
-
         private val pivotDisabledAlert = Alert(
             "The shooter pivot has been disabled due to an error. To re-enable please restart robot code :3",
             Alert.AlertType.kError
         )
 
         init {
-            //FIXME plot points to create regression
-            angleInterpolationTable.putAngle(1.66.meters, 55.0.degrees)
-//            angleInterpolationTable.putAngle(2.5.meters, 50.0.degrees)
-            angleInterpolationTable.putAngle(3.4.meters, 40.0.degrees)
-
-            mechanism.getRoot("Shooter Pivot", 50.0, 150.0).apply {
+          mechanism.getRoot("Shooter Pivot", 50.0, 150.0).apply {
                 append(pivotAngleLigament)
-            }
+          }
         }
 
         override fun periodic() {
