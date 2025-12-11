@@ -1,3 +1,5 @@
+@file:Suppress("DuplicatedCode")
+
 package com.frcteam3636.bunnybots2025
 
 import choreo.auto.AutoRoutine
