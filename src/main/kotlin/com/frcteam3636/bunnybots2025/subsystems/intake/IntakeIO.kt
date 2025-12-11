@@ -5,6 +5,7 @@ import com.ctre.phoenix6.configs.CANcoderConfiguration
 import com.ctre.phoenix6.configs.ExternalFeedbackConfigs
 import com.ctre.phoenix6.configs.TalonFXConfiguration
 import com.ctre.phoenix6.controls.MotionMagicVoltage
+import com.ctre.phoenix6.controls.NeutralOut
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue
 import com.ctre.phoenix6.signals.InvertedValue
 import com.ctre.phoenix6.signals.NeutralModeValue
@@ -53,6 +54,7 @@ interface IntakeIO {
 
 class IntakeIOReal : IntakeIO {
     private var pivotDisabled = false
+    private var brakeModeEnabled = true
 
     private var intakeMotor = SparkFlex(REVDeviceId.IntakeMotor, SparkLowLevel.MotorType.kBrushless).apply {
         configure(SparkFlexConfig().apply {
@@ -122,6 +124,7 @@ class IntakeIOReal : IntakeIO {
     }
 
     override fun setBrakeMode(enabled: Boolean) {
+        brakeModeEnabled = enabled
         intakePivotMotor.setNeutralMode(
             if (enabled) {
                 NeutralModeValue.Brake
@@ -146,14 +149,14 @@ class IntakeIOReal : IntakeIO {
     override val signals: Array<BaseStatusSignal>
         get() = arrayOf(positionSignal, currentSignal, velocitySignal, temperatureSignal, positionReferenceSignal)
 
-//    override fun disablePivot() {
-//        pivotDisabled = true
-//        // this causes a sizeable loop overrun, but I'm willing to do this
-//        // to prevent the robot from tearing itself apart
-//        if (!brakeModeEnabled)
-//            setBrakeMode(true)
-//        intakePivotMotor.setControl(NeutralOut())
-//    }
+    override fun disablePivot() {
+        pivotDisabled = true
+        // this causes a sizeable loop overrun, but I'm willing to do this
+        // to prevent the robot from tearing itself apart
+        if (!brakeModeEnabled)
+            setBrakeMode(true)
+        intakePivotMotor.setControl(NeutralOut())
+    }
 
     companion object Constants {
         val PID_GAINS = PIDGains(25.0, 0.0, 0.0)
