@@ -157,7 +157,7 @@ object Drivetrain : Subsystem {
                 {
                     inputs.gyroConnected
                 },
-                false,
+                isLL4 = true,
             ),
             "Limelight Right" to LimelightPoseProvider(
                 "limelight-right",

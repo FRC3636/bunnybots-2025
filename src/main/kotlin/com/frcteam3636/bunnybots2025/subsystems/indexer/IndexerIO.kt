@@ -36,41 +36,24 @@ interface IndexerIO {
 }
 
 class IndexerIOReal : IndexerIO {
-    private var indexerMotor = SparkFlex(REVDeviceId.IndexerMotor, SparkLowLevel.MotorType.kBrushless).apply {
-        configure(SparkFlexConfig().apply {
-            inverted(false)
-        }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
-    }
-//    private var canRange = CANrange(CTREDeviceId.CANRangeIndexer).apply {
-//        configurator.apply(
-//            CANrangeConfiguration().apply {
-//                ProximityParams.ProximityThreshold = 0.35 // fix
-//                ToFParams.UpdateMode = UpdateModeValue.ShortRange100Hz
-//            }
-//        )
-//    }
-
-//    private val detectedSignal = canRange.isDetected
-//
-//    init {
-//        BaseStatusSignal.setUpdateFrequencyForAll(100.0, detectedSignal)
-//        canRange.optimizeBusUtilization()
+//    private var indexerMotor = SparkFlex(REVDeviceId.IndexerMotor, SparkLowLevel.MotorType.kBrushless).apply {
+//        configure(SparkFlexConfig().apply {
+//            inverted(false)
+//        }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
 //    }
 
     override fun updateInputs(inputs: IndexerInputs) {
-        inputs.indexerCurrent = indexerMotor.outputCurrent.amps
-        inputs.indexerVelocity = indexerMotor.encoder.velocity.rpm
-        inputs.indexerTemperature = indexerMotor.motorTemperature.celsius
-//        inputs.isDetected = detectedSignal.value
+//        inputs.indexerCurrent = indexerMotor.outputCurrent.amps
+//        inputs.indexerVelocity = indexerMotor.encoder.velocity.rpm
+//        inputs.indexerTemperature = indexerMotor.motorTemperature.celsius
     }
 
     override val signals: Array<BaseStatusSignal>
         get() = arrayOf()
-//        get() = arrayOf(detectedSignal)
 
     override fun setIndexerSpeed(percentage: Double) {
         assert(percentage in -1.0..1.0)
-        indexerMotor.set(percentage)
+//        indexerMotor.set(percentage)
     }
 }
 
