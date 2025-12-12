@@ -283,6 +283,10 @@ object Robot : LoggedRobot() {
             .onTrue(Shooter.Pivot.setTarget(Target.AIM))
             .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
 
+        joystickLeft.button(2).whileTrue(
+            Intake.cabbageIntake()
+        )
+
         joystickLeft.button(1).whileTrue(
             doIntakeSequence()
         )

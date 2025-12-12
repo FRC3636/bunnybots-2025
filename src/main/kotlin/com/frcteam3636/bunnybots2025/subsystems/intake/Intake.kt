@@ -67,6 +67,18 @@ object Intake : Subsystem {
             }
         )
 
+    fun cabbageIntake(): Command =
+        startEnd(
+            {
+                io.setRollerVoltage((0.7 * 12.0).volts)
+                setPivotPosition(Position.CabbageDeploy)
+            },
+            {
+                io.setRollerSpeed(0.0)
+                setPivotPosition(Position.Stowed)
+            }
+        )
+
     fun outtake(): Command =
         startEnd(
             {
@@ -92,9 +104,9 @@ object Intake : Subsystem {
         )
 
     enum class Position(val angle: Angle) {
-        //        Stowed((-40).degrees),
-        Stowed(-(20).degrees),
-        Deployed(90.degrees)
+        Stowed(-(30).degrees),
+        Deployed(90.degrees),
+        CabbageDeploy(45.degrees)
     }
 
     val signals: Array<BaseStatusSignal>
