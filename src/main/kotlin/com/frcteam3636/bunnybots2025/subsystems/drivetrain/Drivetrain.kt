@@ -72,10 +72,11 @@ object Drivetrain : Subsystem {
     private val headingController = PIDController(PATH_FOLLOWING_ROTATION_GAINS)
 
     fun followTrajectory(sample: SwerveSample) {
-        desiredChassisSpeeds = ChassisSpeeds(
+        desiredChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
             sample.vx + xController.calculate(estimatedPose.x, sample.x),
             sample.vy + yController.calculate(estimatedPose.y, sample.y),
-            sample.omega + headingController.calculate(estimatedPose.rotation.radians, sample.omega)
+            sample.omega + headingController.calculate(estimatedPose.rotation.radians, sample.omega),
+            estimatedPose.rotation
         )
     }
 
