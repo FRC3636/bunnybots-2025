@@ -111,6 +111,7 @@ class LimelightPoseProvider(
     private val gyroPublisher = table.getDoubleArrayTopic("robot_orientation_set").publish()
     private val throttlePublisher = table.getIntegerTopic("throttle_set").publish()
     private val imuModePublisher = table.getIntegerTopic("imumode_set").publish()
+    private val imuAlphaPublisher = table.getDoubleTopic("imuassistalpha_set").publish()
     private var loopsSinceLastSeen: Int = 0
     private var connected = false
 
@@ -235,6 +236,16 @@ class LimelightPoseProvider(
             measurements.add(measurement)
         }
 
+        if (txSubscriber.get() != 0.0 && isLL4) {
+            val latestPoseReading = megatag1Subscriber.get()
+            if (latestPoseReading.size > 0) {
+                if (latestPoseReading[9].meters < 2.0.meters) {
+                    imuAlphaPublisher.accept(0.2)
+                } else {
+                    imuAlphaPublisher.accept(0.001)
+                }
+            }
+        }
 
         return measurements
     }
