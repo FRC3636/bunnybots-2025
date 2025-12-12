@@ -462,6 +462,9 @@ object Drivetrain : Subsystem {
                 poseEstimator.estimatedPosition.rotation
             )
         }.until(isPointedAtZoo)
+            .finallyDo { ->
+                Logger.recordOutput("Drivetrain/Align To Zoo/Active", false)
+            }
     }
 
     val isPointedAtZoo = Trigger {
