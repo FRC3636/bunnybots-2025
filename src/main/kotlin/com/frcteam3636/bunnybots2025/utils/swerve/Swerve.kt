@@ -130,9 +130,11 @@ data class SwerveModuleTemperature(
     val drivingMotorTemperature: Temperature,
     val turningMotorTemperature: Temperature
 ) : StructSerializable {
-    @JvmField
-    @Suppress("unused")
-    val struct = SwerveModuleTemperatureStruct()
+    companion object {
+        @JvmField
+        @Suppress("unused")
+        val struct = SwerveModuleTemperatureStruct()
+    }
 }
 
 class SwerveModuleTemperatureStruct : Struct<SwerveModuleTemperature> {
