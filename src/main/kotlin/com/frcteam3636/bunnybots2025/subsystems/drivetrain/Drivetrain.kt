@@ -88,7 +88,7 @@ object Drivetrain : Subsystem {
             }),
             Commands.run({
                 val speed = limiter.calculate(0.1)
-                driveWithoutDeadband(Translation2d(), Translation2d(0.0, speed))
+                driveWithoutDeadband(Translation2d.kZero, Translation2d(0.0, speed))
             }, this)
         ),
         Commands.sequence(
@@ -431,6 +431,7 @@ object Drivetrain : Subsystem {
         }
     }
 
+    @Suppress("SameParameterValue")
     private fun driveWithoutDeadband(translationInput: Translation2d, rotationInput: Translation2d) {
         desiredChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
             calculateInputCurve(translationInput.x) * FREE_SPEED.inMetersPerSecond() * TRANSLATION_SENSITIVITY,
@@ -486,7 +487,7 @@ object Drivetrain : Subsystem {
             ) {
                 translationJoystick.fieldRelativeTranslation2d
             } else {
-                Translation2d()
+                Translation2d.kZero
             }
             val magnitude = polarDrivingPIDController.calculate(
                 estimatedPose.rotation.radians,
@@ -612,7 +613,7 @@ object Drivetrain : Subsystem {
             frontLeft = Corner(
                 Pose2d(
                     Translation2d(FRONT_LEFT_CONSTANTS.LocationX, FRONT_LEFT_CONSTANTS.LocationY),
-                    Rotation2d.fromDegrees(0.0)
+                    Rotation2d.kZero
                 ), FRONT_LEFT_MAGNET_OFFSET
             ),
             frontRight = Corner(
@@ -624,7 +625,7 @@ object Drivetrain : Subsystem {
             backLeft = Corner(
                 Pose2d(
                     Translation2d(BACK_LEFT_CONSTANTS.LocationX, BACK_LEFT_CONSTANTS.LocationY),
-                    Rotation2d.fromDegrees(0.0)
+                    Rotation2d.kZero
                 ), BACK_LEFT_MAGNET_OFFSET
             ),
             backRight = Corner(
