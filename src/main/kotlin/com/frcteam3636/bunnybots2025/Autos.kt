@@ -24,9 +24,7 @@ object Autos {
 
         val driveToZoo = routine.trajectory("LeftOne")
 
-        if (Robot.model == Robot.Model.SIMULATION) {
-            routine.active().onTrue(driveToZoo.resetOdometry())
-        }
+        routine.active().onTrue(driveToZoo.resetOdometry())
 
         routine.active().onTrue(
             driveToZoo.cmd()
@@ -54,9 +52,7 @@ object Autos {
         val driveToZooFromFirstPatch = routine.trajectory("LeftScoreOne")
         val driveToPatchFromSecondScore = routine.trajectory("LeftPatchTwo")
 
-        if (Robot.model == Robot.Model.SIMULATION) {
-            routine.active().onTrue(driveToZoo.resetOdometry())
-        }
+        routine.active().onTrue(driveToZoo.resetOdometry())
 
         routine.active().onTrue(
             driveToZoo.cmd()
@@ -106,9 +102,7 @@ object Autos {
         val driveToPatchFromSecondScore = routine.trajectory("LeftPatchTwo")
         val driveToZooFromSecondPatch = routine.trajectory("LeftScoreTwo")
 
-        if (Robot.model == Robot.Model.SIMULATION) {
-            routine.active().onTrue(driveToZoo.resetOdometry())
-        }
+        routine.active().onTrue(driveToZoo.resetOdometry())
 
         routine.active().onTrue(
             driveToZoo.cmd()
