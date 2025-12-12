@@ -203,7 +203,6 @@ class DrivingTalon(id: CTREDeviceId) : SwerveDrivingMotor {
 
     private var velocityControl = VelocityVoltage(0.0).apply {
         EnableFOC = true
-        UpdateFreqHz = 0.0
     }
 
     override var velocity: LinearVelocity
@@ -278,7 +277,6 @@ class TurningTalon(id: CTREDeviceId, encoderId: CTREDeviceId, magnetOffset: Doub
 
     private val positonControl = PositionVoltage(0.0).apply {
         EnableFOC = true
-        UpdateFreqHz = 0.0
     }
 
     override val temperature: Temperature
