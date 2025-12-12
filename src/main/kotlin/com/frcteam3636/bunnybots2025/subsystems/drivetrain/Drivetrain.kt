@@ -67,15 +67,15 @@ object Drivetrain : Subsystem {
     private var wheelRadiusLastAngle = Rotation2d.kZero
     private var wheelRadiusGyroDelta = 0.0
 
-    private val xController = PIDController(PATH_FOLLOWING_TRANSLATION_GAINS)
-    private val yController = PIDController(PATH_FOLLOWING_TRANSLATION_GAINS)
-    private val headingController = PIDController(PATH_FOLLOWING_ROTATION_GAINS)
+    private val trajectoryXController = PIDController(PATH_FOLLOWING_TRANSLATION_GAINS)
+    private val trajectoryYController = PIDController(PATH_FOLLOWING_TRANSLATION_GAINS)
+    private val trajectoryHeadingController = PIDController(PATH_FOLLOWING_ROTATION_GAINS)
 
     fun followTrajectory(sample: SwerveSample) {
         desiredChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-            sample.vx + xController.calculate(estimatedPose.x, sample.x),
-            sample.vy + yController.calculate(estimatedPose.y, sample.y),
-            sample.omega + headingController.calculate(estimatedPose.rotation.radians, sample.omega),
+            sample.vx + trajectoryXController.calculate(estimatedPose.x, sample.x),
+            sample.vy + trajectoryYController.calculate(estimatedPose.y, sample.y),
+            sample.omega + trajectoryHeadingController.calculate(estimatedPose.rotation.radians, sample.omega),
             estimatedPose.rotation
         )
     }
@@ -246,7 +246,7 @@ object Drivetrain : Subsystem {
 
         PhoenixOdometryThread.getInstance().start()
 
-        headingController.enableContinuousInput(-PI, PI)
+        trajectoryHeadingController.enableContinuousInput(-PI, PI)
     }
 
     val modulePositions = Array(4) { SwerveModulePosition() }
