@@ -36,16 +36,16 @@ interface IndexerIO {
 }
 
 class IndexerIOReal : IndexerIO {
-//    private var indexerMotor = SparkFlex(REVDeviceId.IndexerMotor, SparkLowLevel.MotorType.kBrushless).apply {
-//        configure(SparkFlexConfig().apply {
-//            inverted(false)
-//        }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
-//    }
+    private var indexerMotor = SparkFlex(REVDeviceId.IndexerMotor, SparkLowLevel.MotorType.kBrushless).apply {
+        configure(SparkFlexConfig().apply {
+            inverted(false)
+        }, SparkBase.ResetMode.kResetSafeParameters, SparkBase.PersistMode.kPersistParameters)
+    }
 
     override fun updateInputs(inputs: IndexerInputs) {
-//        inputs.indexerCurrent = indexerMotor.outputCurrent.amps
-//        inputs.indexerVelocity = indexerMotor.encoder.velocity.rpm
-//        inputs.indexerTemperature = indexerMotor.motorTemperature.celsius
+        inputs.indexerCurrent = indexerMotor.outputCurrent.amps
+        inputs.indexerVelocity = indexerMotor.encoder.velocity.rpm
+        inputs.indexerTemperature = indexerMotor.motorTemperature.celsius
     }
 
     override val signals: Array<BaseStatusSignal>
@@ -53,7 +53,7 @@ class IndexerIOReal : IndexerIO {
 
     override fun setIndexerSpeed(percentage: Double) {
         assert(percentage in -1.0..1.0)
-//        indexerMotor.set(percentage)
+        indexerMotor.set(percentage)
     }
 }
 
