@@ -4,6 +4,7 @@ package com.frcteam3636.bunnybots2025
 
 import choreo.auto.AutoRoutine
 import com.frcteam3636.bunnybots2025.subsystems.drivetrain.Drivetrain
+import com.frcteam3636.bunnybots2025.subsystems.indexer.Indexer
 import com.frcteam3636.bunnybots2025.subsystems.intake.Intake
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Shooter
 import com.frcteam3636.bunnybots2025.subsystems.shooter.Target
@@ -19,12 +20,26 @@ object Autos {
         )
     }
 
+    private fun doShootSequence(): Command {
+        return Commands.parallel(
+            Shooter.Flywheels.shoot(),
+            Commands.sequence(
+                Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
+                Commands.parallel(
+                    Shooter.Feeder.feed(),
+                    Indexer.index(),
+                )
+            )
+        )
+    }
+
     fun scorePreloadLeft(): AutoRoutine {
         val routine = Robot.autoFactory.newRoutine("preload")
 
         val driveToZoo = routine.trajectory("LeftOne")
 
-        routine.active().onTrue(driveToZoo.resetOdometry())
+//        routine.active().onTrue(driveToZoo.resetOdometry())
 
         routine.active().onTrue(
             driveToZoo.cmd()
@@ -36,8 +51,8 @@ object Autos {
 
         driveToZoo.done().onTrue(
             Commands.sequence(
-                Drivetrain.alignToZoo(),
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT)
+//                Drivetrain.alignToZoo(),
+                doShootSequence().withTimeout(SHOOT_TIMEOUT)
             )
         )
 
@@ -81,7 +96,7 @@ object Autos {
         driveToZooFromFirstPatch.active().onTrue(
             Commands.sequence(
                 Drivetrain.alignToZoo(),
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
+                doShootSequence().withTimeout(SHOOT_TIMEOUT),
                 driveToPatchFromSecondScore.cmd()
             )
         )
@@ -115,7 +130,7 @@ object Autos {
         driveToZoo.done().onTrue(
             Commands.sequence(
                 Drivetrain.alignToZoo(),
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
+                doShootSequence().withTimeout(SHOOT_TIMEOUT),
                 driveToPatchFromFirstScore.cmd()
             )
         )
@@ -157,7 +172,7 @@ object Autos {
         return routine
     }
 
-    const val SHOOT_TIMEOUT = 3.0
+    const val SHOOT_TIMEOUT = 6.0
     const val BULLDOZE_TIMEOUT = 2.0
     const val TIME_REMAINING_REQUIREMENT = 5
 }

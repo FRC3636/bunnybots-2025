@@ -211,7 +211,7 @@ object Shooter {
         fun feed(): Command =
             startEnd(
                 {
-                    io.setSpeed(0.2)
+                    io.setSpeed(0.15)
                 },
                 {
                     io.setSpeed(0.0)
@@ -261,8 +261,8 @@ enum class Target(val profile: ShooterProfile) {
                 MathUtil.clamp(angle, 12.0, 60.0).degrees
             }, {
                 val distance = distanceToZoo().inMeters()
-                val speed = ((61.57635 * distance.pow(2)) + (636.69951 * distance) + 1423.39901)
-                MathUtil.clamp(speed, 0.0, 5000.0).rpm
+                val speed = 192.34592 * Math.E.pow(distance) + 1511.02808
+                MathUtil.clamp(speed, 0.0, 6000.0).rpm
             }
         )
     ),

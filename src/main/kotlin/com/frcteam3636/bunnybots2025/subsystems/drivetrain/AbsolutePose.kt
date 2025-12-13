@@ -167,13 +167,13 @@ class LimelightPoseProvider(
             gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees, 0.0, 0.0, 0.0, 0.0, 0.0))
             NetworkTableInstance.getDefault().flush()
         } else {
+            gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees, 0.0, 0.0, 0.0, 0.0, 0.0))
+            NetworkTableInstance.getDefault().flush()
             if (RobotState.beforeFirstEnable) {
                 imuModePublisher.accept(1.toLong())
-                gyroPublisher.accept(doubleArrayOf(gyroAngle.degrees, 0.0, 0.0, 0.0, 0.0, 0.0))
-                NetworkTableInstance.getDefault().flush()
             }
             if (Robot.isDisabled && !isThrottled) {
-                throttlePublisher.accept(100.toLong())
+                throttlePublisher.accept(0.toLong())
                 isThrottled = true
             } else if (Robot.isEnabled && isThrottled) {
                 isThrottled = false
@@ -183,7 +183,7 @@ class LimelightPoseProvider(
 
         if ((!RobotState.beforeFirstEnable)) {
             if (isLL4 && !wasIMUChanged) {
-                imuModePublisher.accept(3.toLong())
+                imuModePublisher.accept(1.toLong())
                 wasIMUChanged = true
             }
         }
@@ -239,11 +239,7 @@ class LimelightPoseProvider(
         if (txSubscriber.get() != 0.0 && isLL4) {
             val latestPoseReading = megatag1Subscriber.get()
             if (latestPoseReading.size > 0) {
-                if (latestPoseReading[9].meters < 2.0.meters) {
-                    imuAlphaPublisher.accept(0.2)
-                } else {
-                    imuAlphaPublisher.accept(0.001)
-                }
+                imuAlphaPublisher.accept(0.2)
             }
         }
 

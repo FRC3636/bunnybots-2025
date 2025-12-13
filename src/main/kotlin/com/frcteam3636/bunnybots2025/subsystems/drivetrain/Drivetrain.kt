@@ -75,11 +75,12 @@ object Drivetrain : Subsystem {
         desiredChassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
             sample.vx + trajectoryXController.calculate(estimatedPose.x, sample.x),
             sample.vy + trajectoryYController.calculate(estimatedPose.y, sample.y),
-            sample.omega + trajectoryHeadingController.calculate(estimatedPose.rotation.radians, sample.omega),
+            sample.omega + trajectoryHeadingController.calculate(estimatedPose.rotation.radians, sample.heading),
             estimatedPose.rotation
         )
     }
 
+    @Suppress("unused")
     fun calculateWheelRadius(): Command = Commands.parallel(
         Commands.sequence(
             Commands.runOnce({
@@ -644,8 +645,8 @@ object Drivetrain : Subsystem {
         // Chassis Control
         val FREE_SPEED = TunerConstants.kSpeedAt12Volts
 
-        val PATH_FOLLOWING_TRANSLATION_GAINS = PIDGains(10.0)
-        val PATH_FOLLOWING_ROTATION_GAINS = PIDGains(7.5)
+        val PATH_FOLLOWING_TRANSLATION_GAINS = PIDGains(8.0, 0.0, 0.0)
+        val PATH_FOLLOWING_ROTATION_GAINS = PIDGains(10.0, 0.0, 0.0)
 
         val POLAR_DRIVING_GAINS = PIDGains(5.0, 0.0, 0.0)
 

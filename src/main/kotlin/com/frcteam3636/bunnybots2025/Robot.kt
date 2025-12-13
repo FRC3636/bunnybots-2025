@@ -225,7 +225,7 @@ object Robot : LoggedRobot() {
         return Commands.parallel(
             Shooter.Flywheels.shoot(),
             Commands.sequence(
-                Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity),
+                Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity).withTimeout(2.0),
                 Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
                 Commands.waitUntil(Drivetrain.isPointedAtZoo),
                 Commands.parallel(
@@ -336,7 +336,7 @@ object Robot : LoggedRobot() {
 //        controllerDev.x().whileTrue(Shooter.Flywheels.sysIdDynamic(SysIdRoutine.Direction.kReverse))
 
 
-        controllerDev.rightTrigger()
+        joystickDev.button(1)
             .whileTrue(
                 Commands.parallel(
                     Shooter.Flywheels.shoot(),
@@ -350,13 +350,13 @@ object Robot : LoggedRobot() {
                     )
                 )
             )
-            .onTrue(Shooter.Pivot.setTarget(Target.AIM))
+            .onTrue(Shooter.Pivot.setTarget(Target.TUNING))
             .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
 //        controllerDev.leftTrigger()
 //            .onTrue(Shooter.Pivot.setTarget(Target.AIM))
 //            .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
 
-        joystickDev.button(1).whileTrue(Drivetrain.calculateWheelRadius())
+//        joystickDev.button(1).whileTrue(Drivetrain.calculateWheelRadius())
 
         joystickDev.button(2).onTrue(
             Commands.runOnce({
