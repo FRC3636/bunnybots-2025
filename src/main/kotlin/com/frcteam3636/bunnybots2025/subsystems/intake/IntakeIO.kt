@@ -160,8 +160,8 @@ class IntakeIOReal : IntakeIO {
 
     companion object Constants {
         val PID_GAINS = PIDGains(25.0, 0.0, 0.0)
-        val PROFILE_CRUISE_VELOCITY = 75.0.rotationsPerSecond
-        val PROFILE_ACCELERATION = (6.7 * 2.0).rotationsPerSecondPerSecond
+        val PROFILE_CRUISE_VELOCITY = 1.0.rotationsPerSecond
+        val PROFILE_ACCELERATION = (6.7 / 2.0).rotationsPerSecondPerSecond
         const val PROFILE_JERK = 0.0
         const val ENCODER_MAGNET_OFFSET = -0.17529
         const val ENCODER_TO_PIVOT_GEAR_RATIO = 2.25

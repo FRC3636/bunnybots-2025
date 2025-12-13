@@ -109,6 +109,12 @@ object Shooter {
                 lowerSetpoint = Pivot.target.profile.getVelocity()
             }
 
+        fun eject(): Command =
+            run {
+                upperSetpoint = (-500).rpm
+                lowerSetpoint = (-500).rpm
+            }
+
         val signals: Array<BaseStatusSignal>
             get() = io.signals
     }
@@ -256,7 +262,7 @@ enum class Target(val profile: ShooterProfile) {
             }, {
                 val distance = distanceToZoo().inMeters()
                 val speed = ((61.57635 * distance.pow(2)) + (636.69951 * distance) + 1423.39901)
-                MathUtil.clamp(speed, 0.0, 5500.0).rpm
+                MathUtil.clamp(speed, 0.0, 5000.0).rpm
             }
         )
     ),
@@ -303,4 +309,4 @@ val DriverStation.Alliance.zooTranslation: Translation2d
                 FIELD_LAYOUT.getTagPose(3).get().translation.toTranslation2d()) / 2.0
     }
 
-internal val FLYWHEEL_VELOCITY_TOLERANCE = 2.radiansPerSecond
+internal val FLYWHEEL_VELOCITY_TOLERANCE = 50.rpm

@@ -201,25 +201,22 @@ object Robot : LoggedRobot() {
     }
 
     fun doIntakeSequence(): Command {
-        return Commands.sequence(
-            Intake.setPivotPosition(Position.Deployed),
-            Commands.parallel(
-                Intake.intake(),
-                Commands.sequence(
-                    Commands.either(
-                        Indexer.index(),
-                        Commands.sequence(
-                            Commands.parallel(
-                                Shooter.Feeder.feed(),
-                                Indexer.index(),
-                            ).until(Shooter.Flywheels.isDetected),
-                            Indexer.slowIndex()
+        return Commands.parallel(
+            Intake.intake(),
+            Commands.sequence(
+                Commands.either(
+                    Indexer.index(),
+                    Commands.sequence(
+                        Commands.parallel(
+                            Shooter.Feeder.feed(),
+                            Indexer.index(),
                         ).until(Shooter.Flywheels.isDetected),
-                        Shooter.Flywheels.isDetected
-                    ),
-                    Indexer.index()
-                        .repeatedly(), // retry until subsystem is released. just in case we are shooting at the same time.
-                )
+                        Indexer.slowIndex()
+                    ).until(Shooter.Flywheels.isDetected),
+                    Shooter.Flywheels.isDetected
+                ),
+                Indexer.index()
+                    .repeatedly(), // retry until subsystem is released. just in case we are shooting at the same time.
             )
         )
     }
@@ -309,14 +306,15 @@ object Robot : LoggedRobot() {
             .onFalse(Shooter.Pivot.setTarget(Target.STOWED))
 
         joystickLeft.button(4).whileTrue(
-            Intake.outtake()
+            Intake.bulldoze()
         )
 
         joystickRight.button(3).whileTrue(
             Commands.parallel(
                 Intake.outtake(),
                 Shooter.Feeder.eject(),
-                Indexer.outtake()
+                Indexer.outtake(),
+                Shooter.Flywheels.eject()
             )
         )
 

@@ -367,7 +367,7 @@ class SimSwerveModule : SwerveModule {
 
 // take the known wheel diameter, divide it by two to get the radius, then get the
 // circumference
-internal val WHEEL_RADIUS = 2.inches
+internal val WHEEL_RADIUS = 1.976.inches
 
 const val DRIVING_GEAR_RATIO = TunerConstants.kDriveGearRatio
 const val TURNING_GEAR_RATIO = TunerConstants.kSteerGearRatio
@@ -381,4 +381,4 @@ internal val TURNING_FF_GAINS: MotorFFGains = TunerConstants.steerGains!!.motorF
 internal val TURNING_CURRENT_LIMIT = TunerConstants.kSteerCurrentLimit
 internal val DRIVING_CURRENT_LIMIT = TunerConstants.kSlipCurrent // FIXME: Calculate
 
-const val COUPLING_RATIO = 0.0
+const val COUPLING_RATIO = 0.64
