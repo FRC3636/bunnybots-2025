@@ -74,7 +74,7 @@ object Robot : LoggedRobot() {
 
     val autoChooser = AutoChooser().apply {
         addRoutine("Left Score Preload", Autos::scorePreloadLeft)
-        addRoutine("Left Score Preload and One Patch", Autos::scorePreloadAndOnePatchLeft)
+        addRoutine("Left Score Preload and One Patch", Autos::scorePreloadAndOnePatchLeftV2)
         addRoutine("Left Can't Stop Won't Stop", Autos::cantStopWontStopLeft)
         addRoutine("TESTING: Left long rewrite", Autos::scorePreloadAndOnePatchLeftRewrote)
     }

@@ -82,10 +82,12 @@ object Intake : Subsystem {
     fun outtake(): Command =
         runEnd(
             {
-                io.setRollerSpeed(-0.5)
+                io.setRollerSpeed(-1.0)
+                io.setPivotPosition(Position.CabbageDeploy.angle)
             },
             {
                 io.setRollerSpeed(0.0)
+                io.setPivotPosition(Position.Stowed.angle)
             }
         )
 

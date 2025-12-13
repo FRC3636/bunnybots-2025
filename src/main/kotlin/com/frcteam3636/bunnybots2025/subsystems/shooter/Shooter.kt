@@ -221,7 +221,7 @@ object Shooter {
         fun eject(): Command =
             startEnd(
                 {
-                    io.setSpeed(-0.2)
+                    io.setSpeed(-0.5)
                 },
                 {
                     io.setSpeed(0.0)

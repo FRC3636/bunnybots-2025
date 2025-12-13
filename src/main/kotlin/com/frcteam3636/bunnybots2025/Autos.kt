@@ -99,6 +99,45 @@ object Autos {
         return routine
     }
 
+    fun scorePreloadAndOnePatchLeftV2(): AutoRoutine {
+        val routine = Robot.autoFactory.newRoutine("preloadAndOnePatch")
+
+        val driveToZoo = routine.trajectory("LeftOne")
+        val driveToPatchFromFirstScore = routine.trajectory("LeftPatchOneBackup")
+        val driveToZooFromFirstPatch = routine.trajectory("LeftScoreTwoBackup")
+        val driveToPatchFromSecondScore = routine.trajectory("LeftPatchTwo")
+
+        routine.active().onTrue(driveToZoo.resetOdometry())
+
+        routine.active().onTrue(
+            driveToZoo.cmd()
+        )
+
+        driveToZoo.active().onTrue(
+            Shooter.Pivot.setTarget(Target.AIM)
+        )
+
+        driveToZoo.done().onTrue(
+            doShootSequence().withTimeout(SHOOT_TIMEOUT)
+                .andThen(driveToPatchFromFirstScore.cmd().raceWith(intakeThenBulldoze()))
+        )
+
+        driveToPatchFromFirstScore.done().onTrue(
+            driveToZooFromFirstPatch.cmd()
+        )
+
+        driveToZooFromFirstPatch.done().onTrue(
+            doShootSequence().withTimeout(SHOOT_TIMEOUT)
+                .andThen(driveToPatchFromSecondScore.cmd().raceWith(intakeThenBulldoze()))
+        )
+
+        driveToPatchFromSecondScore.active().onTrue(
+            intakeThenBulldoze()
+        )
+
+        return routine
+    }
+
     fun scorePreloadAndOnePatchLeftRewrote(): AutoRoutine {
         val routine = Robot.autoFactory.newRoutine("preloadAndOnePatch")
 
@@ -193,7 +232,7 @@ object Autos {
         return routine
     }
 
-    const val SHOOT_TIMEOUT = 5.0
+    const val SHOOT_TIMEOUT = 3.0
     const val BULLDOZE_TIMEOUT = 2.0
     const val TIME_REMAINING_REQUIREMENT = 5
 }

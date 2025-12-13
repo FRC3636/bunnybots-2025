@@ -646,7 +646,7 @@ object Drivetrain : Subsystem {
         val FREE_SPEED = TunerConstants.kSpeedAt12Volts
 
         val PATH_FOLLOWING_TRANSLATION_GAINS = PIDGains(8.0, 0.0, 0.0)
-        val PATH_FOLLOWING_ROTATION_GAINS = PIDGains(10.0, 0.0, 0.0)
+        val PATH_FOLLOWING_ROTATION_GAINS = PIDGains(10.0, 0.0, 0.5)
 
         val POLAR_DRIVING_GAINS = PIDGains(5.0, 0.0, 0.0)
 
