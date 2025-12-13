@@ -119,13 +119,13 @@ object Autos {
                 driveToZoo.cmd(),
                 Shooter.Pivot.setTarget(Target.AIM),
                 doShootSequence().withTimeout(SHOOT_TIMEOUT),
-                Commands.parallel(
+                Commands.race(
                     driveToPatchFromFirstScore.cmd(),
                     intakeThenBulldoze()
                 ),
                 driveToZooFromFirstPatch.cmd(),
                 doShootSequence().withTimeout(SHOOT_TIMEOUT),
-                Commands.parallel(
+                Commands.race(
                     driveToPatchFromSecondScore.cmd(),
                     intakeThenBulldoze()
                 )

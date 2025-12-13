@@ -76,6 +76,7 @@ object Robot : LoggedRobot() {
         addRoutine("Left Score Preload", Autos::scorePreloadLeft)
         addRoutine("Left Score Preload and One Patch", Autos::scorePreloadAndOnePatchLeft)
         addRoutine("Left Can't Stop Won't Stop", Autos::cantStopWontStopLeft)
+        addRoutine("TESTING: Left long rewrite", Autos::scorePreloadAndOnePatchLeftRewrote)
     }
 
     /** A model of robot, depending on where we're deployed to. */
