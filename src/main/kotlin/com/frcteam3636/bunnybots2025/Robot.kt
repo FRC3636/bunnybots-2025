@@ -57,6 +57,7 @@ import kotlin.jvm.optionals.getOrDefault
  * renaming the object or package, it will get changed everywhere.)
  */
 object Robot : LoggedRobot() {
+    @Suppress("unused")
     private val controller = CommandXboxController(2)
     private val joystickLeft = CommandJoystick(0)
     private val joystickRight = CommandJoystick(1)
@@ -378,7 +379,7 @@ object Robot : LoggedRobot() {
         Diagnostics.report(canivoreBus)
         Diagnostics.reportDSPeripheral(joystickLeft.hid, isController = false)
         Diagnostics.reportDSPeripheral(joystickRight.hid, isController = false)
-        Diagnostics.reportDSPeripheral(controller.hid, isController = true)
+//        Diagnostics.reportDSPeripheral(controller.hid, isController = true)
     }
 
     override fun robotPeriodic() {
