@@ -29,6 +29,7 @@ object Autos {
                 Commands.parallel(
                     Shooter.Feeder.feed(),
                     Indexer.index(),
+                    Intake.intake()
                 )
             )
         )
@@ -67,7 +68,7 @@ object Autos {
         val driveToZooFromFirstPatch = routine.trajectory("LeftScoreOne")
         val driveToPatchFromSecondScore = routine.trajectory("LeftPatchTwo")
 
-        routine.active().onTrue(driveToZoo.resetOdometry())
+//        routine.active().onTrue(driveToZoo.resetOdometry())
 
         routine.active().onTrue(
             driveToZoo.cmd()
@@ -78,12 +79,9 @@ object Autos {
         )
 
         driveToZoo.done().onTrue(
-            Commands.sequence(
-                Drivetrain.alignToZoo(),
-                Robot.doShootSequence().withTimeout(SHOOT_TIMEOUT),
-                driveToPatchFromFirstScore.cmd()
+            doShootSequence().withTimeout(SHOOT_TIMEOUT)
+                .andThen(driveToPatchFromFirstScore.cmd())
             )
-        )
 
         driveToPatchFromFirstScore.active().whileTrue(
             intakeThenBulldoze()
@@ -95,7 +93,7 @@ object Autos {
 
         driveToZooFromFirstPatch.active().onTrue(
             Commands.sequence(
-                Drivetrain.alignToZoo(),
+//                Drivetrain.alignToZoo(),
                 doShootSequence().withTimeout(SHOOT_TIMEOUT),
                 driveToPatchFromSecondScore.cmd()
             )
@@ -103,6 +101,35 @@ object Autos {
 
         driveToPatchFromSecondScore.active().onTrue(
             intakeThenBulldoze()
+        )
+
+        return routine
+    }
+
+    fun scorePreloadAndOnePatchLeftRewrote(): AutoRoutine {
+        val routine = Robot.autoFactory.newRoutine("preloadAndOnePatch")
+
+        val driveToZoo = routine.trajectory("LeftOne")
+        val driveToPatchFromFirstScore = routine.trajectory("LeftPatchOne")
+        val driveToZooFromFirstPatch = routine.trajectory("LeftScoreOne")
+        val driveToPatchFromSecondScore = routine.trajectory("LeftPatchTwo")
+
+        routine.active().onTrue(
+            Commands.sequence(
+                driveToZoo.cmd(),
+                Shooter.Pivot.setTarget(Target.AIM),
+                doShootSequence().withTimeout(SHOOT_TIMEOUT),
+                Commands.parallel(
+                    driveToPatchFromFirstScore.cmd(),
+                    intakeThenBulldoze()
+                ),
+                driveToZooFromFirstPatch.cmd(),
+                doShootSequence().withTimeout(SHOOT_TIMEOUT),
+                Commands.parallel(
+                    driveToPatchFromSecondScore.cmd(),
+                    intakeThenBulldoze()
+                )
+            )
         )
 
         return routine
@@ -172,7 +199,7 @@ object Autos {
         return routine
     }
 
-    const val SHOOT_TIMEOUT = 6.0
+    const val SHOOT_TIMEOUT = 5.0
     const val BULLDOZE_TIMEOUT = 2.0
     const val TIME_REMAINING_REQUIREMENT = 5
 }
