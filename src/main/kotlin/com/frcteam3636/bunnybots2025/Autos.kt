@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj2.command.Commands
 object Autos {
     private fun intakeThenBulldoze(): Command {
         return Commands.sequence(
-            Robot.doIntakeSequence().withTimeout(BULLDOZE_TIMEOUT),
+            Robot.doIntakeSequence().until(Shooter.Flywheels.isDetected),
             Intake.bulldoze()
         )
     }
@@ -68,7 +68,7 @@ object Autos {
         val driveToZooFromFirstPatch = routine.trajectory("LeftScoreOne")
         val driveToPatchFromSecondScore = routine.trajectory("LeftPatchTwo")
 
-//        routine.active().onTrue(driveToZoo.resetOdometry())
+        routine.active().onTrue(driveToZoo.resetOdometry())
 
         routine.active().onTrue(
             driveToZoo.cmd()
@@ -80,23 +80,16 @@ object Autos {
 
         driveToZoo.done().onTrue(
             doShootSequence().withTimeout(SHOOT_TIMEOUT)
-                .andThen(driveToPatchFromFirstScore.cmd())
+                .andThen(driveToPatchFromFirstScore.cmd().raceWith(intakeThenBulldoze()))
             )
-
-        driveToPatchFromFirstScore.active().whileTrue(
-            intakeThenBulldoze()
-        )
 
         driveToPatchFromFirstScore.done().onTrue(
             driveToZooFromFirstPatch.cmd()
         )
 
-        driveToZooFromFirstPatch.active().onTrue(
-            Commands.sequence(
-//                Drivetrain.alignToZoo(),
-                doShootSequence().withTimeout(SHOOT_TIMEOUT),
-                driveToPatchFromSecondScore.cmd()
-            )
+        driveToZooFromFirstPatch.done().onTrue(
+            doShootSequence().withTimeout(SHOOT_TIMEOUT)
+                .andThen(driveToPatchFromSecondScore.cmd().raceWith(intakeThenBulldoze()))
         )
 
         driveToPatchFromSecondScore.active().onTrue(
@@ -116,6 +109,7 @@ object Autos {
 
         routine.active().onTrue(
             Commands.sequence(
+                driveToZoo.resetOdometry(),
                 driveToZoo.cmd(),
                 Shooter.Pivot.setTarget(Target.AIM),
                 doShootSequence().withTimeout(SHOOT_TIMEOUT),
