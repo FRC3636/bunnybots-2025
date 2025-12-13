@@ -226,7 +226,7 @@ object Robot : LoggedRobot() {
         return Commands.parallel(
             Shooter.Flywheels.shoot(),
             Commands.sequence(
-                Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity).withTimeout(2.0),
+                Commands.waitUntil(Shooter.Flywheels.atDesiredVelocity).withTimeout(4.0),
                 Commands.waitUntil(Shooter.Pivot.atDesiredPosition),
                 Commands.waitUntil(Drivetrain.isPointedAtZoo),
                 Commands.parallel(
